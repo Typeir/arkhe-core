@@ -21,11 +21,11 @@ export type RootNode = Document | ShadowRoot;
  *
  * @interface EnvironmentInput
  * @property {() => RootNode} [rootNode] - Returns the root node.
- * @property {HTMLElement | (() => HTMLElement | undefined)} [container] - Portal target.
+ * @property {HTMLElement} [container] - Portal target.
  */
 export interface EnvironmentInput {
   readonly rootNode?: () => RootNode;
-  readonly container?: HTMLElement | (() => HTMLElement | undefined);
+  readonly container?: HTMLElement;
 }
 
 /**
@@ -33,20 +33,12 @@ export interface EnvironmentInput {
  *
  * @interface ArkheEnvironmentValue
  * @property {() => RootNode} getRootNode - Returns the root node.
- * @property {() => HTMLElement | undefined} container - Returns the portal target.
+ * @property {() => HTMLElement} container - Returns the portal target.
  */
 export interface ArkheEnvironmentValue {
   readonly getRootNode: () => RootNode;
-  readonly container: () => HTMLElement | undefined;
+  readonly container: () => HTMLElement;
 }
-
-/**
- * Context key both ports publish the environment under.
- *
- * @constant ENVIRONMENT_KEY
- * @type {symbol}
- */
-export const ENVIRONMENT_KEY = Symbol.for('arkhe.environment');
 
 /**
  * Returns the document that owns `root`.
@@ -77,10 +69,7 @@ export function createEnvironment(
   const { container } = input;
   return {
     getRootNode,
-    container:
-      typeof container === 'function'
-        ? container
-        : () => container ?? documentOf(getRootNode()).body,
+    container: () => container ?? documentOf(getRootNode()).body,
   };
 }
 

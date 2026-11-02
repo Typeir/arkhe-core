@@ -72,20 +72,20 @@ export function progressState(
 }
 
 /**
- * Returns the announced value text of a progress bar.
+ * Returns the announced value text of a progress bar, from the state
+ * `progressState` already computed.
  *
  * @function progressValueText
- * @param {number} value - Current amount.
+ * @param {ProgressState} state - Bar state.
  * @param {number} max - Amount that fills the bar.
  * @param {ArkheLabels} labels - Label templates.
  * @returns {string} Value text, e.g. `3 of 10`.
  */
 export function progressValueText(
-  value: number,
+  state: ProgressState,
   max: number,
   labels: ArkheLabels,
 ): string {
-  const state = progressState(value, max);
   return state.over
     ? formatLabel(labels.progressOver, {
         value: state.value,
