@@ -4,7 +4,8 @@
  * none, so a server-rendered open modal can wait for its content to mount
  * before Zag traps focus. Focus returns to `finalFocus` when it gives an
  * element, else to the trigger part when one renders, else to whatever had
- * focus before opening. Inside a shadow root the rest of that root is hidden
+ * focus before opening, else, when that is gone, to its nearest focusable
+ * neighbour (`FocusReturn`). Inside a shadow root the rest of that root is hidden
  * from assistive technology too, which Zag's own hiding stops short of.
  *
  * @module packages/core/src/dialog
@@ -14,6 +15,7 @@
  */
 
 import type { RootNode } from './environment.js';
+import type { FocusReturn } from './focusReturn.js';
 import { definedOnly } from './machine.js';
 
 /**
@@ -32,7 +34,8 @@ export type DialogRole = 'dialog' | 'alertdialog';
  * @property {boolean} [ready] - False until content can mount; keeps Zag closed.
  * @property {DialogRole} [role] - Dialog role. Defaults to `dialog`.
  * @property {(open: boolean) => void} onOpenChange - Open-state callback.
- * @property {() => HTMLElement | null} [finalFocus] - Element to focus on close, e.g. when the opener is gone.
+ * @property {() => HTMLElement | null} [finalFocus] - Element to focus on close; wins over everything else.
+ * @property {FocusReturn} [focusReturn] - The instance's opener memory; the port keeps one per instance.
  * @property {() => RootNode} getRootNode - Root node for Zag.
  */
 export interface DialogMachineInput {
@@ -42,6 +45,7 @@ export interface DialogMachineInput {
   readonly role?: DialogRole;
   readonly onOpenChange: (open: boolean) => void;
   readonly finalFocus?: () => HTMLElement | null;
+  readonly focusReturn?: FocusReturn;
   readonly getRootNode: () => RootNode;
 }
 
@@ -53,13 +57,19 @@ export interface DialogMachineInput {
  * @returns {object} Machine props.
  */
 export function dialogMachineProps(input: DialogMachineInput) {
+  const open = input.open && (input.ready ?? true);
+  const memory = input.focusReturn;
+  memory?.track(open, input.getRootNode());
   return definedOnly({
     id: input.id,
-    open: input.open && (input.ready ?? true),
+    open,
     role: input.role,
     onOpenChange: (details: { open: boolean }) =>
       input.onOpenChange(details.open),
-    finalFocusEl: input.finalFocus,
+    finalFocusEl:
+      input.finalFocus || memory
+        ? () => input.finalFocus?.() ?? memory?.target() ?? null
+        : undefined,
     getRootNode: input.getRootNode,
   });
 }

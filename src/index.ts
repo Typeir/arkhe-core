@@ -8,6 +8,7 @@
  * @since 0.1.0
  */
 
+export * from './announcer.js';
 export * from './chip.js';
 export * from './combobox.js';
 export * from './dialog.js';
@@ -15,6 +16,7 @@ export * from './environment.js';
 export * from './events.js';
 export * from './field.js';
 export * from './floating.js';
+export * from './focusReturn.js';
 export * from './icons.js';
 export * from './labels.js';
 export * from './loader.js';
