@@ -217,18 +217,21 @@ export function comboboxMachineProps(input: ComboboxMachineInput) {
  * @property {() => string | null} highlighted - Highlighted value, if any.
  * @property {() => string} inputValue - Current text.
  * @property {(value: string) => void} select - Selects a value.
+ * @property {() => void} close - Closes the list and clears the highlight.
  * @property {(text: string) => void} [submit] - Takes free text on Enter.
  */
 export interface ComboboxKeyActions {
   readonly highlighted: () => string | null;
   readonly inputValue: () => string;
   readonly select: (value: string) => void;
+  readonly close: () => void;
   readonly submit?: (text: string) => void;
 }
 
 /**
- * Wraps Zag's input props. Tab with an option highlighted completes it and
- * keeps focus; Enter with nothing highlighted hands the text to `submit`.
+ * Wraps Zag's input props. Tab with an option highlighted completes it,
+ * closes the list and keeps focus, so the next Tab moves on; Enter with
+ * nothing highlighted hands the text to `submit`.
  *
  * @function guardComboboxKeys
  * @template {object} P
@@ -256,6 +259,7 @@ export function guardComboboxKeys<P extends object>(
     if (event.key === 'Tab' && !event.shiftKey && highlighted !== null) {
       event.preventDefault();
       actions.select(highlighted);
+      actions.close();
       return;
     }
     if (event.key === 'Enter' && highlighted === null && actions.submit) {
