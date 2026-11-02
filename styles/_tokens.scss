@@ -1,7 +1,7 @@
 /**
  * @fileoverview Design tokens: the one place colours are written. Dark is
- * the default; `[data-theme='light']` swaps the palette. Names match
- * Ikuisuus, so an app drops its own palette instead of renaming anything.
+ * the default; `[data-theme='light']` swaps the palette. Names follow the
+ * host app's, so an app drops its own palette instead of renaming anything.
  */
 
 @mixin tokens {

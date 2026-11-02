@@ -1,7 +1,7 @@
 /**
  * @fileoverview Where Arkhé components live: the root node Zag queries and
  * the element portals mount into. Lets a component work inside a shadow root
- * or a detached window, such as Flamelost's pop-out panels.
+ * or a detached window, such as a pop-out panel.
  *
  * @module packages/core/src/environment
  * @version 1.0.0
