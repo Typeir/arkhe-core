@@ -22,8 +22,18 @@
   }
 
   @include part('skeleton', 'group') {
+    position: relative;
     display: grid;
     gap: var(--space-2);
+  }
+
+  @include part('skeleton', 'label') {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   @include part('skeleton', 'root') {
