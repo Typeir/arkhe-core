@@ -1,0 +1,182 @@
+/**
+ * @fileoverview Floating parts: tooltip, hover card, popover, menu. One
+ * square surface for all; hint triggers read as dotted inline text.
+ * Entry and exit run on CSS transitions keyed to `hidden`.
+ */
+
+@use '../part' as *;
+@use '../motion' as *;
+@use '../shape' as *;
+@use '../text' as *;
+@use 'button' as *;
+
+/**
+ * Shared look of a floating panel.
+ *
+ * @param {length} $lift - Travel on entry and exit.
+ */
+@mixin floating-surface($lift: 0.25rem) {
+  box-sizing: border-box;
+  border: var(--border-width-xs) solid var(--color-border-secondary);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-small);
+  box-shadow: 0 0.5rem 1.5rem rgb(var(--color-shadow));
+  outline: none;
+  @include reveal(block, $lift);
+}
+
+/**
+ * A trigger that reads as inline text with a dotted accent underline.
+ */
+@mixin inline-trigger {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline dotted var(--color-accent);
+  text-underline-offset: 0.2em;
+  cursor: help;
+  @include focus-ring;
+
+  &:hover,
+  &[data-state='open'] {
+    color: var(--color-accent);
+  }
+}
+
+@mixin floating {
+  @include part('tooltip', 'trigger') {
+    @include inline-trigger;
+  }
+
+  @include part('tooltip', 'content') {
+    @include floating-surface;
+    max-width: 18rem;
+    padding: var(--space-1) var(--space-2);
+  }
+
+  @include part('hover-card', 'trigger') {
+    @include inline-trigger;
+    cursor: pointer;
+  }
+
+  @include part('hover-card', 'content') {
+    @include floating-surface;
+    display: grid;
+    width: max-content;
+    max-width: 22rem;
+
+    &[data-pinned] {
+      border-color: var(--color-accent);
+    }
+  }
+
+  @include part('hover-card', 'header') {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+    border-bottom: var(--border-width-xs) solid var(--color-border);
+  }
+
+  @include part('hover-card', 'title') {
+    @include label-caps;
+    color: var(--color-accent);
+  }
+
+  @include part('hover-card', 'body') {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  @each $scope in ('popover', 'menu') {
+    @include part($scope, 'trigger') {
+      @include button-face;
+    }
+
+    @include part($scope, 'positioner') {
+      z-index: var(--layer-modal);
+    }
+  }
+
+  @include part('popover', 'content') {
+    @include floating-surface;
+    min-width: 14rem;
+    max-width: 24rem;
+  }
+
+  @include part('popover', 'header') {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+    border-bottom: var(--border-width-xs) solid var(--color-border);
+  }
+
+  @include part('popover', 'title') {
+    margin: 0;
+    @include label-caps;
+    color: var(--color-accent);
+  }
+
+  @include part('popover', 'close-trigger') {
+    @include button-face;
+    @include button-icon-only;
+    margin-left: auto;
+    border-color: transparent;
+    background: transparent;
+  }
+
+  @include part('popover', 'body') {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-3);
+  }
+
+  @include part('menu', 'content') {
+    @include floating-surface;
+    min-width: 11rem;
+    margin: 0;
+    padding: var(--space-1);
+    list-style: none;
+  }
+
+  @include part('menu', 'item') {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    cursor: pointer;
+    user-select: none;
+
+    &[data-highlighted] {
+      background: rgb(var(--color-accent-a10));
+      color: var(--color-accent);
+    }
+
+    &[data-danger] {
+      color: var(--color-danger);
+
+      &[data-highlighted] {
+        background: var(--color-danger-subtle);
+      }
+    }
+
+    &[data-disabled] {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  @include part('menu', 'separator') {
+    height: var(--border-width-xs);
+    margin: var(--space-1) 0;
+    background: var(--color-border);
+  }
+}

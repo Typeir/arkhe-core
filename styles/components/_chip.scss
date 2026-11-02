@@ -1,0 +1,64 @@
+/**
+ * @fileoverview Chip: a tag with pointed ends, an optional icon and an
+ * optional remove button. Tones tint border and text.
+ */
+
+@use '../part' as *;
+@use '../shape' as *;
+@use '../motion' as *;
+
+@mixin chip {
+  @include part('chip', 'root') {
+    --chip-tone: var(--color-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    max-width: 100%;
+    padding-block: 0.15rem;
+    @include pill;
+    border: var(--border-width-xs) solid var(--color-border-secondary);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--font-size-small);
+    line-height: 1.3;
+    white-space: nowrap;
+
+    &[data-tone='accent'] {
+      --chip-tone: var(--color-accent);
+    }
+
+    &[data-tone='emphasis'] {
+      --chip-tone: var(--color-emphasis);
+    }
+
+    &[data-tone='warning'] {
+      --chip-tone: var(--color-warning);
+    }
+
+    &[data-tone='danger'] {
+      --chip-tone: var(--color-danger);
+    }
+
+    &:not([data-tone='neutral']) {
+      border-color: color-mix(in oklab, var(--chip-tone) 55%, transparent);
+      color: var(--chip-tone);
+    }
+  }
+
+  @include part('chip', 'remove') {
+    display: inline-flex;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.7;
+    @include grows(var(--scale-hover-icon));
+    @include focus-ring;
+
+    &:hover {
+      opacity: 1;
+      color: var(--color-danger);
+    }
+  }
+}

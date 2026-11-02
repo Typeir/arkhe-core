@@ -1,0 +1,19 @@
+/**
+ * @fileoverview Part selector: one component part inside an `.arkhe` root.
+ * Matches the Zag 1.x attribute pair and the Zag 2.x single attribute.
+ */
+
+/**
+ * Styles `$part` of component `$scope`.
+ *
+ * @param {string} $scope - Component name.
+ * @param {string} $part - Part name.
+ */
+@mixin part($scope, $part) {
+  :is(:where(.arkhe), :where(.arkhe) *):is(
+    [data-scope='#{$scope}'][data-part='#{$part}'],
+    [data-#{$scope}-#{$part}]
+  ) {
+    @content;
+  }
+}

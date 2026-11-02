@@ -1,0 +1,125 @@
+/**
+ * @fileoverview Motion: hover grow and press shrink, accent glow, row slide,
+ * keyframes shared by components. Everything stays still under reduced motion.
+ */
+
+/**
+ * Wraps rules that apply only under reduced motion.
+ */
+@mixin still {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+/**
+ * Grows on hover and shrinks on press.
+ *
+ * @param {number} $scale - Hover scale.
+ */
+@mixin grows($scale: var(--scale-hover)) {
+  transition:
+    background-color var(--dur-2) var(--ease-springy),
+    border-color var(--dur-2) ease,
+    color var(--dur-2) ease,
+    filter var(--dur-2) ease,
+    transform var(--dur-1) ease;
+
+  @media (prefers-reduced-motion: no-preference) {
+    &:hover:not(:disabled, [aria-disabled='true']) {
+      transform: scale($scale);
+    }
+
+    &:active:not(:disabled, [aria-disabled='true']) {
+      transform: scale(var(--scale-press));
+    }
+  }
+
+  @include still {
+    transition: none;
+  }
+}
+
+/**
+ * Accent glow on hover and keyboard focus.
+ *
+ * @param {length} $size - Glow radius.
+ */
+@mixin glows($size: 4px) {
+  &:hover:not(:disabled, [aria-disabled='true']),
+  &:focus-visible {
+    filter: drop-shadow(0 0 #{$size} var(--color-accent));
+  }
+}
+
+/**
+ * Slides a row sideways on hover.
+ */
+@mixin slides {
+  transition: transform var(--dur-4) var(--ease-springy);
+
+  &:hover {
+    transform: translateX(var(--shift-hover));
+  }
+
+  @include still {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+/**
+ * Fades and lifts in when shown; fades out when `hidden` is set. The element
+ * must stay mounted: the `hidden` attribute drives both directions.
+ *
+ * @param {string} $display - Display while shown.
+ * @param {length} $lift - Travel on entry and exit.
+ */
+@mixin reveal($display: block, $lift: 0.5rem) {
+  display: $display;
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity var(--dur-3) var(--ease-out-quart),
+    translate var(--dur-3) var(--ease-out-quart),
+    display var(--dur-3) allow-discrete;
+
+  @starting-style {
+    opacity: 0;
+    translate: 0 $lift;
+  }
+
+  &[hidden] {
+    display: none;
+    opacity: 0;
+    translate: 0 $lift;
+  }
+
+  @include still {
+    transition: none;
+  }
+}
+
+/**
+ * Shared keyframes: sweep across, turn.
+ */
+@mixin keyframes {
+  @keyframes arkhe-sweep {
+    from {
+      background-position: 100% 0;
+    }
+
+    to {
+      background-position: -100% 0;
+    }
+  }
+
+  @keyframes arkhe-turn {
+    to {
+      rotate: 1turn;
+    }
+  }
+}

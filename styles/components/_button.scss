@@ -1,0 +1,121 @@
+/**
+ * @fileoverview Button: square, grows on hover, glows on focus. Variants
+ * default, primary, ghost, danger; icon-only buttons are square or rhombus.
+ */
+
+@use '../part' as *;
+@use '../motion' as *;
+@use '../shape' as *;
+
+/**
+ * The default button look: square face, hover accent, press, focus ring,
+ * disabled dimming. Any clickable part reuses it.
+ */
+@mixin button-face {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width-xs) solid var(--color-secondary);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  @include grows;
+  @include focus-ring;
+  @include disabled;
+
+  &:hover:not(:disabled, [aria-disabled='true']) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+/**
+ * Square, icon-sized button.
+ */
+@mixin button-icon-only {
+  padding: var(--space-2);
+  aspect-ratio: 1;
+
+  @media (prefers-reduced-motion: no-preference) {
+    &:hover:not(:disabled, [aria-disabled='true']) {
+      transform: scale(var(--scale-hover-icon));
+    }
+  }
+}
+
+/**
+ * Icon-only rhombus: the face turns 45 degrees and the icon turns back.
+ * Margins clear the corners; on coarse pointers the hit area grows to
+ * `--hit-min`.
+ */
+@mixin button-rhombus {
+  position: relative;
+  padding: 0;
+  aspect-ratio: auto;
+  @include rhombus;
+  @include rhombus-size(var(--button-rhombus), $room: true);
+
+  @media (pointer: coarse) {
+    &::before {
+      content: '';
+      position: absolute;
+      inset: calc((var(--button-rhombus) - var(--hit-min)) / 2);
+    }
+  }
+}
+
+@mixin button {
+  @include part('button', 'root') {
+    @include button-face;
+
+    &[aria-pressed='true'] {
+      border-color: var(--color-accent);
+      background: rgb(var(--color-accent-a10));
+      color: var(--color-accent);
+    }
+
+    &[data-variant='primary'] {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+
+      &:hover:not(:disabled, [aria-disabled='true']) {
+        background: rgb(var(--color-accent-a20));
+      }
+    }
+
+    &[data-variant='ghost'] {
+      border-color: transparent;
+      background: transparent;
+      color: var(--color-text-secondary);
+    }
+
+    &[data-variant='danger'] {
+      border-color: var(--color-danger);
+      color: var(--color-danger);
+
+      &:hover:not(:disabled, [aria-disabled='true']) {
+        background: var(--color-danger-subtle);
+        color: var(--color-danger);
+      }
+    }
+
+    &[data-icon-only] {
+      @include button-icon-only;
+    }
+
+    &[data-icon-only][data-shape='rhombus'] {
+      @include button-rhombus;
+    }
+  }
+
+  @include part('button', 'icon') {
+    display: inline-flex;
+  }
+}

@@ -1,0 +1,34 @@
+/**
+ * @fileoverview Text: truncation, small caps labels, breakpoints.
+ */
+
+/**
+ * Cuts overflowing text with an ellipsis on one line.
+ */
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/**
+ * Small uppercase label, as above fields and in table heads.
+ */
+@mixin label-caps {
+  font-size: var(--font-size-tiny);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+/**
+ * Wraps rules for viewports up to `$max`.
+ *
+ * @param {length} $max - Largest viewport width.
+ */
+@mixin below($max) {
+  @media (max-width: $max) {
+    @content;
+  }
+}

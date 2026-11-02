@@ -1,0 +1,127 @@
+/**
+ * @fileoverview Feedback: icons, skeleton placeholders, progress rails and
+ * status lines.
+ */
+
+@use '../part' as *;
+@use '../motion' as *;
+@use '../shape' as *;
+
+@mixin feedback {
+  @include part('icon', 'root') {
+    display: inline-flex;
+    flex: none;
+    width: 1em;
+    height: 1em;
+
+    > svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  @include part('skeleton', 'group') {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  @include part('skeleton', 'root') {
+    display: block;
+    width: var(--skeleton-width, 100%);
+    height: var(--skeleton-height, 0.8em);
+    background: linear-gradient(
+        100deg,
+        transparent 30%,
+        var(--skeleton-glint-1) 45%,
+        var(--skeleton-glint-2) 50%,
+        transparent 65%
+      )
+      var(--skeleton-surface);
+    background-size: 200% 100%;
+    opacity: 0.5;
+    animation: arkhe-sweep 1.6s linear infinite;
+
+    &[data-shape='block'] {
+      height: var(--skeleton-height, 4rem);
+    }
+
+    @include still {
+      animation: none;
+    }
+  }
+
+  @include part('progress', 'root') {
+    display: grid;
+    gap: var(--space-1);
+
+    &[data-over] [data-part='fill'] {
+      background: var(--color-error);
+    }
+  }
+
+  @include part('progress', 'value') {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-tiny);
+    color: var(--color-text-secondary);
+    text-align: end;
+  }
+
+  @include part('progress', 'track') {
+    position: relative;
+    block-size: 3px;
+    background: var(--color-surface);
+  }
+
+  @include part('progress', 'fill') {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: calc(var(--progress, 0) * 100%);
+    background: linear-gradient(
+      to right,
+      var(--color-accent),
+      var(--color-actionable)
+    );
+    transition: inline-size var(--dur-3) var(--ease-out-quart);
+
+    @include still {
+      transition: none;
+    }
+  }
+
+  @include part('progress', 'marker') {
+    position: absolute;
+    inset-block: -3px;
+    inset-inline-start: calc(var(--at) * 100%);
+    inline-size: var(--border-width-xs);
+    background: var(--color-border-secondary);
+
+    &[data-reached] {
+      background: var(--color-bg);
+    }
+  }
+
+  @include part('status', 'root') {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border: var(--border-width-xs) dashed var(--color-border);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-small);
+
+    &[data-kind='error'] {
+      border-style: solid;
+      border-color: color-mix(in oklab, var(--color-error) 50%, transparent);
+      color: var(--color-error);
+    }
+
+    &[data-kind='loading'] [data-scope='icon'][data-part='root'] {
+      animation: arkhe-turn 1.2s linear infinite;
+
+      @include still {
+        animation: none;
+      }
+    }
+  }
+}

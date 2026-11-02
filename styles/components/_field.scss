@@ -1,0 +1,120 @@
+/**
+ * @fileoverview Field: caps label with an optional readout, the control,
+ * then a hint or an error. Text inputs and text areas share one look.
+ */
+
+@use '../part' as *;
+@use '../shape' as *;
+@use '../text' as *;
+
+@mixin control-surface {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width-xs) solid var(--color-secondary);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-base);
+  transition: border-color var(--dur-2) ease;
+  @include focus-ring;
+  @include disabled(0.6);
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-border-secondary);
+  }
+
+  &:focus-visible {
+    border-color: var(--color-accent);
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--color-error);
+  }
+
+  &::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.7;
+  }
+}
+
+/**
+ * A frame around a composite control (input plus buttons): the border sits
+ * on the frame, which lights on hover and while anything inside has focus.
+ */
+@mixin control-frame {
+  border: var(--border-width-xs) solid var(--color-secondary);
+  background: var(--color-bg);
+  transition: border-color var(--dur-2) ease;
+
+  &:hover,
+  &[data-focus] {
+    border-color: var(--color-accent);
+  }
+
+  &[data-invalid] {
+    border-color: var(--color-error);
+  }
+}
+
+/**
+ * A borderless input living inside a `control-frame`.
+ */
+@mixin framed-input {
+  min-width: 0;
+  padding: var(--space-2);
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-base);
+  outline: none;
+}
+
+@mixin field {
+  @include part('field', 'root') {
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--font-size-base);
+  }
+
+  @include part('field', 'head') {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  @include part('field', 'label') {
+    @include label-caps;
+  }
+
+  @include part('field', 'readout') {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-small);
+    color: var(--color-accent);
+  }
+
+  @include part('field', 'hint') {
+    margin: 0;
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+  }
+
+  @include part('field', 'error') {
+    margin: 0;
+    font-size: var(--font-size-small);
+    color: var(--color-error);
+  }
+
+  @include part('text-input', 'root') {
+    @include control-surface;
+  }
+
+  @include part('text-area', 'root') {
+    @include control-surface;
+    min-height: 5em;
+    resize: vertical;
+    @include scrollbar-thin;
+  }
+}

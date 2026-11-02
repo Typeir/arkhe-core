@@ -1,0 +1,87 @@
+/**
+ * @fileoverview Number field: caps label over a square control, step
+ * buttons either side of a centred mono input. A rhombus blooms behind a
+ * step button on hover.
+ */
+
+@use '../part' as *;
+@use '../motion' as *;
+@use '../shape' as *;
+@use '../text' as *;
+@use 'field' as *;
+
+@mixin numeric {
+  @include part('number-input', 'root') {
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--font-size-base);
+  }
+
+  @include part('number-input', 'label') {
+    @include label-caps;
+  }
+
+  @include part('number-input', 'control') {
+    display: grid;
+    grid-template-columns: 2rem 1fr 2rem;
+    @include control-frame;
+  }
+
+  @include part('number-input', 'input') {
+    @include framed-input;
+    font-family: var(--font-mono);
+    text-align: center;
+  }
+
+  @each $trigger in ('increment-trigger', 'decrement-trigger') {
+    @include part('number-input', $trigger) {
+      position: relative;
+      isolation: isolate;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      @include focus-ring;
+
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        margin: auto;
+        @include rhombus($upright: false);
+        @include rhombus-size(0.875rem);
+        background: rgb(var(--color-accent-a20));
+        scale: 0.4;
+        opacity: 0;
+        transition:
+          scale var(--dur-2) var(--ease-springy),
+          opacity var(--dur-2) ease;
+      }
+
+      &:hover:not([data-disabled]) {
+        color: var(--color-accent);
+
+        &::before {
+          scale: 1;
+          opacity: 1;
+        }
+      }
+
+      &[data-disabled] {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      @include still {
+        &::before {
+          transition: none;
+        }
+      }
+    }
+  }
+}

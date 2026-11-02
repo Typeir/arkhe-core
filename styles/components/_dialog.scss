@@ -1,0 +1,83 @@
+/**
+ * @fileoverview Modal: dimmed backdrop, a square panel centred in the
+ * viewport. Entry and exit run on CSS transitions keyed to `hidden`.
+ */
+
+@use '../part' as *;
+@use '../motion' as *;
+@use '../shape' as *;
+@use 'button' as *;
+
+@mixin dialog {
+  @include part('dialog', 'trigger') {
+    @include button-face;
+  }
+
+  @include part('dialog', 'backdrop') {
+    position: fixed;
+    inset: 0;
+    z-index: var(--layer-modal);
+    background: rgb(var(--color-overlay));
+    @include reveal(block, 0);
+  }
+
+  @include part('dialog', 'positioner') {
+    position: fixed;
+    inset: 0;
+    z-index: var(--layer-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+    pointer-events: none;
+  }
+
+  @include part('dialog', 'content') {
+    position: relative;
+    box-sizing: border-box;
+    width: min(32rem, 100%);
+    max-height: calc(100dvh - 2 * var(--space-4));
+    overflow: auto;
+    border: var(--border-width-xs) solid var(--color-border-secondary);
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: 0 1rem 3rem rgb(var(--color-shadow));
+    pointer-events: auto;
+    outline: none;
+    @include scrollbar-thin;
+    @include reveal(block);
+  }
+
+  @include part('dialog', 'header') {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: var(--border-width-xs) solid var(--color-border);
+  }
+
+  @include part('dialog', 'title') {
+    margin: 0;
+    font-family: var(--font-headings);
+    font-size: 1.25em;
+    font-weight: 400;
+    color: var(--color-accent);
+  }
+
+  @include part('dialog', 'close-trigger') {
+    @include button-face;
+    @include button-icon-only;
+  }
+
+  @include part('dialog', 'body') {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-4);
+  }
+
+  @include part('dialog', 'description') {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+}

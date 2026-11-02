@@ -1,0 +1,80 @@
+/**
+ * @fileoverview Tabs: caps triggers on a rule, an accent bar with a rhombus
+ * that slides to the selected tab. Zag sets the bar's transition inline from
+ * the `--transition-*` variables, so those carry the timing.
+ */
+
+@use '../part' as *;
+@use '../motion' as *;
+@use '../shape' as *;
+@use '../text' as *;
+
+@mixin tabs {
+  @include part('tabs', 'root') {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  @include part('tabs', 'list') {
+    position: relative;
+    display: flex;
+    border-bottom: var(--border-width-xs) solid var(--color-border);
+    overflow: auto clip;
+    @include scrollbar-thin;
+  }
+
+  @include part('tabs', 'trigger') {
+    flex: 1 0 auto;
+    padding: var(--space-2) var(--space-3);
+    border: 0;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font: inherit;
+    cursor: pointer;
+    @include label-caps;
+    transition: color var(--dur-2) ease;
+    @include focus-ring;
+
+    &:hover:not([data-disabled]) {
+      color: var(--color-text);
+    }
+
+    &[data-selected] {
+      color: var(--color-accent);
+    }
+
+    &[data-disabled] {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  @include part('tabs', 'indicator') {
+    --transition-duration: var(--dur-3);
+    --transition-timing-function: var(--ease-out-quart);
+
+    @include still {
+      --transition-duration: 0ms;
+    }
+    bottom: -1px;
+    width: var(--width);
+    height: var(--border-width-s);
+    background: var(--color-accent);
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: -3px;
+      margin-left: -4px;
+      @include rhombus($upright: false);
+      @include rhombus-size(8px);
+      background: var(--color-accent);
+    }
+  }
+
+  @include part('tabs', 'content') {
+    color: var(--color-text);
+    @include focus-ring;
+  }
+}
