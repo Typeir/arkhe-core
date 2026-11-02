@@ -1,8 +1,9 @@
 /**
  * @fileoverview Where focus goes when a modal closes and its opener is gone.
- * On open, the element that had focus is kept with a ranked list of nearby
- * nodes: its siblings, then its parent's, then its grandparent's, nearest
- * first, alternating older and newer. On close, a live opener wins; else the
+ * On open, the element that had focus is kept, or, when focus sits on the
+ * body as after a mouse click in Safari, the last element pressed. With it
+ * goes a ranked list of nearby nodes: its siblings, then its parent's, then
+ * its grandparent's, nearest first, alternating older and newer. On close, a live opener wins; else the
  * first node still in the page gives itself or its first focusable child;
  * else nothing, and focus falls to the body.
  *
@@ -99,11 +100,30 @@ export function focusableIn(node: Element): HTMLElement | null {
 export class FocusReturn {
   private opened = false;
   private opener: Element | null = null;
+  private pressed: Element | null = null;
   private ranked: Element[] = [];
 
   /**
+   * Remembers the last element pressed in `root`, the opener when a click
+   * leaves focus on the body. Call while the modal is mounted.
+   *
+   * @param {RootNode} root - Document or shadow root of the modal.
+   * @returns {() => void} Stops listening.
+   */
+  watch(root: RootNode): () => void {
+    const press = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      this.pressed = target.closest(FOCUSABLE) ?? target;
+    };
+    root.addEventListener('pointerdown', press, true);
+    return () => root.removeEventListener('pointerdown', press, true);
+  }
+
+  /**
    * Feeds the wanted open state. The first `true` of each opening keeps the
-   * root's focused element and ranks its neighbours.
+   * root's focused element, else the last one pressed, and ranks its
+   * neighbours.
    *
    * @param {boolean} open - Open state about to apply.
    * @param {RootNode} root - Document or shadow root of the modal.
@@ -113,7 +133,8 @@ export class FocusReturn {
     if (open && !this.opened) {
       const active = root.activeElement;
       const body = active?.ownerDocument.body;
-      this.opener = active && active !== body ? active : null;
+      const pressed = this.pressed?.isConnected ? this.pressed : null;
+      this.opener = active && active !== body ? active : pressed;
       this.ranked = this.opener ? focusCandidates(this.opener) : [];
     }
     this.opened = open;
