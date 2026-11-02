@@ -1,7 +1,9 @@
 /**
  * @fileoverview Floating parts: tooltip, hover card, popover, menu. One
  * square surface for all; hint triggers read as dotted inline text.
- * Entry and exit run on CSS transitions keyed to `hidden`.
+ * Entry and exit run on CSS transitions keyed to `hidden`. Every positioner
+ * sits on `--layer-floating`, above a modal, so a part opened inside a modal
+ * shows over it.
  */
 
 @use '../part' as *;
@@ -47,7 +49,29 @@
   }
 }
 
+/**
+ * A hint positioner that carries `hidden` itself: it keeps its box until
+ * the content's exit transition ends.
+ */
+@mixin hint-positioner {
+  z-index: var(--layer-floating);
+  display: block;
+  transition: display var(--dur-3) allow-discrete;
+
+  &[hidden] {
+    display: none;
+  }
+
+  @include still {
+    transition: none;
+  }
+}
+
 @mixin floating {
+  @include part('tooltip', 'positioner') {
+    @include hint-positioner;
+  }
+
   @include part('tooltip', 'trigger') {
     @include inline-trigger;
   }
@@ -56,6 +80,10 @@
     @include floating-surface;
     max-width: 18rem;
     padding: var(--space-1) var(--space-2);
+  }
+
+  @include part('hover-card', 'positioner') {
+    @include hint-positioner;
   }
 
   @include part('hover-card', 'trigger') {
@@ -79,7 +107,8 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-2);
-    padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+    padding-block: var(--space-1);
+    padding-inline: var(--space-3) var(--space-1);
     border-bottom: var(--border-width-xs) solid var(--color-border);
   }
 
@@ -100,7 +129,7 @@
     }
 
     @include part($scope, 'positioner') {
-      z-index: var(--layer-modal);
+      z-index: var(--layer-floating);
     }
   }
 
@@ -115,7 +144,8 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-2);
-    padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+    padding-block: var(--space-1);
+    padding-inline: var(--space-3) var(--space-1);
     border-bottom: var(--border-width-xs) solid var(--color-border);
   }
 
@@ -128,7 +158,7 @@
   @include part('popover', 'close-trigger') {
     @include button-face;
     @include button-icon-only;
-    margin-left: auto;
+    margin-inline-start: auto;
     border-color: transparent;
     background: transparent;
   }
