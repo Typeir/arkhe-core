@@ -102,7 +102,7 @@ export function hideShadowSiblings(content: Element): () => void {
       sibling.setAttribute('aria-hidden', 'true');
       hidden.push(sibling);
     }
-    if (parent === root) break;
+    if (parent.nodeType === 11) break;
     node = parent as Element;
   }
   return () => {
