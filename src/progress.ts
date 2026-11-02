@@ -41,8 +41,8 @@ export interface ProgressState {
 }
 
 /**
- * Computes the bar for `value` out of `max`. Markers outside (0, max) and
- * non-finite inputs are dropped.
+ * Computes the bar for `value` out of `max`. Markers outside (0, max),
+ * repeated markers and non-finite inputs are dropped.
  *
  * @function progressState
  * @param {number} value - Current amount.
@@ -65,7 +65,7 @@ export function progressState(
     ratio: Math.min(1, Math.max(0, safe / max)),
     over: safe > max,
     overBy: Math.max(0, Number((safe - max).toPrecision(12))),
-    markers: markers
+    markers: [...new Set(markers)]
       .filter((at) => Number.isFinite(at) && at > 0 && at < max)
       .map((at) => ({ at: at / max, reached: safe >= at })),
   };

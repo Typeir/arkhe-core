@@ -35,6 +35,7 @@ export interface TabItem {
  * @property {string} [value] - Selected value; makes the tabs controlled.
  * @property {string} [defaultValue] - First value when uncontrolled.
  * @property {(value: string) => void} [onValueChange] - Selection callback.
+ * @property {Set<string>} [warned] - Unknown values this instance warned about; the port keeps one per instance.
  * @property {() => RootNode} getRootNode - Root node for Zag.
  */
 export interface TabsMachineInput {
@@ -44,10 +45,9 @@ export interface TabsMachineInput {
   readonly value?: string;
   readonly defaultValue?: string;
   readonly onValueChange?: (value: string) => void;
+  readonly warned?: Set<string>;
   readonly getRootNode: () => RootNode;
 }
-
-const warned = new Set<string>();
 
 /**
  * Hashes text to a short base-36 string (djb2).
@@ -99,16 +99,19 @@ export function tabIds(id: string): {
 
 /**
  * Returns `value` when it names an enabled tab, else the first enabled tab.
- * Warns once per unknown value.
+ * Warns once per unknown value held in `warned`; without it, every call
+ * with an unknown value warns.
  *
  * @function resolveTabValue
  * @param {string | undefined} value - Requested value.
  * @param {readonly TabItem[]} items - Tabs.
+ * @param {Set<string>} [warned] - Unknown values already warned about.
  * @returns {string | undefined} Value to show; undefined when no tab is enabled.
  */
 export function resolveTabValue(
   value: string | undefined,
   items: readonly TabItem[],
+  warned: Set<string> = new Set(),
 ): string | undefined {
   const enabled = items.filter((item) => !item.disabled);
   if (value !== undefined && enabled.some((item) => item.value === value)) {
@@ -136,10 +139,12 @@ export function tabsMachineProps(input: TabsMachineInput) {
   return definedOnly({
     id: input.id,
     ids: tabIds(input.id),
-    value: controlled ? resolveTabValue(input.value, input.items) : undefined,
+    value: controlled
+      ? resolveTabValue(input.value, input.items, input.warned)
+      : undefined,
     defaultValue: controlled
       ? undefined
-      : resolveTabValue(input.defaultValue, input.items),
+      : resolveTabValue(input.defaultValue, input.items, input.warned),
     translations: { listLabel: input.label },
     onValueChange: (details: { value: string }) =>
       input.onValueChange?.(details.value),

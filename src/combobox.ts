@@ -13,7 +13,7 @@ import type { RootNode } from './environment.js';
 import type { EventNames } from './events.js';
 import { floatingMachineProps, type Placement } from './floating.js';
 import { formatLabel, type ArkheLabels } from './labels.js';
-import { definedOnly } from './machine.js';
+import { definedOnly, uniqueByValue } from './machine.js';
 
 /**
  * One choice.
@@ -101,7 +101,7 @@ export function matchOption(option: ComboboxOption, query: string): boolean {
 
 /**
  * Narrows `options` to those matching `query`. An empty query, or a `false`
- * filter, keeps them all.
+ * filter, keeps them all. An option repeating an earlier value is dropped.
  *
  * @function filterOptions
  * @template {ComboboxOption} T
@@ -115,8 +115,9 @@ export function filterOptions<T extends ComboboxOption>(
   query: string,
   filter: OptionFilter<T> = matchOption,
 ): T[] {
-  if (filter === false || !query.trim()) return [...options];
-  return options.filter((option) => filter(option, query));
+  const unique = uniqueByValue(options);
+  if (filter === false || !query.trim()) return unique;
+  return unique.filter((option) => filter(option, query));
 }
 
 /**

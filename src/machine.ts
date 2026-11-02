@@ -21,3 +21,24 @@ export function definedOnly<T extends object>(props: T): T {
     Object.entries(props).filter(([, value]) => value !== undefined),
   ) as T;
 }
+
+/**
+ * Keeps the first item for each value and drops later repeats. Zag keys
+ * items, ids and selection by value, and Svelte's keyed each throws on a
+ * repeated key, so both ports render the same unique list.
+ *
+ * @function uniqueByValue
+ * @template {{ value: unknown }} T
+ * @param {readonly T[]} items - Items, possibly with repeated values.
+ * @returns {T[]} Items with unique values, in order.
+ */
+export function uniqueByValue<T extends { readonly value: unknown }>(
+  items: readonly T[],
+): T[] {
+  const seen = new Set<unknown>();
+  return items.filter((item) => {
+    if (seen.has(item.value)) return false;
+    seen.add(item.value);
+    return true;
+  });
+}
