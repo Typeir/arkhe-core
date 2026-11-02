@@ -4,6 +4,7 @@
  * Entry and exit run on CSS transitions keyed to `hidden`.
  */
 
+@use '../contrast' as *;
 @use '../part' as *;
 @use '../motion' as *;
 @use '../shape' as *;
@@ -171,6 +172,13 @@
     &[data-disabled] {
       opacity: 0.4;
       cursor: not-allowed;
+    }
+
+    @include forced {
+      &[data-highlighted],
+      &[data-danger][data-highlighted] {
+        @include forced-highlight;
+      }
     }
   }
 

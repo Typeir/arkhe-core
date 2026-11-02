@@ -4,6 +4,7 @@
  * input, with caps group headings and an accent highlight.
  */
 
+@use '../contrast' as *;
 @use '../part' as *;
 @use '../motion' as *;
 @use '../shape' as *;
@@ -113,6 +114,16 @@
     &[data-disabled] {
       opacity: 0.4;
       cursor: not-allowed;
+    }
+
+    @include forced {
+      &[data-state='checked'] {
+        border-inline-start: var(--border-width-s) solid currentColor;
+      }
+
+      &[data-highlighted] {
+        @include forced-highlight;
+      }
     }
   }
 

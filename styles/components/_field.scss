@@ -3,6 +3,7 @@
  * then a hint or an error. Text inputs and text areas share one look.
  */
 
+@use '../contrast' as *;
 @use '../part' as *;
 @use '../shape' as *;
 @use '../text' as *;
@@ -54,6 +55,13 @@
 
   &[data-invalid] {
     border-color: var(--color-error);
+  }
+
+  @include forced {
+    &[data-focus] {
+      outline: var(--outline-width) solid Highlight;
+      outline-offset: 2px;
+    }
   }
 }
 
