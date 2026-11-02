@@ -1,6 +1,7 @@
 /**
  * @fileoverview Tabs rules shared by both ports: stable element ids from any
- * value, a fallback when the value matches no tab, and Zag machine props.
+ * value, a fallback when the value matches no tab or the selected tab goes
+ * away, and Zag machine props.
  *
  * @module packages/core/src/tabs
  * @version 1.0.0
@@ -122,6 +123,24 @@ export function resolveTabValue(
     );
   }
   return fallback;
+}
+
+/**
+ * Says where uncontrolled tabs must move when `items` change under them:
+ * the first enabled tab once `current` is gone or disabled, else nothing.
+ *
+ * @function staleTabFallback
+ * @param {string | null | undefined} current - Value Zag shows now.
+ * @param {readonly TabItem[]} items - Current tabs.
+ * @returns {string | undefined} Value to select, or undefined to stay put.
+ */
+export function staleTabFallback(
+  current: string | null | undefined,
+  items: readonly TabItem[],
+): string | undefined {
+  const enabled = items.filter((item) => !item.disabled);
+  if (enabled.some((item) => item.value === current)) return undefined;
+  return enabled[0]?.value;
 }
 
 /**

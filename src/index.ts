@@ -8,6 +8,7 @@
  * @since 0.1.0
  */
 
+export * from './chip.js';
 export * from './combobox.js';
 export * from './dialog.js';
 export * from './environment.js';

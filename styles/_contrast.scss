@@ -1,0 +1,37 @@
+/**
+ * @fileoverview Forced colours (Windows High Contrast): the user's palette
+ * replaces Arkhé's, gradients and shadows drop out, and every border turns
+ * one colour. Cues carried only by those get a system-colour stand-in here.
+ */
+
+/**
+ * Applies `@content` while the user forces a colour palette.
+ */
+@mixin forced {
+  @media (forced-colors: active) {
+    @content;
+  }
+}
+
+/**
+ * Paints a part in a system colour the forced palette leaves alone.
+ *
+ * @param {color} $background - System colour for the background.
+ */
+@mixin forced-paint($background) {
+  forced-color-adjust: none;
+  background: $background;
+}
+
+/**
+ * Marks the keyboard-highlighted option of a list in the system highlight
+ * pair, text and icons included.
+ */
+@mixin forced-highlight {
+  @include forced-paint(Highlight);
+  color: HighlightText;
+
+  * {
+    color: inherit;
+  }
+}

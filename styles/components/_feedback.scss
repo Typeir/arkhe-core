@@ -3,6 +3,7 @@
  * status lines.
  */
 
+@use '../contrast' as *;
 @use '../part' as *;
 @use '../motion' as *;
 @use '../shape' as *;
@@ -21,8 +22,18 @@
   }
 
   @include part('skeleton', 'group') {
+    position: relative;
     display: grid;
     gap: var(--space-2);
+  }
+
+  @include part('skeleton', 'label') {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   @include part('skeleton', 'root') {
@@ -48,6 +59,11 @@
     @include still {
       animation: none;
     }
+
+    @include forced {
+      @include forced-paint(GrayText);
+      animation: none;
+    }
   }
 
   @include part('progress', 'root') {
@@ -56,6 +72,10 @@
 
     &[data-over] [data-part='fill'] {
       background: var(--color-error);
+
+      @include forced {
+        background: Mark;
+      }
     }
   }
 
@@ -70,6 +90,10 @@
     position: relative;
     block-size: 3px;
     background: var(--color-surface);
+
+    @include forced {
+      outline: var(--border-width-xs) solid CanvasText;
+    }
   }
 
   @include part('progress', 'fill') {
@@ -87,6 +111,10 @@
     @include still {
       transition: none;
     }
+
+    @include forced {
+      @include forced-paint(Highlight);
+    }
   }
 
   @include part('progress', 'marker') {
@@ -98,6 +126,14 @@
 
     &[data-reached] {
       background: var(--color-bg);
+    }
+
+    @include forced {
+      @include forced-paint(CanvasText);
+
+      &[data-reached] {
+        background: Canvas;
+      }
     }
   }
 

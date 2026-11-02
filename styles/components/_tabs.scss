@@ -4,6 +4,7 @@
  * the `--transition-*` variables, so those carry the timing.
  */
 
+@use '../contrast' as *;
 @use '../part' as *;
 @use '../motion' as *;
 @use '../shape' as *;
@@ -70,6 +71,14 @@
       @include rhombus($upright: false);
       @include rhombus-size(8px);
       background: var(--color-accent);
+    }
+
+    @include forced {
+      @include forced-paint(Highlight);
+
+      &::after {
+        background: Highlight;
+      }
     }
   }
 
