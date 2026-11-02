@@ -41,20 +41,26 @@
 
 /**
  * A frame around a composite control (input plus buttons): the border sits
- * on the frame, which lights on hover and while anything inside has focus.
+ * on the frame, which lights on hover and while anything inside has focus,
+ * and dims with no hover light while disabled.
  */
 @mixin control-frame {
   border: var(--border-width-xs) solid var(--color-secondary);
   background: var(--color-bg);
   transition: border-color var(--dur-2) ease;
 
-  &:hover,
+  &:hover:not([data-disabled]),
   &[data-focus] {
     border-color: var(--color-accent);
   }
 
   &[data-invalid] {
     border-color: var(--color-error);
+  }
+
+  &[data-disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   @include forced {
@@ -77,6 +83,10 @@
   font: inherit;
   font-size: var(--font-size-base);
   outline: none;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
 }
 
 @mixin field {

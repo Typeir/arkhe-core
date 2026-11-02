@@ -41,7 +41,7 @@ export class NumericSync {
   private controlled: NumericValue | undefined;
   private awaitingAnswer = false;
   private focused = false;
-  private silent = false;
+  private silent = 0;
 
   /**
    * @param {() => NumericMachineApi} api - Returns the live Zag API.
@@ -49,7 +49,9 @@ export class NumericSync {
   constructor(private readonly api: () => NumericMachineApi) {}
 
   /**
-   * Reports a draft change, unless the change came from `receive`.
+   * Reports a draft change, unless the change came from `receive` or
+   * `blur`. Zag's React binding runs a sent event in a later microtask, so
+   * the silence lasts until the microtask after the send.
    *
    * @param {number} valueAsNumber - Parsed draft.
    * @param {(value: NumericValue) => void} [onValueChange] - Host callback.
@@ -59,7 +61,7 @@ export class NumericSync {
     valueAsNumber: number,
     onValueChange?: (value: NumericValue) => void,
   ): void {
-    if (this.silent) return;
+    if (this.silent > 0) return;
     this.awaitingAnswer = this.controlled !== undefined;
     onValueChange?.(toNumericValue(valueAsNumber));
   }
@@ -129,12 +131,14 @@ export class NumericSync {
   }
 
   private apply(value: NumericValue): void {
-    this.silent = true;
+    this.silent += 1;
     try {
       if (value === null) this.api().clearValue();
       else this.api().setValue(value);
     } finally {
-      this.silent = false;
+      queueMicrotask(() => {
+        this.silent -= 1;
+      });
     }
   }
 }

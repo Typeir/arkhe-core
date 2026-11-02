@@ -54,8 +54,12 @@
       cursor: pointer;
       @include focus-ring;
 
-      &:hover {
+      &:hover:not(:disabled) {
         color: var(--color-accent);
+      }
+
+      &:disabled {
+        cursor: not-allowed;
       }
 
       &[hidden] {
@@ -77,7 +81,7 @@
   }
 
   @include part('combobox', 'positioner') {
-    z-index: var(--layer-modal);
+    z-index: var(--layer-floating);
   }
 
   @include part('combobox', 'content') {
