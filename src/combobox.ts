@@ -12,7 +12,8 @@
 import type { RootNode } from './environment.js';
 import type { EventNames } from './events.js';
 import { floatingMachineProps, type Placement } from './floating.js';
-import { formatLabel, type ArkheLabels } from './labels.js';
+import { formatLabel, formatPlural, type ArkheLabels } from './labels.js';
+import { DEFAULT_LOCALE } from './locale.js';
 import { definedOnly, uniqueByValue } from './machine.js';
 
 /**
@@ -47,6 +48,7 @@ export type OptionFilter<T> = ((option: T, query: string) => boolean) | false;
  * @property {string} id - Instance id.
  * @property {string} label - Visible label; names the clear button.
  * @property {ArkheLabels} labels - Label templates.
+ * @property {string} [locale] - BCP 47 locale of the announced count. Defaults to `DEFAULT_LOCALE`.
  * @property {string | null} [value] - Selected value; makes the selection controlled.
  * @property {string | null} [defaultValue] - First selection when uncontrolled.
  * @property {boolean} [clearOnSelect] - Picker mode: report the choice, then empty the input.
@@ -61,6 +63,7 @@ export interface ComboboxMachineInput {
   readonly id: string;
   readonly label: string;
   readonly labels: ArkheLabels;
+  readonly locale?: string;
   readonly value?: string | null;
   readonly defaultValue?: string | null;
   readonly clearOnSelect?: boolean;
@@ -204,9 +207,7 @@ export function comboboxMachineProps(input: ComboboxMachineInput) {
       noResults: labels.comboboxEmpty,
       loading: labels.loading,
       resultsCount: (count: number) =>
-        formatLabel(count === 1 ? labels.resultOne : labels.resultMany, {
-          count,
-        }),
+        formatPlural(labels.results, count, input.locale ?? DEFAULT_LOCALE),
     },
   });
 }

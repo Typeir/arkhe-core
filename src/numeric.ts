@@ -1,6 +1,7 @@
 /**
  * @fileoverview Number field rules shared by both ports. Zag holds the draft
- * text; the outside world sees a number or `null`. `NumericSync` keeps a
+ * text and formats and parses it in the provider's locale (fi: "1 234,5";
+ * typing 1,5 works); the outside world sees a number or `null`. `NumericSync` keeps a
  * controlled value and Zag's draft in step without eating keystrokes.
  *
  * @module packages/core/src/numeric
@@ -11,6 +12,7 @@
 
 import type { RootNode } from './environment.js';
 import { formatLabel, type ArkheLabels } from './labels.js';
+import { DEFAULT_LOCALE, NUMERIC_FORMAT, formatNumber } from './locale.js';
 import { definedOnly } from './machine.js';
 
 /**
@@ -53,6 +55,7 @@ export interface NumericMachineApi {
  * @property {string} id - Instance id.
  * @property {string} label - Visible label; names the step buttons.
  * @property {ArkheLabels} labels - Label templates.
+ * @property {string} [locale] - BCP 47 locale for formatting and parsing. Defaults to `DEFAULT_LOCALE`.
  * @property {NumericValue} [value] - Controlled value.
  * @property {NumericValue} [defaultValue] - First value when uncontrolled.
  * @property {number} [min] - Lowest value.
@@ -64,6 +67,7 @@ export interface NumericMachineInput extends NumericBounds {
   readonly id: string;
   readonly label: string;
   readonly labels: ArkheLabels;
+  readonly locale?: string;
   readonly value?: NumericValue;
   readonly defaultValue?: NumericValue;
   readonly step?: number;
@@ -82,14 +86,20 @@ export function toNumericValue(valueAsNumber: number): NumericValue {
 }
 
 /**
- * Renders a field value as draft text.
+ * Renders a field value as draft text in `locale`.
  *
  * @function formatDraft
  * @param {NumericValue | undefined} value - Field value.
+ * @param {string} [locale] - BCP 47 locale. Defaults to `DEFAULT_LOCALE`.
  * @returns {string} Draft; empty for null or undefined.
  */
-export function formatDraft(value: NumericValue | undefined): string {
-  return value === null || value === undefined ? '' : String(value);
+export function formatDraft(
+  value: NumericValue | undefined,
+  locale: string = DEFAULT_LOCALE,
+): string {
+  return value === null || value === undefined
+    ? ''
+    : formatNumber(value, locale);
 }
 
 /**
@@ -123,9 +133,12 @@ export function clampToBounds(
  */
 export function numericMachineProps(input: NumericMachineInput) {
   const initial = input.value !== undefined ? input.value : input.defaultValue;
+  const locale = input.locale ?? DEFAULT_LOCALE;
   return definedOnly({
     id: input.id,
-    defaultValue: formatDraft(initial),
+    locale,
+    formatOptions: NUMERIC_FORMAT,
+    defaultValue: formatDraft(initial, locale),
     min: input.min,
     max: input.max,
     step: input.step,

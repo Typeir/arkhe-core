@@ -21,6 +21,7 @@ export * from './focusReturn.js';
 export * from './icons.js';
 export * from './labels.js';
 export * from './loader.js';
+export * from './locale.js';
 export * from './machine.js';
 export * from './menu.js';
 export * from './numeric.js';

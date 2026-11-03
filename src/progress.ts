@@ -79,18 +79,24 @@ export function progressState(
  * @param {ProgressState} state - Bar state.
  * @param {number} max - Amount that fills the bar.
  * @param {ArkheLabels} labels - Label templates.
+ * @param {string} [locale] - BCP 47 locale for the numbers.
  * @returns {string} Value text, e.g. `3 of 10`.
  */
 export function progressValueText(
   state: ProgressState,
   max: number,
   labels: ArkheLabels,
+  locale?: string,
 ): string {
   return state.over
-    ? formatLabel(labels.progressOver, {
-        value: state.value,
-        max,
-        over: state.overBy,
-      })
-    : formatLabel(labels.progressValue, { value: state.value, max });
+    ? formatLabel(
+        labels.progressOver,
+        {
+          value: state.value,
+          max,
+          over: state.overBy,
+        },
+        locale,
+      )
+    : formatLabel(labels.progressValue, { value: state.value, max }, locale);
 }
