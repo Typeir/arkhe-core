@@ -15,11 +15,15 @@
  * @property {string} focus - Focus prop.
  * @property {string} blur - Blur prop.
  * @property {string} keydown - Key-down prop.
+ * @property {string} pointerdown - Pointer-down prop.
+ * @property {string} click - Click prop.
  */
 export interface EventNames {
   readonly focus: string;
   readonly blur: string;
   readonly keydown: string;
+  readonly pointerdown: string;
+  readonly click: string;
 }
 
 /**
@@ -32,6 +36,8 @@ export const REACT_EVENTS: EventNames = {
   focus: 'onFocus',
   blur: 'onBlur',
   keydown: 'onKeyDown',
+  pointerdown: 'onPointerDown',
+  click: 'onClick',
 };
 
 /**
@@ -44,4 +50,6 @@ export const SVELTE_EVENTS: EventNames = {
   focus: 'onfocusin',
   blur: 'onfocusout',
   keydown: 'onkeydown',
+  pointerdown: 'onpointerdown',
+  click: 'onclick',
 };
