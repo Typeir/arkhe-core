@@ -12,6 +12,7 @@ export * from './announcer.js';
 export * from './chip.js';
 export * from './combobox.js';
 export * from './dialog.js';
+export * from './effects.js';
 export * from './environment.js';
 export * from './events.js';
 export * from './field.js';

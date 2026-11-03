@@ -11,6 +11,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./fx": {
+      "types": "./dist/fx/index.d.ts",
+      "default": "./dist/fx/index.js"
+    },
     "./arkhe.css": "./dist/arkhe.css",
     "./styles/*": "./styles/*"
   },

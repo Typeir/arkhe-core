@@ -1,6 +1,8 @@
 /**
  * @fileoverview Feedback: icons, skeleton placeholders, progress rails,
- * status lines and the announcer's hidden live regions.
+ * status lines and the announcer's hidden live regions. The CSS skeleton is
+ * the fallback (SSR, before the canvas engine loads, `effect` off, forced
+ * colours); it goes transparent once a canvas has painted its own group.
  */
 
 @use '../contrast' as *;
@@ -23,8 +25,12 @@
 
   @include part('skeleton', 'group') {
     position: relative;
-    display: grid;
-    gap: var(--space-2);
+    display: block;
+
+    &[data-loading] {
+      display: grid;
+      gap: var(--space-2);
+    }
   }
 
   @include part('announcer', 'region') {
@@ -64,6 +70,16 @@
 
     &[data-shape='block'] {
       height: var(--skeleton-height, 4rem);
+    }
+
+    :where([data-painted])
+      &:not(
+        :where([data-painted])
+          [data-scope='skeleton'][data-part='group']:not([data-painted])
+          *
+      ) {
+      background: transparent;
+      animation: none;
     }
 
     @include still {
