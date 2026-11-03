@@ -13,7 +13,7 @@ Arkhé's framework-free core: part attributes, labels, icon names, field ids, pr
 
 ## Source
 
-This repo is split from the Arkhé monorepo with `git subtree`. Changes go to the monorepo. The `release/core` branch carries the built `dist`; `split/core` carries only the sources.
+This repo is a read-only mirror, split from the [Arkhé monorepo](https://github.com/typeir/arkhe) with `git subtree`. Changes go to the monorepo. The `release/core` branch carries the built `dist`; `split/core` carries only the sources.
 
 ```bash
 npm install
