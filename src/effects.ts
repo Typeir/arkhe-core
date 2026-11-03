@@ -13,6 +13,8 @@
 
 import type { Fx, FxOptions } from './fx/api.js';
 
+export type { Fx, FxOptions, FxStats } from './fx/api.js';
+
 /**
  * What the loader resolves to: the `@arkhe/core/fx` module, or any object
  * with its `createFx`.
