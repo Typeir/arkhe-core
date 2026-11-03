@@ -84,6 +84,12 @@
     z-index: var(--layer-floating);
   }
 
+  @include part('combobox', 'note') {
+    @include floating-surface;
+    min-width: var(--reference-width);
+    padding: var(--space-1);
+  }
+
   @include part('combobox', 'content') {
     @include floating-surface;
     min-width: var(--reference-width);
