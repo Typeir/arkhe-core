@@ -2,8 +2,10 @@
  * @fileoverview One tile of a tiled surface: a sentinel that drives wake
  * and visibility, and a budgeted canvas allocated lazily. It paints in full
  * once when it gets a canvas, then only its visible slice. Off screen it
- * waits for spare frame time, finishes on a timer once its last reveal
- * ends, and gives its canvas back on eviction or context loss.
+ * waits for spare frame time. Once nothing in view animates, it finishes
+ * on a timer when its last started reveal ends, on screen or off, so a
+ * reveal never waits for a scroll. It gives its canvas back on eviction or
+ * context loss.
  *
  * @module packages/core/src/canvas/tile
  * @version 1.0.0
@@ -193,7 +195,10 @@ export class CanvasTile implements BudgetClient, Frameable {
       ctx.restore();
       this.owner.ctx.painted(this.owner.region);
     }
-    return this.slice.animating(t, Math.max(top, y), Math.min(bottom, y + h));
+    const top1 = Math.max(top, y);
+    const animating = this.slice.animating(t, top1, Math.min(bottom, y + h));
+    if (!animating) this.settleLater();
+    return animating;
   }
 
   /**
@@ -204,9 +209,9 @@ export class CanvasTile implements BudgetClient, Frameable {
    */
   setVisible(visible: boolean): void {
     this.visible = visible;
-    if (visible) this.ensure();
-    else if (this.owner.ctx.budget.over) this.evict();
-    else this.settleLater();
+    if (visible) return this.ensure();
+    if (this.owner.ctx.budget.over) this.evict();
+    this.settleLater();
   }
 
   /**
@@ -227,12 +232,7 @@ export class CanvasTile implements BudgetClient, Frameable {
     clearTimeout(this.settle);
     this.settle = window.setTimeout(
       () => {
-        if (
-          !this.visible &&
-          this.canvas.live &&
-          !this.slice.pending(performance.now())
-        )
-          this.finish();
+        if (!this.done && !this.slice.pending(performance.now())) this.finish();
       },
       Math.max(0, end - performance.now()) + 16,
     );

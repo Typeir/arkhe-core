@@ -51,6 +51,7 @@ export class ViewportSurface implements Frameable {
   private readonly seen = new Set<Region>();
   private dpr = 0;
   private dirty = false;
+  private settle = 0;
 
   /**
    * @param {SurfaceContext} ctx - Shared services.
@@ -193,6 +194,7 @@ export class ViewportSurface implements Frameable {
       this.ctx.painted(region);
       animating ||= slice.animating(t, top, bottom);
     }
+    if (!animating && !this.dirty) this.settleLater();
     return animating || this.dirty;
   }
 
@@ -202,6 +204,7 @@ export class ViewportSurface implements Frameable {
    * @returns {void}
    */
   destroy(): void {
+    clearTimeout(this.settle);
     removeEventListener('scroll', this.onScroll);
     for (const region of this.regions.keys())
       this.ctx.hub.unobserve(region.host, HOST_MARGIN);
@@ -219,6 +222,21 @@ export class ViewportSurface implements Frameable {
    */
   pixels(): number {
     return this.canvas.width * this.canvas.height;
+  }
+
+  private settleLater(): void {
+    clearTimeout(this.settle);
+    const ends = [...this.regions.values()]
+      .map((slice) => slice.settlesAt())
+      .filter((end) => Number.isFinite(end));
+    if (!ends.length) return;
+    const wait = Math.max(0, Math.min(...ends) - performance.now()) + 16;
+    this.settle = window.setTimeout(() => {
+      const t = performance.now();
+      for (const [region, slice] of [...this.regions])
+        if (!slice.pending(t)) this.ctx.done(region);
+      this.settleLater();
+    }, wait);
   }
 
   private readonly onScroll = (): void => {
