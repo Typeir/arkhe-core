@@ -25,5 +25,9 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json && sass --no-source-map styles/arkhe.scss dist/arkhe.css",
     "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "sass": "1.107.0",
+    "typescript": "6.0.3"
   }
 }
