@@ -1,11 +1,12 @@
 /**
  * @fileoverview Where focus goes when a modal closes and its opener is gone.
  * On open, the element that had focus is kept, or, when focus sits on the
- * body as after a mouse click in Safari, the last element pressed. With it
- * goes a ranked list of nearby nodes: its siblings, then its parent's, then
- * its grandparent's, nearest first, alternating older and newer. On close, a live opener wins; else the
- * first node still in the page gives itself or its first focusable child;
- * else nothing, and focus falls to the body.
+ * body (a page that cancels `mousedown` on its buttons), the last element
+ * pressed. With it goes a ranked list of nearby nodes: its siblings, then
+ * its parent's, then its grandparent's, nearest first, alternating older
+ * and newer. On close, a live opener wins; else the first node still in the
+ * page gives itself or its first focusable child; else nothing, and focus
+ * falls to the body.
  *
  * @module packages/core/src/focusReturn
  * @version 1.0.0
