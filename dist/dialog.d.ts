@@ -1,0 +1,73 @@
+/**
+ * @fileoverview Modal rules shared by both ports. Ports always drive Zag's
+ * dialog as controlled, keeping their own open state when the host passes
+ * none, so a server-rendered open modal can wait for its content to mount
+ * before Zag traps focus. Focus returns to `finalFocus` when it gives an
+ * element, else to the trigger part when one renders, else to whatever had
+ * focus before opening, else, when that is gone, to its nearest focusable
+ * neighbour (`FocusReturn`). Inside a shadow root the rest of that root is hidden
+ * from assistive technology too, which Zag's own hiding stops short of.
+ *
+ * @module packages/core/src/dialog
+ * @version 1.0.0
+ * @author Typeir
+ * @since 0.1.0
+ */
+import type { RootNode } from './environment.js';
+import type { FocusReturn } from './focusReturn.js';
+/**
+ * Dialog role: `alertdialog` for confirmations that need an answer.
+ *
+ * @typedef {'dialog' | 'alertdialog'} DialogRole
+ */
+export type DialogRole = 'dialog' | 'alertdialog';
+/**
+ * What a port passes to `dialogMachineProps`.
+ *
+ * @interface DialogMachineInput
+ * @property {string} id - Instance id.
+ * @property {boolean} open - Wanted open state.
+ * @property {boolean} [ready] - False until content can mount; keeps Zag closed.
+ * @property {DialogRole} [role] - Dialog role. Defaults to `dialog`.
+ * @property {(open: boolean) => void} onOpenChange - Open-state callback.
+ * @property {() => HTMLElement | null} [finalFocus] - Element to focus on close; wins over everything else.
+ * @property {FocusReturn} [focusReturn] - The instance's opener memory; the port keeps one per instance.
+ * @property {() => RootNode} getRootNode - Root node for Zag.
+ */
+export interface DialogMachineInput {
+    readonly id: string;
+    readonly open: boolean;
+    readonly ready?: boolean;
+    readonly role?: DialogRole;
+    readonly onOpenChange: (open: boolean) => void;
+    readonly finalFocus?: () => HTMLElement | null;
+    readonly focusReturn?: FocusReturn;
+    readonly getRootNode: () => RootNode;
+}
+/**
+ * Builds Zag dialog machine props.
+ *
+ * @function dialogMachineProps
+ * @param {DialogMachineInput} input - Port input.
+ * @returns {object} Machine props.
+ */
+export declare function dialogMachineProps(input: DialogMachineInput): {
+    id: string;
+    open: boolean;
+    role: DialogRole | undefined;
+    onOpenChange: (details: {
+        open: boolean;
+    }) => void;
+    finalFocusEl: (() => HTMLElement | null) | undefined;
+    getRootNode: () => RootNode;
+};
+/**
+ * Hides from assistive technology everything in `content`'s shadow root
+ * beside the path down to `content`. Outside a shadow root it does nothing:
+ * Zag already hides the document around the dialog.
+ *
+ * @function hideShadowSiblings
+ * @param {Element} content - Open dialog content.
+ * @returns {() => void} Restores what it hid.
+ */
+export declare function hideShadowSiblings(content: Element): () => void;

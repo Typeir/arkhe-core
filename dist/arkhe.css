@@ -1,0 +1,2118 @@
+@charset "UTF-8";
+/**
+ * @fileoverview Arkhé stylesheet: tokens, keyframes and every component,
+ * inside `@layer arkhe` so any unlayered host rule wins.
+ */
+/**
+ * @fileoverview Design tokens: the one place colours are written. Dark is
+ * the default; `[data-theme='light']` swaps the palette. Names follow the
+ * host app's, so an app drops its own palette instead of renaming anything.
+ */
+/**
+ * @fileoverview Motion: hover grow and press shrink, accent glow, row slide,
+ * keyframes shared by components. Everything stays still under reduced motion.
+ */
+/**
+ * Wraps rules that apply only under reduced motion.
+ */
+/**
+ * Grows on hover and shrinks on press.
+ *
+ * @param {number} $scale - Hover scale.
+ */
+/**
+ * Accent glow on hover and keyboard focus.
+ *
+ * @param {length} $size - Glow radius.
+ */
+/**
+ * Slides a row sideways on hover.
+ */
+/**
+ * Fades and lifts in when shown; fades out when `hidden` is set. The element
+ * must stay mounted: the `hidden` attribute drives both directions.
+ *
+ * @param {string} $display - Display while shown.
+ * @param {length} $lift - Travel on entry and exit.
+ */
+/**
+ * Shared keyframes: sweep across, turn.
+ */
+/**
+ * @fileoverview Button: square, grows on hover, glows on focus. Variants
+ * default, primary, ghost, danger; icon-only buttons are square or rhombus.
+ */
+/**
+ * @fileoverview Part selector: one component part inside an `.arkhe` root.
+ * Matches the Zag 1.x attribute pair and the Zag 2.x single attribute.
+ */
+/**
+ * Styles `$part` of component `$scope`.
+ *
+ * @param {string} $scope - Component name.
+ * @param {string} $part - Part name.
+ */
+/**
+ * @fileoverview Shape: square corners, hexagon pills, rhombus markers, focus
+ * ring, thin scrollbars. Corners are square unless a part is a pill; nothing
+ * is ever rounded.
+ */
+/**
+ * Fraction of the replaced square's area a rhombus keeps.
+ */
+/**
+ * Per-side scale that keeps `$rhombus-area`.
+ */
+/**
+ * Margin per unit of drawn side that clears the turned corners.
+ */
+/**
+ * Bevels a pill's ends into points: an elongated hexagon. Without
+ * `corner-shape` the pill stays square, never round.
+ */
+/**
+ * Turns a box into a rhombus and its children back upright, so icons and
+ * text inside stay level.
+ *
+ * @param {angle} $angle - Turn of the box.
+ * @param {boolean} $upright - Turns children back; off for pseudo-elements.
+ */
+/**
+ * Sizes a rhombus. `$size` is the square it replaces; the side shrinks so
+ * the rhombus keeps `$rhombus-area` of it.
+ *
+ * @param {length} $size - Side of the replaced square.
+ * @param {boolean} $room - Adds margins that clear the turned corners.
+ */
+/**
+ * A rhombus pip, for `::before` or an empty element: hollow until lit.
+ *
+ * @param {length} $size - Edge before rotating.
+ */
+/**
+ * Lights a rhombus pip.
+ */
+/**
+ * Keyboard focus ring: a straight outline that follows the shape, never a
+ * circle, and distinct from the hover glow.
+ */
+/**
+ * Thin scrollbar in the palette.
+ */
+/**
+ * Dims and blocks a disabled control.
+ *
+ * @param {number} $opacity - Opacity while disabled.
+ */
+/**
+ * The default button look: square face, hover accent, press, focus ring,
+ * disabled dimming. Any clickable part reuses it.
+ */
+/**
+ * Square, icon-sized button.
+ */
+/**
+ * Icon-only rhombus: the face turns 45 degrees and the icon turns back.
+ * Margins clear the corners; on coarse pointers the hit area grows to
+ * `--hit-min`.
+ */
+/**
+ * @fileoverview Chip: a tag with pointed ends, an optional icon and an
+ * optional remove button. Tones tint border and text.
+ */
+/**
+ * @fileoverview Combobox: caps label over a framed input with clear and open
+ * buttons; the option list is a floating surface at least as wide as the
+ * input, with caps group headings and an accent highlight.
+ */
+/**
+ * @fileoverview Forced colours (Windows High Contrast): the user's palette
+ * replaces Arkhé's, gradients and shadows drop out, and every border turns
+ * one colour. Cues carried only by those get a system-colour stand-in here.
+ */
+/**
+ * Applies `@content` while the user forces a colour palette.
+ */
+/**
+ * Paints a part in a system colour the forced palette leaves alone.
+ *
+ * @param {color} $background - System colour for the background.
+ */
+/**
+ * Marks the keyboard-highlighted option of a list in the system highlight
+ * pair, text and icons included.
+ */
+/**
+ * @fileoverview Text: truncation, small caps labels, breakpoints.
+ */
+/**
+ * Cuts overflowing text with an ellipsis on one line.
+ */
+/**
+ * Small uppercase label, as above fields and in table heads.
+ */
+/**
+ * Wraps rules for viewports up to `$max`.
+ *
+ * @param {length} $max - Largest viewport width.
+ */
+/**
+ * @fileoverview Field: caps label with an optional readout, the control,
+ * then a hint or an error. Text inputs and text areas share one look.
+ */
+/**
+ * A frame around a composite control (input plus buttons): the border sits
+ * on the frame, which lights on hover and while anything inside has focus,
+ * and dims with no hover light while disabled.
+ */
+/**
+ * A borderless input living inside a `control-frame`.
+ */
+/**
+ * @fileoverview Floating parts: tooltip, hover card, popover, menu. One
+ * square surface for all; hint triggers read as dotted inline text.
+ * Entry and exit run on CSS transitions keyed to `hidden`. Every positioner
+ * sits on `--layer-floating`, above a modal, so a part opened inside a modal
+ * shows over it.
+ */
+/**
+ * Shared look of a floating panel.
+ *
+ * @param {length} $lift - Travel on entry and exit.
+ */
+/**
+ * A trigger that reads as inline text with a dotted accent underline.
+ */
+/**
+ * A hint positioner that carries `hidden` itself: it keeps its box until
+ * the content's exit transition ends.
+ */
+/**
+ * @fileoverview Modal: dimmed backdrop, a square panel centred in the
+ * viewport. Entry and exit run on CSS transitions keyed to `hidden`.
+ */
+/**
+ * @fileoverview Feedback: icons, skeleton placeholders, progress rails,
+ * status lines and the announcer's hidden live regions. The CSS skeleton is
+ * the fallback (SSR, before the canvas engine loads, `effect` off, forced
+ * colours); it goes transparent once a canvas has painted its own group.
+ */
+/**
+ * @fileoverview Number field: caps label over a square control, step
+ * buttons either side of a centred mono input. A rhombus blooms behind a
+ * step button on hover.
+ */
+/**
+ * @fileoverview Tabs: caps triggers on a rule, an accent bar with a rhombus
+ * that slides to the selected tab. Zag sets the bar's transition inline from
+ * the `--transition-*` variables, so those carry the timing.
+ */
+@layer arkhe {
+  :root {
+    --color-bg: #111217;
+    --color-bg-secondary: #28303b;
+    --color-bg-tertiary: #1e1f26;
+    --color-text: #c8ccc7;
+    --color-text-secondary: #a1a1aa;
+    --color-accent: #8fd3a1;
+    --color-accent-hover: #7bc392;
+    --color-surface: #1b1d23;
+    --color-border: #2a2c35;
+    --color-border-secondary: #454b59;
+    --color-primary: #7fc7a3;
+    --color-secondary: #545d6a;
+    --color-actionable: #b2dfdb;
+    --color-emphasis: #8acfd4;
+    --color-success: #86efac;
+    --color-warning: #fbbf24;
+    --color-error: #f87171;
+    --color-info: #93c5fd;
+    --color-danger: #f87171;
+    --color-danger-subtle: rgb(248 113 113 / 0.2);
+    --color-shadow: 0 0 0 / 0.3;
+    --color-overlay: 0 0 0 / 0.6;
+    --color-accent-a10: 143 211 161 / 0.1;
+    --color-accent-a20: 143 211 161 / 0.2;
+    --skeleton-surface: var(--color-bg-secondary);
+    --skeleton-glint-1: #3f5a4a;
+    --skeleton-glint-2: #4d7580;
+    --skeleton-bg: var(--color-bg);
+    --skeleton-glyph-font: var(--font-headings);
+    --font-default:
+      system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+      Helvetica, Arial, sans-serif;
+    --font-mono:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+      monospace;
+    --font-headings: 'Times New Roman', Times, serif;
+    --font-size-base: 0.875rem;
+    --font-size-small: 0.75rem;
+    --font-size-tiny: 0.6875rem;
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --border-width-xs: 1px;
+    --border-width-s: 2px;
+    --outline-width: 1px;
+    --layer-modal: 100;
+    --layer-floating: 110;
+    --button-rhombus: 1.5rem;
+    --hit-min: 44px;
+    --corner-shape-pill: bevel;
+    --pill-chamfer-pad: 0px;
+    --ease-springy: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+    --ease-out-quart: cubic-bezier(0.165, 0.84, 0.44, 1);
+    --ease-in-cubic: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+    --dur-1: 120ms;
+    --dur-2: 180ms;
+    --dur-3: 240ms;
+    --dur-4: 300ms;
+    --dur-5: 500ms;
+    --scale-hover: 1.05;
+    --scale-hover-icon: 1.08;
+    --scale-press: 0.95;
+    --shift-hover: 0.3rem;
+    color-scheme: dark;
+  }
+  @supports (corner-shape: bevel) {
+    :root {
+      --pill-chamfer-pad: 0.45em;
+    }
+  }
+  :root[data-theme=light] {
+    --color-bg: #fdfdf7;
+    --color-bg-secondary: #e7eaef;
+    --color-bg-tertiary: #dbdee4;
+    --color-text: #1f2937;
+    --color-text-secondary: #6b7280;
+    --color-accent: #0070f3;
+    --color-accent-hover: #0056d6;
+    --color-surface: #eeecec;
+    --color-border: #d1ceca;
+    --color-border-secondary: var(--color-border);
+    --color-primary: #77a6ec;
+    --color-secondary: #a0a0a0;
+    --color-actionable: #ebbe7a;
+    --color-emphasis: #ebbb73;
+    --color-success: #4ade80;
+    --color-warning: #fb923c;
+    --color-error: #f87171;
+    --color-info: #60a5fa;
+    --color-danger: #f87171;
+    --color-danger-subtle: rgb(239 68 68 / 0.15);
+    --color-shadow: 0 0 0 / 0.1;
+    --color-overlay: 0 0 0 / 0.4;
+    --color-accent-a10: 0 112 243 / 0.1;
+    --color-accent-a20: 0 112 243 / 0.2;
+    --skeleton-surface: #8b93a3;
+    --skeleton-glint-1: #c9a840;
+    --skeleton-glint-2: #4f83dc;
+    color-scheme: light;
+  }
+  @keyframes arkhe-sweep {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: -100% 0;
+    }
+  }
+  @keyframes arkhe-turn {
+    to {
+      rotate: 1turn;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+  [data-button-root]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: var(--border-width-xs) solid var(--color-secondary);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--font-size-small);
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--dur-2) var(--ease-springy), border-color var(--dur-2) ease, color var(--dur-2) ease, filter var(--dur-2) ease, transform var(--dur-1) ease;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+    [data-button-root]):hover:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-hover));
+    }
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+    [data-button-root]):active:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-press));
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+    [data-button-root]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+  [data-button-root]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+  [data-button-root]):disabled, :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+  [data-button-root])[aria-disabled=true] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+  [data-button-root]):hover:not(:disabled, [aria-disabled=true]) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+  [data-button-root])[aria-pressed=true] {
+    border-color: var(--color-accent);
+    background: rgb(var(--color-accent-a10));
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+  [data-button-root])[data-variant=primary] {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+  [data-button-root])[data-variant=primary]:hover:not(:disabled, [aria-disabled=true]) {
+    background: rgb(var(--color-accent-a20));
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+  [data-button-root])[data-variant=ghost] {
+    border-color: transparent;
+    background: transparent;
+    color: var(--color-text-secondary);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+  [data-button-root])[data-variant=danger] {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+  [data-button-root])[data-variant=danger]:hover:not(:disabled, [aria-disabled=true]) {
+    background: var(--color-danger-subtle);
+    color: var(--color-danger);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+  [data-button-root])[data-icon-only] {
+    padding: var(--space-2);
+    aspect-ratio: 1;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+    [data-button-root])[data-icon-only]:hover:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-hover-icon));
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+  [data-button-root])[data-icon-only][data-shape=rhombus] {
+    position: relative;
+    padding: 0;
+    aspect-ratio: auto;
+    rotate: 45deg;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+  [data-button-root])[data-icon-only][data-shape=rhombus] > * {
+    rotate: -45deg;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+  [data-button-root])[data-icon-only][data-shape=rhombus] {
+    width: calc(var(--button-rhombus) * 0.9617692031);
+    height: calc(var(--button-rhombus) * 0.9617692031);
+    margin: calc(var(--button-rhombus) * 0.1991889239);
+  }
+  @media (pointer: coarse) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=root],
+    [data-button-root])[data-icon-only][data-shape=rhombus]::before {
+      content: "";
+      position: absolute;
+      inset: calc((var(--button-rhombus) - var(--hit-min)) / 2);
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=button][data-part=icon],
+  [data-button-icon]) {
+    display: inline-flex;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=chip][data-part=root],
+  [data-chip-root]) {
+    --chip-tone: var(--color-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    max-width: 100%;
+    padding-block: 0.15rem;
+    border-radius: 0;
+    padding-inline: calc(var(--space-2) + var(--pill-chamfer-pad));
+  }
+  @supports (corner-shape: bevel) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=chip][data-part=root],
+    [data-chip-root]) {
+      border-radius: 999px;
+      corner-shape: var(--corner-shape-pill);
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=chip][data-part=root],
+  [data-chip-root]) {
+    border: var(--border-width-xs) solid var(--color-border-secondary);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--font-size-small);
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=chip][data-part=root],
+  [data-chip-root])[data-tone=accent] {
+    --chip-tone: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=chip][data-part=root],
+  [data-chip-root])[data-tone=emphasis] {
+    --chip-tone: var(--color-emphasis);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=chip][data-part=root],
+  [data-chip-root])[data-tone=warning] {
+    --chip-tone: var(--color-warning);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=chip][data-part=root],
+  [data-chip-root])[data-tone=danger] {
+    --chip-tone: var(--color-danger);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=chip][data-part=root],
+  [data-chip-root]):not([data-tone=neutral]) {
+    border-color: color-mix(in oklab, var(--chip-tone) 55%, transparent);
+    color: var(--chip-tone);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=chip][data-part=remove],
+  [data-chip-remove]) {
+    display: inline-flex;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: background-color var(--dur-2) var(--ease-springy), border-color var(--dur-2) ease, color var(--dur-2) ease, filter var(--dur-2) ease, transform var(--dur-1) ease;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=chip][data-part=remove],
+    [data-chip-remove]):hover:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-hover-icon));
+    }
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=chip][data-part=remove],
+    [data-chip-remove]):active:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-press));
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=chip][data-part=remove],
+    [data-chip-remove]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=chip][data-part=remove],
+  [data-chip-remove]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=chip][data-part=remove],
+  [data-chip-remove]):hover {
+    opacity: 1;
+    color: var(--color-danger);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=root],
+  [data-combobox-root]) {
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--font-size-base);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=label],
+  [data-combobox-label]) {
+    font-size: var(--font-size-tiny);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=control],
+  [data-combobox-control]) {
+    display: flex;
+    align-items: center;
+    border: var(--border-width-xs) solid var(--color-secondary);
+    background: var(--color-bg);
+    transition: border-color var(--dur-2) ease;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=control],
+  [data-combobox-control]):hover:not([data-disabled]), :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=control],
+  [data-combobox-control])[data-focus] {
+    border-color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=control],
+  [data-combobox-control])[data-invalid] {
+    border-color: var(--color-error);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=control],
+  [data-combobox-control])[data-disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  @media (forced-colors: active) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=control],
+    [data-combobox-control])[data-focus] {
+      outline: var(--outline-width) solid Highlight;
+      outline-offset: 2px;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=input],
+  [data-combobox-input]) {
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-2);
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--font-size-base);
+    outline: none;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=input],
+  [data-combobox-input]):disabled {
+    cursor: not-allowed;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=input],
+  [data-combobox-input])::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.7;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=trigger],
+  [data-combobox-trigger]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 2rem;
+    align-self: stretch;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=trigger],
+  [data-combobox-trigger]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=trigger],
+  [data-combobox-trigger]):hover:not(:disabled) {
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=trigger],
+  [data-combobox-trigger]):disabled {
+    cursor: not-allowed;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=trigger],
+  [data-combobox-trigger])[hidden] {
+    display: none;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=clear-trigger],
+  [data-combobox-clear-trigger]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 2rem;
+    align-self: stretch;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=clear-trigger],
+  [data-combobox-clear-trigger]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=clear-trigger],
+  [data-combobox-clear-trigger]):hover:not(:disabled) {
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=clear-trigger],
+  [data-combobox-clear-trigger]):disabled {
+    cursor: not-allowed;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=clear-trigger],
+  [data-combobox-clear-trigger])[hidden] {
+    display: none;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=trigger],
+  [data-combobox-trigger]) {
+    transition: rotate var(--dur-2) ease;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=trigger],
+  [data-combobox-trigger])[data-state=open] {
+    rotate: 180deg;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=trigger],
+    [data-combobox-trigger]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=positioner],
+  [data-combobox-positioner]) {
+    z-index: var(--layer-floating);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=note],
+  [data-combobox-note]) {
+    box-sizing: border-box;
+    border: var(--border-width-xs) solid var(--color-border-secondary);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--font-size-small);
+    box-shadow: 0 0.5rem 1.5rem rgb(var(--color-shadow));
+    outline: none;
+    display: block;
+    opacity: 1;
+    translate: 0 0;
+    transition: opacity var(--dur-3) var(--ease-out-quart), translate var(--dur-3) var(--ease-out-quart), display var(--dur-3) allow-discrete;
+  }
+  @starting-style {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=note],
+    [data-combobox-note]) {
+      opacity: 0;
+      translate: 0 0.25rem;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=note],
+  [data-combobox-note])[hidden] {
+    display: none;
+    opacity: 0;
+    translate: 0 0.25rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=note],
+    [data-combobox-note]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=note],
+  [data-combobox-note]) {
+    min-width: var(--reference-width);
+    padding: var(--space-1);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=content],
+  [data-combobox-content]) {
+    box-sizing: border-box;
+    border: var(--border-width-xs) solid var(--color-border-secondary);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--font-size-small);
+    box-shadow: 0 0.5rem 1.5rem rgb(var(--color-shadow));
+    outline: none;
+    display: block;
+    opacity: 1;
+    translate: 0 0;
+    transition: opacity var(--dur-3) var(--ease-out-quart), translate var(--dur-3) var(--ease-out-quart), display var(--dur-3) allow-discrete;
+  }
+  @starting-style {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=content],
+    [data-combobox-content]) {
+      opacity: 0;
+      translate: 0 0.25rem;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=content],
+  [data-combobox-content])[hidden] {
+    display: none;
+    opacity: 0;
+    translate: 0 0.25rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=content],
+    [data-combobox-content]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=content],
+  [data-combobox-content]) {
+    min-width: var(--reference-width);
+    max-height: min(20rem, var(--available-height, 20rem));
+    overflow-y: auto;
+    padding: var(--space-1);
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-secondary) var(--color-surface);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=item-group-label],
+  [data-combobox-item-group-label]) {
+    padding: var(--space-2) var(--space-2) var(--space-1);
+    font-size: var(--font-size-tiny);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=item],
+  [data-combobox-item]) {
+    display: grid;
+    gap: 0.125rem;
+    padding: var(--space-1) var(--space-2);
+    cursor: pointer;
+    user-select: none;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=item],
+  [data-combobox-item])[data-highlighted] {
+    background: rgb(var(--color-accent-a10));
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=item],
+  [data-combobox-item])[data-state=checked] {
+    box-shadow: inset var(--border-width-s) 0 var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=item],
+  [data-combobox-item])[data-disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  @media (forced-colors: active) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=item],
+    [data-combobox-item])[data-state=checked] {
+      border-inline-start: var(--border-width-s) solid currentColor;
+    }
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=item],
+    [data-combobox-item])[data-highlighted] {
+      forced-color-adjust: none;
+      background: Highlight;
+      color: HighlightText;
+    }
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=item],
+    [data-combobox-item])[data-highlighted] * {
+      color: inherit;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=item-description],
+  [data-combobox-item-description]) {
+    font-size: var(--font-size-tiny);
+    color: var(--color-text-secondary);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=combobox][data-part=empty],
+  [data-combobox-empty]) {
+    padding: var(--space-2);
+    color: var(--color-text-secondary);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=trigger],
+  [data-dialog-trigger]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: var(--border-width-xs) solid var(--color-secondary);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--font-size-small);
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--dur-2) var(--ease-springy), border-color var(--dur-2) ease, color var(--dur-2) ease, filter var(--dur-2) ease, transform var(--dur-1) ease;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=trigger],
+    [data-dialog-trigger]):hover:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-hover));
+    }
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=trigger],
+    [data-dialog-trigger]):active:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-press));
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=trigger],
+    [data-dialog-trigger]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=trigger],
+  [data-dialog-trigger]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=trigger],
+  [data-dialog-trigger]):disabled, :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=trigger],
+  [data-dialog-trigger])[aria-disabled=true] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=trigger],
+  [data-dialog-trigger]):hover:not(:disabled, [aria-disabled=true]) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=backdrop],
+  [data-dialog-backdrop]) {
+    position: fixed;
+    inset: 0;
+    z-index: var(--layer-modal);
+    background: rgb(var(--color-overlay));
+    display: block;
+    opacity: 1;
+    translate: 0 0;
+    transition: opacity var(--dur-3) var(--ease-out-quart), translate var(--dur-3) var(--ease-out-quart), display var(--dur-3) allow-discrete;
+  }
+  @starting-style {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=backdrop],
+    [data-dialog-backdrop]) {
+      opacity: 0;
+      translate: 0 0;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=backdrop],
+  [data-dialog-backdrop])[hidden] {
+    display: none;
+    opacity: 0;
+    translate: 0 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=backdrop],
+    [data-dialog-backdrop]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=positioner],
+  [data-dialog-positioner]) {
+    position: fixed;
+    inset: 0;
+    z-index: var(--layer-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+    pointer-events: none;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=content],
+  [data-dialog-content]) {
+    position: relative;
+    box-sizing: border-box;
+    width: min(32rem, 100%);
+    max-height: calc(100dvh - 2 * var(--space-4));
+    overflow: auto;
+    border: var(--border-width-xs) solid var(--color-border-secondary);
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: 0 1rem 3rem rgb(var(--color-shadow));
+    pointer-events: auto;
+    outline: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-secondary) var(--color-surface);
+    display: block;
+    opacity: 1;
+    translate: 0 0;
+    transition: opacity var(--dur-3) var(--ease-out-quart), translate var(--dur-3) var(--ease-out-quart), display var(--dur-3) allow-discrete;
+  }
+  @starting-style {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=content],
+    [data-dialog-content]) {
+      opacity: 0;
+      translate: 0 0.5rem;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=content],
+  [data-dialog-content])[hidden] {
+    display: none;
+    opacity: 0;
+    translate: 0 0.5rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=content],
+    [data-dialog-content]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=header],
+  [data-dialog-header]) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: var(--border-width-xs) solid var(--color-border);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=title],
+  [data-dialog-title]) {
+    margin: 0;
+    font-family: var(--font-headings);
+    font-size: 1.25em;
+    font-weight: 400;
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=close-trigger],
+  [data-dialog-close-trigger]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: var(--border-width-xs) solid var(--color-secondary);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--font-size-small);
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--dur-2) var(--ease-springy), border-color var(--dur-2) ease, color var(--dur-2) ease, filter var(--dur-2) ease, transform var(--dur-1) ease;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=close-trigger],
+    [data-dialog-close-trigger]):hover:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-hover));
+    }
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=close-trigger],
+    [data-dialog-close-trigger]):active:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-press));
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=close-trigger],
+    [data-dialog-close-trigger]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=close-trigger],
+  [data-dialog-close-trigger]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=close-trigger],
+  [data-dialog-close-trigger]):disabled, :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=close-trigger],
+  [data-dialog-close-trigger])[aria-disabled=true] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=close-trigger],
+  [data-dialog-close-trigger]):hover:not(:disabled, [aria-disabled=true]) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=close-trigger],
+  [data-dialog-close-trigger]) {
+    padding: var(--space-2);
+    aspect-ratio: 1;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=close-trigger],
+    [data-dialog-close-trigger]):hover:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-hover-icon));
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=body],
+  [data-dialog-body]) {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-4);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=dialog][data-part=description],
+  [data-dialog-description]) {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=icon][data-part=root],
+  [data-icon-root]) {
+    display: inline-flex;
+    flex: none;
+    width: 1em;
+    height: 1em;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=icon][data-part=root],
+  [data-icon-root]) > svg {
+    width: 100%;
+    height: 100%;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=skeleton][data-part=group],
+  [data-skeleton-group]) {
+    position: relative;
+    display: block;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=skeleton][data-part=group],
+  [data-skeleton-group])[data-loading] {
+    display: grid;
+    gap: var(--space-2);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=announcer][data-part=region],
+  [data-announcer-region]) {
+    position: fixed;
+    inset-block-start: 0;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=skeleton][data-part=label],
+  [data-skeleton-label]) {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=skeleton][data-part=root],
+  [data-skeleton-root]) {
+    display: block;
+    width: var(--skeleton-width, 100%);
+    height: var(--skeleton-height, 0.8em);
+    background: linear-gradient(100deg, transparent 30%, var(--skeleton-glint-1) 45%, var(--skeleton-glint-2) 50%, transparent 65%) var(--skeleton-surface);
+    background-size: 200% 100%;
+    opacity: 0.5;
+    animation: arkhe-sweep 1.6s linear infinite;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=skeleton][data-part=root],
+  [data-skeleton-root])[data-shape=block] {
+    height: var(--skeleton-height, 4rem);
+  }
+  :where([data-painted]) :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=skeleton][data-part=root],
+  [data-skeleton-root]):not(:where([data-painted]) [data-scope=skeleton][data-part=group]:not([data-painted]) *) {
+    background: transparent;
+    animation: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=skeleton][data-part=root],
+    [data-skeleton-root]) {
+      animation: none;
+    }
+  }
+  @media (forced-colors: active) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=skeleton][data-part=root],
+    [data-skeleton-root]) {
+      forced-color-adjust: none;
+      background: GrayText;
+      animation: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=progress][data-part=root],
+  [data-progress-root]) {
+    display: grid;
+    gap: var(--space-1);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=progress][data-part=root],
+  [data-progress-root])[data-over] [data-part=fill] {
+    background: var(--color-error);
+  }
+  @media (forced-colors: active) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=progress][data-part=root],
+    [data-progress-root])[data-over] [data-part=fill] {
+      background: Mark;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=progress][data-part=value],
+  [data-progress-value]) {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-tiny);
+    color: var(--color-text-secondary);
+    text-align: end;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=progress][data-part=track],
+  [data-progress-track]) {
+    position: relative;
+    block-size: 3px;
+    background: var(--color-surface);
+  }
+  @media (forced-colors: active) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=progress][data-part=track],
+    [data-progress-track]) {
+      outline: var(--border-width-xs) solid CanvasText;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=progress][data-part=fill],
+  [data-progress-fill]) {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: calc(var(--progress, 0) * 100%);
+    background: linear-gradient(to right, var(--color-accent), var(--color-actionable));
+    transition: inline-size var(--dur-3) var(--ease-out-quart);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=progress][data-part=fill],
+    [data-progress-fill]) {
+      transition: none;
+    }
+  }
+  @media (forced-colors: active) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=progress][data-part=fill],
+    [data-progress-fill]) {
+      forced-color-adjust: none;
+      background: Highlight;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=progress][data-part=marker],
+  [data-progress-marker]) {
+    position: absolute;
+    inset-block: -3px;
+    inset-inline-start: calc(var(--at) * 100%);
+    inline-size: var(--border-width-xs);
+    background: var(--color-border-secondary);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=progress][data-part=marker],
+  [data-progress-marker])[data-reached] {
+    background: var(--color-bg);
+  }
+  @media (forced-colors: active) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=progress][data-part=marker],
+    [data-progress-marker]) {
+      forced-color-adjust: none;
+      background: CanvasText;
+    }
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=progress][data-part=marker],
+    [data-progress-marker])[data-reached] {
+      background: Canvas;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=status][data-part=root],
+  [data-status-root]) {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border: var(--border-width-xs) dashed var(--color-border);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-small);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=status][data-part=root],
+  [data-status-root])[data-kind=error] {
+    border-style: solid;
+    border-color: color-mix(in oklab, var(--color-error) 50%, transparent);
+    color: var(--color-error);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=status][data-part=root],
+  [data-status-root])[data-kind=loading] [data-scope=icon][data-part=root] {
+    animation: arkhe-turn 1.2s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=status][data-part=root],
+    [data-status-root])[data-kind=loading] [data-scope=icon][data-part=root] {
+      animation: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=field][data-part=root],
+  [data-field-root]) {
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--font-size-base);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=field][data-part=head],
+  [data-field-head]) {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=field][data-part=label],
+  [data-field-label]) {
+    font-size: var(--font-size-tiny);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=field][data-part=readout],
+  [data-field-readout]) {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-small);
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=field][data-part=hint],
+  [data-field-hint]) {
+    margin: 0;
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=field][data-part=error],
+  [data-field-error]) {
+    margin: 0;
+    font-size: var(--font-size-small);
+    color: var(--color-error);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-input][data-part=root],
+  [data-text-input-root]) {
+    box-sizing: border-box;
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: var(--border-width-xs) solid var(--color-secondary);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--font-size-base);
+    transition: border-color var(--dur-2) ease;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-input][data-part=root],
+  [data-text-input-root]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-input][data-part=root],
+  [data-text-input-root]):disabled, :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-input][data-part=root],
+  [data-text-input-root])[aria-disabled=true] {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-input][data-part=root],
+  [data-text-input-root]):hover:not(:disabled) {
+    border-color: var(--color-border-secondary);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-input][data-part=root],
+  [data-text-input-root]):focus-visible {
+    border-color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-input][data-part=root],
+  [data-text-input-root])[aria-invalid=true] {
+    border-color: var(--color-error);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-input][data-part=root],
+  [data-text-input-root])::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.7;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-area][data-part=root],
+  [data-text-area-root]) {
+    box-sizing: border-box;
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: var(--border-width-xs) solid var(--color-secondary);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--font-size-base);
+    transition: border-color var(--dur-2) ease;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-area][data-part=root],
+  [data-text-area-root]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-area][data-part=root],
+  [data-text-area-root]):disabled, :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-area][data-part=root],
+  [data-text-area-root])[aria-disabled=true] {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-area][data-part=root],
+  [data-text-area-root]):hover:not(:disabled) {
+    border-color: var(--color-border-secondary);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-area][data-part=root],
+  [data-text-area-root]):focus-visible {
+    border-color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-area][data-part=root],
+  [data-text-area-root])[aria-invalid=true] {
+    border-color: var(--color-error);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-area][data-part=root],
+  [data-text-area-root])::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.7;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=text-area][data-part=root],
+  [data-text-area-root]) {
+    min-height: 5em;
+    resize: vertical;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-secondary) var(--color-surface);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tooltip][data-part=positioner],
+  [data-tooltip-positioner]) {
+    z-index: var(--layer-floating);
+    display: block;
+    transition: display var(--dur-3) allow-discrete;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tooltip][data-part=positioner],
+  [data-tooltip-positioner])[hidden] {
+    display: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tooltip][data-part=positioner],
+    [data-tooltip-positioner]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tooltip][data-part=trigger],
+  [data-tooltip-trigger]) {
+    display: inline;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-decoration: underline dotted var(--color-accent);
+    text-underline-offset: 0.2em;
+    cursor: help;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tooltip][data-part=trigger],
+  [data-tooltip-trigger]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tooltip][data-part=trigger],
+  [data-tooltip-trigger]):hover, :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tooltip][data-part=trigger],
+  [data-tooltip-trigger])[data-state=open] {
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tooltip][data-part=content],
+  [data-tooltip-content]) {
+    box-sizing: border-box;
+    border: var(--border-width-xs) solid var(--color-border-secondary);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--font-size-small);
+    box-shadow: 0 0.5rem 1.5rem rgb(var(--color-shadow));
+    outline: none;
+    display: block;
+    opacity: 1;
+    translate: 0 0;
+    transition: opacity var(--dur-3) var(--ease-out-quart), translate var(--dur-3) var(--ease-out-quart), display var(--dur-3) allow-discrete;
+  }
+  @starting-style {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tooltip][data-part=content],
+    [data-tooltip-content]) {
+      opacity: 0;
+      translate: 0 0.25rem;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tooltip][data-part=content],
+  [data-tooltip-content])[hidden] {
+    display: none;
+    opacity: 0;
+    translate: 0 0.25rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tooltip][data-part=content],
+    [data-tooltip-content]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tooltip][data-part=content],
+  [data-tooltip-content]) {
+    max-width: 18rem;
+    padding: var(--space-1) var(--space-2);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=positioner],
+  [data-hover-card-positioner]) {
+    z-index: var(--layer-floating);
+    display: block;
+    transition: display var(--dur-3) allow-discrete;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=positioner],
+  [data-hover-card-positioner])[hidden] {
+    display: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=positioner],
+    [data-hover-card-positioner]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=trigger],
+  [data-hover-card-trigger]) {
+    display: inline;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-decoration: underline dotted var(--color-accent);
+    text-underline-offset: 0.2em;
+    cursor: help;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=trigger],
+  [data-hover-card-trigger]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=trigger],
+  [data-hover-card-trigger]):hover, :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=trigger],
+  [data-hover-card-trigger])[data-state=open] {
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=trigger],
+  [data-hover-card-trigger]) {
+    cursor: pointer;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=content],
+  [data-hover-card-content]) {
+    box-sizing: border-box;
+    border: var(--border-width-xs) solid var(--color-border-secondary);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--font-size-small);
+    box-shadow: 0 0.5rem 1.5rem rgb(var(--color-shadow));
+    outline: none;
+    display: block;
+    opacity: 1;
+    translate: 0 0;
+    transition: opacity var(--dur-3) var(--ease-out-quart), translate var(--dur-3) var(--ease-out-quart), display var(--dur-3) allow-discrete;
+  }
+  @starting-style {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=content],
+    [data-hover-card-content]) {
+      opacity: 0;
+      translate: 0 0.25rem;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=content],
+  [data-hover-card-content])[hidden] {
+    display: none;
+    opacity: 0;
+    translate: 0 0.25rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=content],
+    [data-hover-card-content]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=content],
+  [data-hover-card-content]) {
+    display: grid;
+    width: max-content;
+    max-width: 22rem;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=content],
+  [data-hover-card-content])[data-pinned] {
+    border-color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=header],
+  [data-hover-card-header]) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding-block: var(--space-1);
+    padding-inline: var(--space-3) var(--space-1);
+    border-bottom: var(--border-width-xs) solid var(--color-border);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=title],
+  [data-hover-card-title]) {
+    font-size: var(--font-size-tiny);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    flex: 1;
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=hover-card][data-part=body],
+  [data-hover-card-body]) {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=trigger],
+  [data-popover-trigger]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: var(--border-width-xs) solid var(--color-secondary);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--font-size-small);
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--dur-2) var(--ease-springy), border-color var(--dur-2) ease, color var(--dur-2) ease, filter var(--dur-2) ease, transform var(--dur-1) ease;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=trigger],
+    [data-popover-trigger]):hover:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-hover));
+    }
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=trigger],
+    [data-popover-trigger]):active:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-press));
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=trigger],
+    [data-popover-trigger]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=trigger],
+  [data-popover-trigger]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=trigger],
+  [data-popover-trigger]):disabled, :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=trigger],
+  [data-popover-trigger])[aria-disabled=true] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=trigger],
+  [data-popover-trigger]):hover:not(:disabled, [aria-disabled=true]) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=positioner],
+  [data-popover-positioner]) {
+    z-index: var(--layer-floating);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=trigger],
+  [data-menu-trigger]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: var(--border-width-xs) solid var(--color-secondary);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--font-size-small);
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--dur-2) var(--ease-springy), border-color var(--dur-2) ease, color var(--dur-2) ease, filter var(--dur-2) ease, transform var(--dur-1) ease;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=trigger],
+    [data-menu-trigger]):hover:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-hover));
+    }
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=trigger],
+    [data-menu-trigger]):active:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-press));
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=trigger],
+    [data-menu-trigger]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=trigger],
+  [data-menu-trigger]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=trigger],
+  [data-menu-trigger]):disabled, :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=trigger],
+  [data-menu-trigger])[aria-disabled=true] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=trigger],
+  [data-menu-trigger]):hover:not(:disabled, [aria-disabled=true]) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=positioner],
+  [data-menu-positioner]) {
+    z-index: var(--layer-floating);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=content],
+  [data-popover-content]) {
+    box-sizing: border-box;
+    border: var(--border-width-xs) solid var(--color-border-secondary);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--font-size-small);
+    box-shadow: 0 0.5rem 1.5rem rgb(var(--color-shadow));
+    outline: none;
+    display: block;
+    opacity: 1;
+    translate: 0 0;
+    transition: opacity var(--dur-3) var(--ease-out-quart), translate var(--dur-3) var(--ease-out-quart), display var(--dur-3) allow-discrete;
+  }
+  @starting-style {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=content],
+    [data-popover-content]) {
+      opacity: 0;
+      translate: 0 0.25rem;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=content],
+  [data-popover-content])[hidden] {
+    display: none;
+    opacity: 0;
+    translate: 0 0.25rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=content],
+    [data-popover-content]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=content],
+  [data-popover-content]) {
+    min-width: 14rem;
+    max-width: 24rem;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=header],
+  [data-popover-header]) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding-block: var(--space-1);
+    padding-inline: var(--space-3) var(--space-1);
+    border-bottom: var(--border-width-xs) solid var(--color-border);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=title],
+  [data-popover-title]) {
+    margin: 0;
+    font-size: var(--font-size-tiny);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=close-trigger],
+  [data-popover-close-trigger]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: var(--border-width-xs) solid var(--color-secondary);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--font-size-small);
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--dur-2) var(--ease-springy), border-color var(--dur-2) ease, color var(--dur-2) ease, filter var(--dur-2) ease, transform var(--dur-1) ease;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=close-trigger],
+    [data-popover-close-trigger]):hover:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-hover));
+    }
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=close-trigger],
+    [data-popover-close-trigger]):active:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-press));
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=close-trigger],
+    [data-popover-close-trigger]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=close-trigger],
+  [data-popover-close-trigger]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=close-trigger],
+  [data-popover-close-trigger]):disabled, :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=close-trigger],
+  [data-popover-close-trigger])[aria-disabled=true] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=close-trigger],
+  [data-popover-close-trigger]):hover:not(:disabled, [aria-disabled=true]) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=close-trigger],
+  [data-popover-close-trigger]) {
+    padding: var(--space-2);
+    aspect-ratio: 1;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=close-trigger],
+    [data-popover-close-trigger]):hover:not(:disabled, [aria-disabled=true]) {
+      transform: scale(var(--scale-hover-icon));
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=close-trigger],
+  [data-popover-close-trigger]) {
+    margin-inline-start: auto;
+    border-color: transparent;
+    background: transparent;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=popover][data-part=body],
+  [data-popover-body]) {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-3);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=content],
+  [data-menu-content]) {
+    box-sizing: border-box;
+    border: var(--border-width-xs) solid var(--color-border-secondary);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--font-size-small);
+    box-shadow: 0 0.5rem 1.5rem rgb(var(--color-shadow));
+    outline: none;
+    display: block;
+    opacity: 1;
+    translate: 0 0;
+    transition: opacity var(--dur-3) var(--ease-out-quart), translate var(--dur-3) var(--ease-out-quart), display var(--dur-3) allow-discrete;
+  }
+  @starting-style {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=content],
+    [data-menu-content]) {
+      opacity: 0;
+      translate: 0 0.25rem;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=content],
+  [data-menu-content])[hidden] {
+    display: none;
+    opacity: 0;
+    translate: 0 0.25rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=content],
+    [data-menu-content]) {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=content],
+  [data-menu-content]) {
+    min-width: 11rem;
+    margin: 0;
+    padding: var(--space-1);
+    list-style: none;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=item],
+  [data-menu-item]) {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    cursor: pointer;
+    user-select: none;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=item],
+  [data-menu-item])[data-highlighted] {
+    background: rgb(var(--color-accent-a10));
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=item],
+  [data-menu-item])[data-danger] {
+    color: var(--color-danger);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=item],
+  [data-menu-item])[data-danger][data-highlighted] {
+    background: var(--color-danger-subtle);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=item],
+  [data-menu-item])[data-disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  @media (forced-colors: active) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=item],
+    [data-menu-item])[data-highlighted], :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=item],
+    [data-menu-item])[data-danger][data-highlighted] {
+      forced-color-adjust: none;
+      background: Highlight;
+      color: HighlightText;
+    }
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=item],
+    [data-menu-item])[data-highlighted] *, :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=item],
+    [data-menu-item])[data-danger][data-highlighted] * {
+      color: inherit;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=menu][data-part=separator],
+  [data-menu-separator]) {
+    height: var(--border-width-xs);
+    margin: var(--space-1) 0;
+    background: var(--color-border);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=root],
+  [data-number-input-root]) {
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--font-size-base);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=label],
+  [data-number-input-label]) {
+    font-size: var(--font-size-tiny);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=control],
+  [data-number-input-control]) {
+    display: grid;
+    grid-template-columns: 2rem 1fr 2rem;
+    border: var(--border-width-xs) solid var(--color-secondary);
+    background: var(--color-bg);
+    transition: border-color var(--dur-2) ease;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=control],
+  [data-number-input-control]):hover:not([data-disabled]), :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=control],
+  [data-number-input-control])[data-focus] {
+    border-color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=control],
+  [data-number-input-control])[data-invalid] {
+    border-color: var(--color-error);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=control],
+  [data-number-input-control])[data-disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  @media (forced-colors: active) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=control],
+    [data-number-input-control])[data-focus] {
+      outline: var(--outline-width) solid Highlight;
+      outline-offset: 2px;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=input],
+  [data-number-input-input]) {
+    min-width: 0;
+    padding: var(--space-2);
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--font-size-base);
+    outline: none;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=input],
+  [data-number-input-input]):disabled {
+    cursor: not-allowed;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=input],
+  [data-number-input-input]) {
+    font-family: var(--font-mono);
+    text-align: center;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=increment-trigger],
+  [data-number-input-increment-trigger]) {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=increment-trigger],
+  [data-number-input-increment-trigger]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=increment-trigger],
+  [data-number-input-increment-trigger])::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    margin: auto;
+    rotate: 45deg;
+    width: calc(0.875rem * 0.9617692031);
+    height: calc(0.875rem * 0.9617692031);
+    background: rgb(var(--color-accent-a20));
+    scale: 0.4;
+    opacity: 0;
+    transition: scale var(--dur-2) var(--ease-springy), opacity var(--dur-2) ease;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=increment-trigger],
+  [data-number-input-increment-trigger]):hover:not([data-disabled]) {
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=increment-trigger],
+  [data-number-input-increment-trigger]):hover:not([data-disabled])::before {
+    scale: 1;
+    opacity: 1;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=increment-trigger],
+  [data-number-input-increment-trigger])[data-disabled] {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=increment-trigger],
+    [data-number-input-increment-trigger])::before {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=decrement-trigger],
+  [data-number-input-decrement-trigger]) {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=decrement-trigger],
+  [data-number-input-decrement-trigger]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=decrement-trigger],
+  [data-number-input-decrement-trigger])::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    margin: auto;
+    rotate: 45deg;
+    width: calc(0.875rem * 0.9617692031);
+    height: calc(0.875rem * 0.9617692031);
+    background: rgb(var(--color-accent-a20));
+    scale: 0.4;
+    opacity: 0;
+    transition: scale var(--dur-2) var(--ease-springy), opacity var(--dur-2) ease;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=decrement-trigger],
+  [data-number-input-decrement-trigger]):hover:not([data-disabled]) {
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=decrement-trigger],
+  [data-number-input-decrement-trigger]):hover:not([data-disabled])::before {
+    scale: 1;
+    opacity: 1;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=decrement-trigger],
+  [data-number-input-decrement-trigger])[data-disabled] {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=number-input][data-part=decrement-trigger],
+    [data-number-input-decrement-trigger])::before {
+      transition: none;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tabs][data-part=root],
+  [data-tabs-root]) {
+    display: grid;
+    gap: var(--space-3);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tabs][data-part=list],
+  [data-tabs-list]) {
+    position: relative;
+    display: flex;
+    border-bottom: var(--border-width-xs) solid var(--color-border);
+    overflow: auto clip;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-secondary) var(--color-surface);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tabs][data-part=trigger],
+  [data-tabs-trigger]) {
+    flex: 1 0 auto;
+    padding: var(--space-2) var(--space-3);
+    border: 0;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font: inherit;
+    cursor: pointer;
+    font-size: var(--font-size-tiny);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    transition: color var(--dur-2) ease;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tabs][data-part=trigger],
+  [data-tabs-trigger]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tabs][data-part=trigger],
+  [data-tabs-trigger]):hover:not([data-disabled]) {
+    color: var(--color-text);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tabs][data-part=trigger],
+  [data-tabs-trigger])[data-selected] {
+    color: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tabs][data-part=trigger],
+  [data-tabs-trigger])[data-disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tabs][data-part=indicator],
+  [data-tabs-indicator]) {
+    --transition-duration: var(--dur-3);
+    --transition-timing-function: var(--ease-out-quart);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tabs][data-part=indicator],
+    [data-tabs-indicator]) {
+      --transition-duration: 0ms;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tabs][data-part=indicator],
+  [data-tabs-indicator]) {
+    bottom: -1px;
+    width: var(--width);
+    height: var(--border-width-s);
+    background: var(--color-accent);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tabs][data-part=indicator],
+  [data-tabs-indicator])::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -3px;
+    margin-left: -4px;
+    rotate: 45deg;
+    width: calc(8px * 0.9617692031);
+    height: calc(8px * 0.9617692031);
+    background: var(--color-accent);
+  }
+  @media (forced-colors: active) {
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tabs][data-part=indicator],
+    [data-tabs-indicator]) {
+      forced-color-adjust: none;
+      background: Highlight;
+    }
+    :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tabs][data-part=indicator],
+    [data-tabs-indicator])::after {
+      background: Highlight;
+    }
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tabs][data-part=content],
+  [data-tabs-content]) {
+    color: var(--color-text);
+  }
+  :is(:where(.arkhe), :where(.arkhe) *):is([data-scope=tabs][data-part=content],
+  [data-tabs-content]):focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
