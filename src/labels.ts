@@ -39,6 +39,7 @@ export type PluralLabel = Readonly<
  * @property {string} close - Name of a close button on a modal or popover.
  * @property {string} pin - Name of a hover card's pin button; `{label}` is the card.
  * @property {string} unpin - Name of a pinned card's unpin button; `{label}` is the card.
+ * @property {string} openLink - Name of a hover card's link to its address; `{label}` is the card.
  * @property {string} comboboxTrigger - Name of a combobox's open button.
  * @property {string} comboboxClear - Name of a combobox's clear button; `{label}` is the field.
  * @property {string} comboboxEmpty - Shown when nothing matches.
@@ -57,6 +58,7 @@ export interface ArkheLabels {
   readonly close: string;
   readonly pin: string;
   readonly unpin: string;
+  readonly openLink: string;
   readonly comboboxTrigger: string;
   readonly comboboxClear: string;
   readonly comboboxEmpty: string;
@@ -82,6 +84,7 @@ export const DEFAULT_LABELS: ArkheLabels = {
   close: 'Close',
   pin: 'Pin {label}',
   unpin: 'Unpin {label}',
+  openLink: 'Open {label}',
   comboboxTrigger: 'Show options',
   comboboxClear: 'Clear {label}',
   comboboxEmpty: 'No matches.',

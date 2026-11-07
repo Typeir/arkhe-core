@@ -27,6 +27,7 @@ export const ARKHE_ICON_NAMES = [
   'info',
   'pin',
   'pin-off',
+  'external-link',
 ] as const;
 
 /**

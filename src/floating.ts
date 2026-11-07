@@ -48,7 +48,7 @@ export const FLOATING_GUTTER = 6;
  * @property {boolean} [hold] - Keeps the part open and ignores close requests, e.g. a pinned card.
  * @property {(open: boolean) => void} [onOpenChange] - Open-state callback.
  * @property {Placement} [placement] - Wanted side. Flips when it does not fit.
- * @property {'absolute' | 'fixed'} [strategy] - `fixed` for parts rendered in place, so overflow cannot clip them.
+ * @property {'absolute' | 'fixed'} [strategy] - Zag's positioning strategy. Defaults to `absolute`.
  * @property {() => RootNode} getRootNode - Root node for Zag.
  */
 export interface FloatingMachineInput {

@@ -19,6 +19,7 @@ export * from './field.js';
 export * from './floating.js';
 export * from './focusReturn.js';
 export * from './hint.js';
+export * from './hintTree.js';
 export * from './icons.js';
 export * from './labels.js';
 export * from './loader.js';

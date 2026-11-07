@@ -115,6 +115,7 @@
 
   @include part('hover-card', 'title') {
     @include label-caps;
+    flex: 1;
     color: var(--color-accent);
   }
 
