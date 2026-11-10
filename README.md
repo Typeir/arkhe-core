@@ -1,6 +1,6 @@
 # @arkhe/core
 
-[typeir/arkhe](https://github.com/typeir/arkhe)
+[Typeir/arkhe](https://github.com/Typeir/arkhe)
 
 ## Entries
 
