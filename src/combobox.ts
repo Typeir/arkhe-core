@@ -1,7 +1,8 @@
 /**
- * @fileoverview Combobox rules shared by both ports: option matching, the
- * collection Zag reads, machine props, and the keys Zag leaves alone (Tab
- * completes the highlighted option; Enter on free text submits it).
+ * @fileoverview Option-list rules shared by Select, Picker and Search in
+ * both ports: option matching, the collection Zag reads, combobox machine
+ * props, and the keys Zag leaves alone (Tab completes the highlighted
+ * option; Enter on free text submits it).
  *
  * @module packages/core/src/combobox
  * @version 1.0.0
@@ -14,7 +15,7 @@ import type { EventNames } from './events.js';
 import { floatingMachineProps, type Placement } from './floating.js';
 import { formatLabel, formatPlural, type ArkheLabels } from './labels.js';
 import { DEFAULT_LOCALE } from './locale.js';
-import { definedOnly, uniqueByValue } from './machine.js';
+import { definedOnly, uniqueByValue, valueArray } from './machine.js';
 
 /**
  * One choice.
@@ -177,8 +178,6 @@ export function optionCollection<T extends ComboboxOption>(
  * @returns {object} Machine props.
  */
 export function comboboxMachineProps(input: ComboboxMachineInput) {
-  const toArray = (value: string | null | undefined) =>
-    value === undefined ? undefined : value === null ? [] : [value];
   const { labels } = input;
   return definedOnly({
     ...floatingMachineProps({
@@ -186,8 +185,8 @@ export function comboboxMachineProps(input: ComboboxMachineInput) {
       placement: input.placement ?? 'bottom-start',
       getRootNode: input.getRootNode,
     }),
-    value: toArray(input.value),
-    defaultValue: toArray(input.defaultValue),
+    value: valueArray(input.value),
+    defaultValue: valueArray(input.defaultValue),
     selectionBehavior: input.clearOnSelect
       ? ('clear' as const)
       : ('replace' as const),

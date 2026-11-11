@@ -23,6 +23,21 @@ export function definedOnly<T extends object>(props: T): T {
 }
 
 /**
+ * Turns a single selection into the array Zag's list machines take:
+ * `undefined` stays unset, `null` is no selection.
+ *
+ * @function valueArray
+ * @param {string | null | undefined} value - Selected value.
+ * @returns {string[] | undefined} Zag value.
+ */
+export function valueArray(
+  value: string | null | undefined,
+): string[] | undefined {
+  if (value === undefined) return undefined;
+  return value === null ? [] : [value];
+}
+
+/**
  * Keeps the first item for each value and drops later repeats. Zag keys
  * items, ids and selection by value, and Svelte's keyed each throws on a
  * repeated key, so both ports render the same unique list.

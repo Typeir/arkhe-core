@@ -1,6 +1,8 @@
 /**
  * @fileoverview Button: square, grows on hover, glows on focus. Variants
- * default, primary, ghost, danger; icon-only buttons are square or rhombus.
+ * default, primary, ghost, danger; icon-only buttons are square or rhombus;
+ * a labelled rhombus is a ghost label with its icon in a rhombus. Sizes xs
+ * to xl scale the glyph, and an icon-only box with it.
  */
 
 @use '../part' as *;
@@ -71,6 +73,46 @@
   }
 }
 
+/**
+ * Glyph edge per `size`; the icon-only box and rhombus scale from it.
+ */
+$button-glyphs: (
+  'xs': 0.625rem,
+  's': 0.75rem,
+  'm': 1rem,
+  'l': 1.25rem,
+  'xl': 1.5rem,
+);
+
+/**
+ * Labelled rhombus: a ghost label in the accent, its icon inside a rhombus
+ * outline that lights up on hover and focus.
+ */
+@mixin button-labelled-rhombus {
+  padding: var(--space-1) var(--space-2);
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-accent);
+
+  > [data-scope='icon'] {
+    @include rhombus;
+    box-sizing: content-box;
+    padding: calc(var(--button-glyph, 1em) * 0.3);
+    border: var(--border-width-xs) solid currentColor;
+    color: var(--color-secondary);
+    transition: color var(--dur-2) ease;
+  }
+
+  &:hover:not(:disabled, [aria-disabled='true']),
+  &:focus-visible {
+    border-color: transparent;
+
+    > [data-scope='icon'] {
+      color: var(--color-accent);
+    }
+  }
+}
+
 @mixin button {
   @include part('button', 'root') {
     @include button-face;
@@ -112,6 +154,30 @@
 
     &[data-icon-only][data-shape='rhombus'] {
       @include button-rhombus;
+    }
+
+    @each $size, $glyph in $button-glyphs {
+      &[data-size='#{$size}'] {
+        --button-glyph: #{$glyph};
+      }
+    }
+
+    &[data-size] > [data-scope='icon'] {
+      width: var(--button-glyph);
+      height: var(--button-glyph);
+    }
+
+    &[data-size][data-icon-only] {
+      padding: calc(var(--button-glyph) * 0.25);
+    }
+
+    &[data-size][data-icon-only][data-shape='rhombus'] {
+      --button-rhombus: calc(var(--button-glyph) * 1.5);
+      padding: 0;
+    }
+
+    &[data-shape='rhombus']:not([data-icon-only]) {
+      @include button-labelled-rhombus;
     }
   }
 

@@ -7,12 +7,12 @@
 @use 'motion';
 @use 'components/button';
 @use 'components/chip';
-@use 'components/combobox';
 @use 'components/dialog';
 @use 'components/feedback';
 @use 'components/field';
 @use 'components/floating';
 @use 'components/numeric';
+@use 'components/select';
 @use 'components/tabs';
 
 @layer arkhe {
@@ -20,11 +20,11 @@
   @include motion.keyframes;
   @include button.button;
   @include chip.chip;
-  @include combobox.combobox;
   @include dialog.dialog;
   @include feedback.feedback;
   @include field.field;
   @include floating.floating;
   @include numeric.numeric;
+  @include select.select;
   @include tabs.tabs;
 }

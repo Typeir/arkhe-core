@@ -30,5 +30,6 @@ export * from './numeric.js';
 export * from './numericSync.js';
 export * from './parts.js';
 export * from './progress.js';
+export * from './select.js';
 export * from './status.js';
 export * from './tabs.js';
