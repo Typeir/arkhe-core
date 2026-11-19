@@ -10,6 +10,7 @@
  */
 
 import {
+  computeColor,
   formatColor,
   mixRgb,
   readTokens,
@@ -59,9 +60,11 @@ export const SKELETON_TOKENS = [
  */
 export function readPalette(el: Element): Palette {
   const v = readTokens(el, SKELETON_TOKENS);
-  const surface = resolveColor(v['--skeleton-surface']);
-  const glint1 = resolveColor(v['--skeleton-glint-1']);
-  const glint2 = resolveColor(v['--skeleton-glint-2']);
+  const color = (name: (typeof SKELETON_TOKENS)[number]) =>
+    resolveColor(computeColor(el, v[name]));
+  const surface = color('--skeleton-surface');
+  const glint1 = color('--skeleton-glint-1');
+  const glint2 = color('--skeleton-glint-2');
   const stops: readonly (readonly [Rgb, number])[] = [
     [surface, 0.35],
     [surface, 0.85],
@@ -79,7 +82,7 @@ export function readPalette(el: Element): Palette {
   const p = {
     tones,
     front: formatColor(glint2, 1),
-    bg: v['--skeleton-bg'] || 'transparent',
+    bg: computeColor(el, v['--skeleton-bg']) || 'transparent',
     font: v['--skeleton-glyph-font'] || 'serif',
   };
   return { ...p, key: JSON.stringify(p) };

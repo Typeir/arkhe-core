@@ -57,6 +57,25 @@ export function fieldIds(base: string): FieldIds {
 }
 
 /**
+ * The ids a control is described by: the hint while there is no error, then
+ * the error. Undefined when there is neither.
+ *
+ * @function fieldDescribedBy
+ * @param {FieldIds} ids - Field ids.
+ * @param {string} [hint] - Help text.
+ * @param {string} [error] - Error text.
+ * @returns {string | undefined} Space-separated ids.
+ */
+export function fieldDescribedBy(
+  ids: FieldIds,
+  hint?: string,
+  error?: string,
+): string | undefined {
+  if (error) return ids.error;
+  return hint ? ids.hint : undefined;
+}
+
+/**
  * Returns the attributes for the control of a field.
  *
  * @function fieldControlAttrs

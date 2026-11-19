@@ -68,6 +68,28 @@ export function mixRgb(a: Rgb, b: Rgb, k: number): Rgb {
 }
 
 /**
+ * Computes a CSS colour as `el` would paint it, so `light-dark()`,
+ * `color-mix()` and system colours resolve under `el`'s colour scheme.
+ * Returns `value` itself when it does not parse.
+ *
+ * @function computeColor
+ * @param {Element} el - Element whose colour scheme applies.
+ * @param {string} value - CSS colour.
+ * @returns {string} Computed colour.
+ */
+export function computeColor(el: Element, value: string): string {
+  if (!value) return value;
+  const probe = el.ownerDocument.createElement('span');
+  probe.style.display = 'none';
+  probe.style.color = value;
+  if (!probe.style.color) return value;
+  el.append(probe);
+  const color = getComputedStyle(probe).color;
+  probe.remove();
+  return color || value;
+}
+
+/**
  * Reads custom properties from `el`'s computed style, trimmed.
  *
  * @function readTokens

@@ -9,6 +9,7 @@
  */
 
 export * from './announcer.js';
+export * from './cardAccess.js';
 export * from './chip.js';
 export * from './combobox.js';
 export * from './dialog.js';

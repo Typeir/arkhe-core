@@ -27,6 +27,7 @@ export interface ProgressMarker {
  *
  * @interface ProgressState
  * @property {number} value - Value as drawn; non-finite input reads as 0.
+ * @property {boolean} indeterminate - No value given: the amount is unknown.
  * @property {number} ratio - Fill, [0, 1].
  * @property {boolean} over - True when the value exceeds the maximum.
  * @property {number} overBy - Amount past the maximum; 0 when not over.
@@ -34,6 +35,7 @@ export interface ProgressMarker {
  */
 export interface ProgressState {
   readonly value: number;
+  readonly indeterminate: boolean;
   readonly ratio: number;
   readonly over: boolean;
   readonly overBy: number;
@@ -42,26 +44,28 @@ export interface ProgressState {
 
 /**
  * Computes the bar for `value` out of `max`. Markers outside (0, max),
- * repeated markers and non-finite inputs are dropped.
+ * repeated markers and non-finite inputs are dropped. No value means the
+ * amount is unknown: nothing is reached and nothing is over.
  *
  * @function progressState
- * @param {number} value - Current amount.
+ * @param {number | undefined} value - Current amount; none when unknown.
  * @param {number} max - Amount that fills the bar; must be > 0.
  * @param {readonly number[]} [markers] - Thresholds, in the value's units.
  * @returns {ProgressState} Bar state.
  * @throws {RangeError} When `max` is not a positive finite number.
  */
 export function progressState(
-  value: number,
+  value: number | undefined,
   max: number,
   markers: readonly number[] = [],
 ): ProgressState {
   if (!(max > 0) || !Number.isFinite(max)) {
     throw new RangeError(`Progress max must be a positive number: ${max}.`);
   }
-  const safe = Number.isFinite(value) ? value : 0;
+  const safe = value !== undefined && Number.isFinite(value) ? value : 0;
   return {
     value: safe,
+    indeterminate: value === undefined,
     ratio: Math.min(1, Math.max(0, safe / max)),
     over: safe > max,
     overBy: Math.max(0, Number((safe - max).toPrecision(12))),

@@ -1,0 +1,189 @@
+/**
+ * @fileoverview Contrast by arithmetic. WCAG relative luminance is the Y of
+ * CIE XYZ (D65), and CIELUV lightness L* is a function of Y alone, so a
+ * colour reaches a contrast ratio by setting its Y in closed form: scale its
+ * linear RGB, which keeps its chromaticity and so its CIELUV hue. Where a
+ * channel would leave the sRGB gamut, the colour mixes toward the grey of
+ * the same Y, which loses saturation but neither hue nor Y. 8-bit rounding
+ * goes toward the safe side, so the ratio holds after quantisation.
+ */
+
+@use 'sass:color';
+@use 'sass:list';
+@use 'sass:math';
+
+$-channels: ('red', 'green', 'blue');
+$-weights: (0.2126, 0.7152, 0.0722);
+$-knee: 0.03928;
+
+/**
+ * Linear light of one 8-bit sRGB channel, by the WCAG 2 formula.
+ *
+ * @param {number} $value - Channel, 0 to 255.
+ * @returns {number} Linear light, 0 to 1.
+ */
+@function -linear($value) {
+  $s: math.div($value, 255);
+  @if $s <= $-knee {
+    @return math.div($s, 12.92);
+  }
+  @return math.pow(math.div($s + 0.055, 1.055), 2.4);
+}
+
+/**
+ * 8-bit sRGB channel of a linear light, before rounding.
+ *
+ * @param {number} $light - Linear light, 0 to 1.
+ * @returns {number} Channel, 0 to 255.
+ */
+@function -encode($light) {
+  @if $light <= math.div($-knee, 12.92) {
+    @return $light * 12.92 * 255;
+  }
+  @return (1.055 * math.pow($light, math.div(1, 2.4)) - 0.055) * 255;
+}
+
+/**
+ * Linear light of each channel of `$color`.
+ *
+ * @param {color} $color - Opaque colour.
+ * @returns {list} Red, green and blue linear light.
+ */
+@function -lights($color) {
+  $lights: ();
+  @each $channel in $-channels {
+    $lights: list.append(
+      $lights,
+      -linear(color.channel($color, $channel, $space: rgb))
+    );
+  }
+  @return $lights;
+}
+
+/**
+ * WCAG relative luminance: CIE Y under D65.
+ *
+ * @param {color} $color - Opaque colour.
+ * @returns {number} Luminance, 0 to 1.
+ */
+@function luminance($color) {
+  $lights: -lights($color);
+  $y: 0;
+  @for $i from 1 through 3 {
+    $y: $y + list.nth($-weights, $i) * list.nth($lights, $i);
+  }
+  @return $y;
+}
+
+/**
+ * WCAG contrast ratio of two colours.
+ *
+ * @param {color} $a - Opaque colour.
+ * @param {color} $b - Opaque colour.
+ * @returns {number} Ratio, 1 to 21.
+ */
+@function contrast($a, $b) {
+  $ya: luminance($a);
+  $yb: luminance($b);
+  @return math.div(math.max($ya, $yb) + 0.05, math.min($ya, $yb) + 0.05);
+}
+
+/**
+ * The luminance that meets `$ratio` against every background, on the light
+ * side or the dark side.
+ *
+ * @param {list} $backgrounds - Opaque colours.
+ * @param {number} $ratio - Wanted ratio.
+ * @param {bool} $lighter - Light side.
+ * @returns {number} Luminance; outside 0 to 1 when that side cannot reach it.
+ */
+@function -target($backgrounds, $ratio, $lighter) {
+  $y: 1;
+  @if $lighter {
+    $y: 0;
+  }
+  @each $background in $backgrounds {
+    $yb: luminance($background);
+    @if $lighter {
+      $y: math.max($y, $ratio * ($yb + 0.05) - 0.05);
+    } @else {
+      $y: math.min($y, math.div($yb + 0.05, $ratio) - 0.05);
+    }
+  }
+  @return $y;
+}
+
+/**
+ * `$color` moved to luminance `$y` with its chromaticity kept, mixed toward
+ * the grey of luminance `$y` only as far as the gamut needs.
+ *
+ * @param {color} $color - Opaque colour.
+ * @param {number} $y - Wanted luminance.
+ * @param {bool} $lighter - Rounds up when true, down when false.
+ * @returns {color} Colour of luminance `$y` or past it on the safe side.
+ */
+@function -at-luminance($color, $y, $lighter) {
+  $now: luminance($color);
+  $scaled: ($y, $y, $y);
+  @if $now > 0 {
+    $scaled: ();
+    @each $light in -lights($color) {
+      $scaled: list.append($scaled, $light * math.div($y, $now));
+    }
+  }
+  $mix: 1;
+  @each $light in $scaled {
+    @if $light > 1 {
+      $mix: math.min($mix, math.div(1 - $y, $light - $y));
+    }
+  }
+  $channels: ();
+  @each $light in $scaled {
+    $value: -encode($y + $mix * ($light - $y));
+    $rounded: math.floor($value);
+    @if $lighter {
+      $rounded: math.ceil($value);
+    }
+    $channels: list.append($channels, math.clamp(0, $rounded, 255));
+  }
+  @return color.change(
+    $color,
+    $red: list.nth($channels, 1),
+    $green: list.nth($channels, 2),
+    $blue: list.nth($channels, 3),
+    $space: rgb
+  );
+}
+
+/**
+ * `$color`, or the nearest colour of the same hue that meets `$ratio`
+ * against every background. A colour that already meets it is untouched.
+ * The colour keeps its side, lighter or darker than the first background,
+ * unless only the other side can reach the ratio.
+ *
+ * @param {color} $color - Opaque colour.
+ * @param {list} $backgrounds - Opaque colours it sits on.
+ * @param {number} $ratio - Least ratio.
+ * @returns {color} Colour.
+ */
+@function contrast-floor($color, $backgrounds, $ratio) {
+  $short: false;
+  @each $background in $backgrounds {
+    @if contrast($color, $background) < $ratio {
+      $short: true;
+    }
+  }
+  @if not $short {
+    @return $color;
+  }
+  $lighter: luminance($color) >= luminance(list.nth($backgrounds, 1));
+  $y: -target($backgrounds, $ratio, $lighter);
+  @if $y > 1 or $y < 0 {
+    $lighter: not $lighter;
+    $y: -target($backgrounds, $ratio, $lighter);
+  }
+  @if $y > 1 or $y < 0 {
+    @error 'No colour reaches #{$ratio}:1 against #{$backgrounds}.';
+  }
+  @return -at-luminance($color, $y, $lighter);
+}

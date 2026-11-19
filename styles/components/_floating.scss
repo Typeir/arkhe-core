@@ -25,7 +25,7 @@
   background: var(--color-surface);
   color: var(--color-text);
   font-size: var(--font-size-small);
-  box-shadow: 0 0.5rem 1.5rem rgb(var(--color-shadow));
+  box-shadow: 0 0.5rem 1.5rem var(--color-shadow);
   outline: none;
   @include reveal(block, $lift, $duration);
 }
@@ -102,9 +102,18 @@
 
   @include part('hover-card', 'content') {
     @include floating-surface;
+    @include fits-viewport;
     display: grid;
     width: max-content;
     max-width: 22rem;
+
+    &[data-width='narrow'] {
+      max-width: 15.625rem;
+    }
+
+    &[data-width='wide'] {
+      max-width: 32rem;
+    }
 
     &[data-pinned] {
       border-color: var(--color-accent);
@@ -206,7 +215,7 @@
     user-select: none;
 
     &[data-highlighted] {
-      background: rgb(var(--color-accent-a10));
+      background: var(--color-accent-a10);
       color: var(--color-accent);
     }
 

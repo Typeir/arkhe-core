@@ -59,6 +59,7 @@ export type OptionFilter<T> = ((option: T, query: string) => boolean) | false;
  * @property {boolean} [loading] - Results are on their way.
  * @property {boolean} [disabled] - Blocks input.
  * @property {boolean} [required] - The input must not be empty.
+ * @property {boolean} [invalid] - Marks the control invalid.
  * @property {string} [placeholder] - Input placeholder.
  * @property {Placement} [placement] - Side of the list. Defaults to `bottom-start`.
  * @property {() => RootNode} getRootNode - Root node for Zag.
@@ -75,6 +76,7 @@ export interface ComboboxMachineInput {
   readonly loading?: boolean;
   readonly disabled?: boolean;
   readonly required?: boolean;
+  readonly invalid?: boolean;
   readonly placeholder?: string;
   readonly placement?: Placement;
   readonly getRootNode: () => RootNode;
@@ -202,6 +204,7 @@ export function comboboxMachineProps(input: ComboboxMachineInput) {
     loading: input.loading,
     disabled: input.disabled,
     required: input.required,
+    invalid: input.invalid,
     placeholder: input.placeholder,
     translations: {
       triggerLabel: labels.selectTrigger,

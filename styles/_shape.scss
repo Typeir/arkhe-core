@@ -106,11 +106,50 @@ $rhombus-room: math.div(math.sqrt(2) - 1, 2);
 }
 
 /**
- * Thin scrollbar in the palette.
+ * Width the scrollbar takes and answers the pointer across: 24px, so it
+ * meets WCAG 2.5.8 by size and needs no gutter beside it.
+ */
+$scrollbar-hit: 24px;
+
+/**
+ * Width of the thumb as painted while idle, and while hovered or dragged.
+ */
+$scrollbar-paint: 4px;
+$scrollbar-paint-active: 8px;
+
+/**
+ * Thin scrollbar on a full-size target: a 24px strip the pointer can hit,
+ * with a 4px thumb painted in its middle that widens to 8px while hovered
+ * or dragged. The track is clear, so the thumb meets 3:1 against the
+ * scroller's own background (`--color-secondary` is floored to that). The
+ * `::-webkit-scrollbar` parts only apply with no `scrollbar-width` or
+ * `scrollbar-color` on the element.
  */
 @mixin scrollbar-thin {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-secondary) var(--color-surface);
+  &::-webkit-scrollbar {
+    inline-size: $scrollbar-hit;
+    block-size: $scrollbar-hit;
+  }
+
+  &::-webkit-scrollbar-track,
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border: math.div($scrollbar-hit - $scrollbar-paint, 2) solid transparent;
+    background: var(--color-secondary) padding-box;
+
+    &:hover,
+    &:active {
+      border-width: math.div($scrollbar-hit - $scrollbar-paint-active, 2);
+    }
+
+    @media (forced-colors: active) {
+      forced-color-adjust: none;
+      background: CanvasText padding-box;
+    }
+  }
 }
 
 /**
@@ -123,5 +162,29 @@ $rhombus-room: math.div(math.sqrt(2) - 1, 2);
   &[aria-disabled='true'] {
     opacity: $opacity;
     cursor: not-allowed;
+  }
+}
+
+/**
+ * Grows the pointer target to 24px (WCAG 2.5.8), or to `--hit-min` on a
+ * coarse pointer, with an invisible `::after` centred on the element; what
+ * is drawn stays as it is.
+ */
+@mixin hit-area {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    inline-size: max(100%, 24px);
+    block-size: max(100%, 24px);
+    translate: -50% -50%;
+
+    @media (pointer: coarse) {
+      inline-size: max(100%, var(--hit-min));
+      block-size: max(100%, var(--hit-min));
+    }
   }
 }

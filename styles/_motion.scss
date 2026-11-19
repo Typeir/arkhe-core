@@ -113,9 +113,19 @@
 }
 
 /**
- * Shared keyframes: sweep across, turn.
+ * Shared keyframes: sweep across, glide across, turn.
  */
 @mixin keyframes {
+  @keyframes arkhe-glide {
+    from {
+      background-position: -70% 0;
+    }
+
+    to {
+      background-position: 170% 0;
+    }
+  }
+
   @keyframes arkhe-sweep {
     from {
       background-position: 100% 0;

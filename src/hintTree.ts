@@ -126,6 +126,15 @@ export class HintNode {
   }
 
   /**
+   * Whether a hint nested in this one is open.
+   *
+   * @returns {boolean} True while one shows.
+   */
+  nested(): boolean {
+    return this.#holding();
+  }
+
+  /**
    * Whether a nested hint is open.
    *
    * @returns {boolean} True while one shows.

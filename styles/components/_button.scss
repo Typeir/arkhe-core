@@ -46,6 +46,7 @@
 @mixin button-icon-only {
   padding: var(--space-2);
   aspect-ratio: 1;
+  @include hit-area;
 
   @media (prefers-reduced-motion: no-preference) {
     &:hover:not(:disabled, [aria-disabled='true']) {
@@ -138,7 +139,7 @@ $button-glyphs: (
 
     &[aria-pressed='true'] {
       border-color: var(--color-accent);
-      background: rgb(var(--color-accent-a10));
+      background: var(--color-accent-a10);
       color: var(--color-accent);
     }
 
@@ -147,7 +148,7 @@ $button-glyphs: (
       color: var(--color-accent);
 
       &:hover:not(:disabled, [aria-disabled='true']) {
-        background: rgb(var(--color-accent-a20));
+        background: var(--color-accent-a20);
       }
     }
 

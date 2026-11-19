@@ -63,6 +63,7 @@ export interface NumericMachineApi {
  * @property {number} [step] - Step size.
  * @property {string} [name] - Form field name.
  * @property {boolean} [required] - A value must be given.
+ * @property {boolean} [invalid] - Marks the control invalid.
  * @property {boolean} [disabled] - Blocks input.
  * @property {boolean} [readOnly] - Shows the value without taking edits.
  * @property {() => RootNode} getRootNode - Root node for Zag.
@@ -77,6 +78,7 @@ export interface NumericMachineInput extends NumericBounds {
   readonly step?: number;
   readonly name?: string;
   readonly required?: boolean;
+  readonly invalid?: boolean;
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
   readonly getRootNode: () => RootNode;
@@ -152,6 +154,7 @@ export function numericMachineProps(input: NumericMachineInput) {
     step: input.step,
     name: input.name,
     required: input.required,
+    invalid: input.invalid,
     disabled: input.disabled,
     readOnly: input.readOnly,
     translations: {

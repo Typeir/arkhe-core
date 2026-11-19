@@ -170,3 +170,45 @@ export function tabsMachineProps(input: TabsMachineInput) {
     getRootNode: input.getRootNode,
   });
 }
+
+/**
+ * Lets find-in-page reach the panels of enabled tabs. Each panel marked
+ * `data-findable` that the framework hides with plain `hidden` becomes
+ * `hidden="until-found"`, which the browser can reveal; when it does, it
+ * fires `beforematch` and `onFound` hears that panel's `data-value`.
+ *
+ * @function findablePanels
+ * @param {HTMLElement} root - Tabs root; panels are its children.
+ * @param {(value: string) => void} onFound - Selects the found tab.
+ * @returns {() => void} Stops watching.
+ */
+export function findablePanels(
+  root: HTMLElement,
+  onFound: (value: string) => void,
+): () => void {
+  const mark = () => {
+    for (const panel of root.querySelectorAll<HTMLElement>(
+      ':scope > [data-findable][hidden]',
+    )) {
+      if (panel.getAttribute('hidden') !== 'until-found') {
+        panel.setAttribute('hidden', 'until-found');
+      }
+    }
+  };
+  const found = (event: Event) => {
+    const value = (event.target as HTMLElement).dataset['value'];
+    if (value !== undefined) onFound(value);
+  };
+  mark();
+  const View = root.ownerDocument.defaultView?.MutationObserver;
+  const observer = View ? new View(mark) : undefined;
+  observer?.observe(root, {
+    subtree: true,
+    attributeFilter: ['hidden'],
+  });
+  root.addEventListener('beforematch', found, true);
+  return () => {
+    observer?.disconnect();
+    root.removeEventListener('beforematch', found, true);
+  };
+}

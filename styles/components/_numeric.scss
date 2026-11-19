@@ -55,7 +55,7 @@
         margin: auto;
         @include rhombus($upright: false);
         @include rhombus-size(0.875rem);
-        background: rgb(var(--color-accent-a20));
+        background: var(--color-accent-a20);
         scale: 0.4;
         opacity: 0;
         transition:

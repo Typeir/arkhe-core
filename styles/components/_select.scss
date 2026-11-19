@@ -92,6 +92,12 @@ $scopes: ('combobox', 'select');
       overflow-y: auto;
     }
 
+    @media (pointer: coarse) {
+      &:not([data-virtual]) [data-part='item'] {
+        min-block-size: var(--hit-min);
+      }
+    }
+
     @include virtual-rows;
   }
 
@@ -120,7 +126,7 @@ $scopes: ('combobox', 'select');
     }
 
     &[data-highlighted] {
-      background: rgb(var(--color-accent-a10));
+      background: var(--color-accent-a10);
       color: var(--color-accent);
     }
 
@@ -247,6 +253,11 @@ $scopes: ('combobox', 'select');
     &[data-inline] {
       @include inline-list;
     }
+  }
+
+  @include part('select', 'stand-in') {
+    @include visually-hidden;
+    pointer-events: none;
   }
 
   @include part('combobox', 'empty') {

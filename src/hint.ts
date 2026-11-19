@@ -34,6 +34,7 @@ const OWNERS = ['tooltip', 'hover-card']
  * @property {EventTarget | null} currentTarget - Element the handler sits on.
  * @property {EventTarget | null} [relatedTarget] - Element focus moves to, for blur events.
  * @property {string} [pointerType] - Pointer kind, for pointer and click events.
+ * @property {string} [key] - Key, for key events.
  * @property {{ pointerType?: string }} [nativeEvent] - React's underlying event; its click carries the pointer kind.
  * @property {() => void} preventDefault - Cancels the default action.
  */
@@ -43,6 +44,7 @@ export interface HintEvent {
   readonly currentTarget: EventTarget | null;
   readonly relatedTarget?: EventTarget | null;
   readonly pointerType?: string;
+  readonly key?: string;
   readonly nativeEvent?: { readonly pointerType?: string };
   readonly preventDefault: () => void;
 }
@@ -69,6 +71,8 @@ export interface PointerMemory {
  * @property {PointerMemory} memory - One per trigger, kept across renders.
  * @property {EventNames} names - The framework's event prop names.
  * @property {(target: EventTarget | null) => boolean} [holds] - Whether an element is inside the hint or a hint it holds.
+ * @property {() => void} [activate] - A click that is not a tap; pins a card.
+ * @property {boolean} [keys] - Enter and Space also activate, for a trigger that is not a native button.
  */
 export interface HintTriggerInput {
   readonly open: boolean;
@@ -76,6 +80,8 @@ export interface HintTriggerInput {
   readonly memory: PointerMemory;
   readonly names: EventNames;
   readonly holds?: (target: EventTarget | null) => boolean;
+  readonly activate?: () => void;
+  readonly keys?: boolean;
 }
 
 /**
@@ -131,7 +137,16 @@ export function hintTriggerProps<P extends object>(
         return;
       }
     }
+    if (event.type === 'keydown') {
+      handler?.(event);
+      if (input.keys && (event.key === 'Enter' || event.key === ' ')) {
+        event.preventDefault();
+        input.activate?.();
+      }
+      return;
+    }
     if (pointer !== 'touch') handler?.(event);
+    if (event.type === 'click' && pointer !== 'touch') input.activate?.();
   };
   const wrapped: Record<string, unknown> = Object.fromEntries(
     Object.entries(props),
@@ -141,7 +156,9 @@ export function hintTriggerProps<P extends object>(
       wrapped[key] = (event: HintEvent) => route(event, handler);
     }
   }
-  for (const key of [input.names.pointerdown, input.names.click]) {
+  const ensured = [input.names.pointerdown, input.names.click];
+  if (input.keys) ensured.push(input.names.keydown);
+  for (const key of ensured) {
     wrapped[key] ??= (event: HintEvent) => route(event);
   }
   return wrapped as P;

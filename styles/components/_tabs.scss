@@ -13,7 +13,12 @@
 @mixin tabs {
   @include part('tabs', 'root') {
     display: grid;
+    grid-template-areas: 'list' 'panel';
     gap: var(--space-3);
+
+    > [data-part='content'] {
+      grid-area: panel;
+    }
   }
 
   @include part('tabs', 'list') {

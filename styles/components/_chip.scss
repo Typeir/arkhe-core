@@ -9,7 +9,7 @@
 
 @mixin chip {
   @include part('chip', 'root') {
-    --chip-tone: var(--color-secondary);
+    --chip-tone: var(--color-text-secondary);
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
@@ -55,6 +55,7 @@
     opacity: 0.7;
     @include grows(var(--scale-hover-icon));
     @include focus-ring;
+    @include hit-area;
 
     &:hover {
       opacity: 1;
