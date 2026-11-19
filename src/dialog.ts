@@ -7,6 +7,8 @@
  * focus before opening, else, when that is gone, to its nearest focusable
  * neighbour (`FocusReturn`). Inside a shadow root the rest of that root is hidden
  * from assistive technology too, which Zag's own hiding stops short of.
+ * While open, the platform's close request (the back gesture on a phone)
+ * closes it; Escape stays Zag's, which cancels the key once it dismisses.
  *
  * @module packages/core/src/dialog
  * @version 1.0.0
@@ -14,7 +16,7 @@
  * @since 0.1.0
  */
 
-import type { RootNode } from './environment.js';
+import { documentOf, type RootNode } from './environment.js';
 import type { FocusReturn } from './focusReturn.js';
 import { definedOnly } from './machine.js';
 
@@ -34,6 +36,7 @@ export type DialogRole = 'dialog' | 'alertdialog';
  * @property {boolean} [ready] - False until content can mount; keeps Zag closed.
  * @property {DialogRole} [role] - Dialog role. Defaults to `dialog`.
  * @property {(open: boolean) => void} onOpenChange - Open-state callback.
+ * @property {() => HTMLElement | null} [initialFocus] - Element to focus on open. Defaults to Zag's first focusable.
  * @property {() => HTMLElement | null} [finalFocus] - Element to focus on close; wins over everything else.
  * @property {FocusReturn} [focusReturn] - The instance's opener memory; the port keeps one per instance.
  * @property {() => RootNode} getRootNode - Root node for Zag.
@@ -44,6 +47,7 @@ export interface DialogMachineInput {
   readonly ready?: boolean;
   readonly role?: DialogRole;
   readonly onOpenChange: (open: boolean) => void;
+  readonly initialFocus?: () => HTMLElement | null;
   readonly finalFocus?: () => HTMLElement | null;
   readonly focusReturn?: FocusReturn;
   readonly getRootNode: () => RootNode;
@@ -64,6 +68,7 @@ export function dialogMachineProps(input: DialogMachineInput) {
     id: input.id,
     open,
     role: input.role,
+    initialFocusEl: input.initialFocus,
     onOpenChange: (details: { open: boolean }) =>
       input.onOpenChange(details.open),
     finalFocusEl:
@@ -118,4 +123,38 @@ export function hideShadowSiblings(content: Element): () => void {
   return () => {
     for (const sibling of hidden) sibling.removeAttribute('aria-hidden');
   };
+}
+
+/**
+ * The platform's close watcher, where the window has one.
+ *
+ * @interface CloseWatcherLike
+ * @property {(type: 'close', listener: () => void) => void} addEventListener - Hears the close request.
+ * @property {() => void} destroy - Stops watching.
+ */
+interface CloseWatcherLike {
+  addEventListener(type: 'close', listener: () => void): void;
+  destroy(): void;
+}
+
+/**
+ * Calls `onClose` on the platform's close request, such as the back gesture
+ * on a phone, until stopped. Does nothing where the window has no
+ * `CloseWatcher`.
+ *
+ * @function watchCloseRequest
+ * @param {RootNode} root - Root node.
+ * @param {() => void} onClose - Called on the close request.
+ * @returns {() => void} Stops watching.
+ */
+export function watchCloseRequest(
+  root: RootNode,
+  onClose: () => void,
+): () => void {
+  const view = documentOf(root).defaultView as
+    (Window & { CloseWatcher?: new () => CloseWatcherLike }) | null;
+  if (!view?.CloseWatcher) return () => undefined;
+  const watcher = new view.CloseWatcher();
+  watcher.addEventListener('close', onClose);
+  return () => watcher.destroy();
 }

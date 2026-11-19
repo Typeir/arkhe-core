@@ -79,7 +79,8 @@
 
       @include still {
         &::before {
-          transition: none;
+          scale: 1;
+          transition: opacity var(--dur-2) ease;
         }
       }
     }

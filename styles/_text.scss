@@ -1,5 +1,6 @@
 /**
- * @fileoverview Text: truncation, small caps labels, breakpoints.
+ * @fileoverview Text: truncation, small caps labels, visually hidden text,
+ * breakpoints.
  */
 
 /**
@@ -20,6 +21,18 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--color-text-secondary);
+}
+
+/**
+ * Hides text from sight but keeps it for assistive tech.
+ */
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /**

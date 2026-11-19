@@ -40,9 +40,9 @@ export type PluralLabel = Readonly<
  * @property {string} pin - Name of a hover card's pin button; `{label}` is the card.
  * @property {string} unpin - Name of a pinned card's unpin button; `{label}` is the card.
  * @property {string} openLink - Name of a hover card's link to its address; `{label}` is the card.
- * @property {string} comboboxTrigger - Name of a combobox's open button.
- * @property {string} comboboxClear - Name of a combobox's clear button; `{label}` is the field.
- * @property {string} comboboxEmpty - Shown when nothing matches.
+ * @property {string} selectTrigger - Name of a searchable select's open button.
+ * @property {string} selectClear - Name of a select's clear button; `{label}` is the field.
+ * @property {string} selectEmpty - Shown when nothing matches.
  * @property {PluralLabel} results - Announced count of results; `{count}`.
  */
 export interface ArkheLabels {
@@ -59,9 +59,9 @@ export interface ArkheLabels {
   readonly pin: string;
   readonly unpin: string;
   readonly openLink: string;
-  readonly comboboxTrigger: string;
-  readonly comboboxClear: string;
-  readonly comboboxEmpty: string;
+  readonly selectTrigger: string;
+  readonly selectClear: string;
+  readonly selectEmpty: string;
   readonly results: PluralLabel;
 }
 
@@ -85,9 +85,9 @@ export const DEFAULT_LABELS: ArkheLabels = {
   pin: 'Pin {label}',
   unpin: 'Unpin {label}',
   openLink: 'Open {label}',
-  comboboxTrigger: 'Show options',
-  comboboxClear: 'Clear {label}',
-  comboboxEmpty: 'No matches.',
+  selectTrigger: 'Show options',
+  selectClear: 'Clear {label}',
+  selectEmpty: 'No matches.',
   results: { one: '{count} result', other: '{count} results' },
 };
 

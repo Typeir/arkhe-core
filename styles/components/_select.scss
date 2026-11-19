@@ -13,6 +13,7 @@
 @use '../text' as *;
 @use 'field' as *;
 @use 'floating' as *;
+@use 'virtual' as *;
 
 $scopes: ('combobox', 'select');
 
@@ -55,6 +56,19 @@ $scopes: ('combobox', 'select');
   }
 }
 
+/**
+ * A list shown in place, as inside a sheet: no floating surface, no height
+ * cap of its own.
+ */
+@mixin inline-list {
+  min-width: 0;
+  max-height: none;
+  margin-top: var(--space-2);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 @mixin option-list($scope) {
   @include part($scope, 'positioner') {
     z-index: var(--layer-floating);
@@ -65,8 +79,20 @@ $scopes: ('combobox', 'select');
     min-width: var(--reference-width);
     max-height: min(20rem, var(--available-height, 20rem));
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: var(--space-1);
     @include scrollbar-thin;
+
+    &[data-inline] {
+      @include inline-list;
+    }
+
+    &[data-inline][data-virtual] {
+      max-height: 60dvh;
+      overflow-y: auto;
+    }
+
+    @include virtual-rows;
   }
 
   @include part($scope, 'item-group-label') {
@@ -77,10 +103,21 @@ $scopes: ('combobox', 'select');
 
   @include part($scope, 'item') {
     display: grid;
+    align-content: center;
     gap: 0.125rem;
     padding: var(--space-1) var(--space-2);
     cursor: pointer;
     user-select: none;
+
+    &:has(> [data-scope='icon']) {
+      grid-template-columns: auto 1fr;
+      column-gap: var(--space-2);
+
+      > [data-scope='icon'] {
+        grid-row: span 2;
+        align-self: center;
+      }
+    }
 
     &[data-highlighted] {
       background: rgb(var(--color-accent-a10));
@@ -114,11 +151,32 @@ $scopes: ('combobox', 'select');
 }
 
 @mixin select {
+  @include part('search', 'root') {
+    display: grid;
+  }
+
   @each $scope in $scopes {
     @include part($scope, 'root') {
       display: grid;
       gap: var(--space-1);
       font-size: var(--font-size-base);
+
+      &[data-label-hidden] > [data-part='label'] {
+        @include visually-hidden;
+      }
+
+      &[data-size='s'] {
+        --select-pad: var(--space-1);
+        font-size: var(--font-size-small);
+      }
+
+      &[data-size='l'] {
+        --select-pad: var(--space-3);
+      }
+
+      &:has(> select:user-invalid) > [data-part='control'] {
+        border-color: var(--color-error);
+      }
     }
 
     @include part($scope, 'label') {
@@ -141,6 +199,7 @@ $scopes: ('combobox', 'select');
   @include part('combobox', 'input') {
     flex: 1;
     @include framed-input;
+    padding: var(--select-pad, var(--space-2));
 
     &::placeholder {
       color: var(--color-text-secondary);
@@ -161,6 +220,7 @@ $scopes: ('combobox', 'select');
     text-align: start;
     cursor: pointer;
     @include framed-input;
+    padding: var(--select-pad, var(--space-2));
     @include focus-ring;
 
     &[data-placeholder-shown] {
@@ -183,6 +243,10 @@ $scopes: ('combobox', 'select');
     @include floating-surface;
     min-width: var(--reference-width);
     padding: var(--space-1);
+
+    &[data-inline] {
+      @include inline-list;
+    }
   }
 
   @include part('combobox', 'empty') {

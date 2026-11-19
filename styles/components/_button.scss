@@ -1,8 +1,10 @@
 /**
  * @fileoverview Button: square, grows on hover, glows on focus. Variants
  * default, primary, ghost, danger; icon-only buttons are square or rhombus;
- * a labelled rhombus is a ghost label with its icon in a rhombus. Sizes xs
- * to xl scale the glyph, and an icon-only box with it.
+ * a labelled rhombus is a ghost label with its icon in a rhombus; a plain
+ * icon-only button is the glyph alone. Sizes xs to xl scale the glyph, and
+ * an icon-only box with it. Tones colour the hover; dashed marks an add
+ * action; the icon may sit at the end.
  */
 
 @use '../part' as *;
@@ -33,8 +35,8 @@
   @include disabled;
 
   &:hover:not(:disabled, [aria-disabled='true']) {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
+    border-color: var(--button-tone, var(--color-accent));
+    color: var(--button-tone, var(--color-accent));
   }
 }
 
@@ -108,8 +110,25 @@ $button-glyphs: (
     border-color: transparent;
 
     > [data-scope='icon'] {
-      color: var(--color-accent);
+      color: var(--button-tone, var(--color-accent));
     }
+  }
+}
+
+/**
+ * Plain icon-only button: the glyph alone, muted until hover or focus
+ * lights it in the tone with a glow.
+ */
+@mixin button-plain {
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-secondary);
+
+  &:hover:not(:disabled, [aria-disabled='true']),
+  &:focus-visible {
+    border-color: transparent;
+    color: var(--button-tone, var(--color-accent));
+    filter: drop-shadow(0 0 3px var(--button-tone, var(--color-accent)));
   }
 }
 
@@ -178,6 +197,28 @@ $button-glyphs: (
 
     &[data-shape='rhombus']:not([data-icon-only]) {
       @include button-labelled-rhombus;
+    }
+
+    &[data-icon-only][data-shape='plain'] {
+      @include button-plain;
+    }
+
+    &[data-tone='danger'] {
+      --button-tone: var(--color-danger);
+    }
+
+    &[data-tone='inherit'] {
+      --button-tone: currentColor;
+    }
+
+    &[data-dashed] {
+      border-style: dashed;
+      border-color: var(--color-emphasis);
+      color: var(--color-emphasis);
+    }
+
+    &[data-icon-side='end'] {
+      flex-direction: row-reverse;
     }
   }
 

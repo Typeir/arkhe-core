@@ -20,17 +20,19 @@ import { definedOnly, uniqueByValue, valueArray } from './machine.js';
 /**
  * One choice.
  *
- * @interface ComboboxOption
+ * @interface SelectOption
  * @property {string} value - Key reported on select.
  * @property {string} label - Visible text; what typing matches.
  * @property {string} [description] - Second line; also matched.
+ * @property {string} [icon] - Lucide name of a leading icon.
  * @property {string} [group] - Heading the option sits under.
  * @property {boolean} [disabled] - Blocks selection.
  */
-export interface ComboboxOption {
+export interface SelectOption {
   readonly value: string;
   readonly label: string;
   readonly description?: string;
+  readonly icon?: string;
   readonly group?: string;
   readonly disabled?: boolean;
 }
@@ -56,6 +58,7 @@ export type OptionFilter<T> = ((option: T, query: string) => boolean) | false;
  * @property {boolean} [submits] - The host takes free text on Enter, so nothing is highlighted until the user moves.
  * @property {boolean} [loading] - Results are on their way.
  * @property {boolean} [disabled] - Blocks input.
+ * @property {boolean} [required] - The input must not be empty.
  * @property {string} [placeholder] - Input placeholder.
  * @property {Placement} [placement] - Side of the list. Defaults to `bottom-start`.
  * @property {() => RootNode} getRootNode - Root node for Zag.
@@ -71,6 +74,7 @@ export interface ComboboxMachineInput {
   readonly submits?: boolean;
   readonly loading?: boolean;
   readonly disabled?: boolean;
+  readonly required?: boolean;
   readonly placeholder?: string;
   readonly placement?: Placement;
   readonly getRootNode: () => RootNode;
@@ -91,11 +95,11 @@ function fold(text: string): string {
  * Default match: the folded query occurs in the label or description.
  *
  * @function matchOption
- * @param {ComboboxOption} option - Option.
+ * @param {SelectOption} option - Option.
  * @param {string} query - Typed text.
  * @returns {boolean} True on a match.
  */
-export function matchOption(option: ComboboxOption, query: string): boolean {
+export function matchOption(option: SelectOption, query: string): boolean {
   const needle = fold(query.trim()) || query.trim();
   return (
     fold(option.label).includes(needle) ||
@@ -108,13 +112,13 @@ export function matchOption(option: ComboboxOption, query: string): boolean {
  * filter, keeps them all. An option repeating an earlier value is dropped.
  *
  * @function filterOptions
- * @template {ComboboxOption} T
+ * @template {SelectOption} T
  * @param {readonly T[]} options - All options.
  * @param {string} query - Typed text.
  * @param {OptionFilter<T>} [filter] - Match rule. Defaults to `matchOption`.
  * @returns {T[]} Matching options, in order.
  */
-export function filterOptions<T extends ComboboxOption>(
+export function filterOptions<T extends SelectOption>(
   options: readonly T[],
   query: string,
   filter: OptionFilter<T> = matchOption,
@@ -143,10 +147,10 @@ export function queryAfterChange(details: {
  * Says whether any option names a group, so the list shows headings.
  *
  * @function isGrouped
- * @param {readonly ComboboxOption[]} options - Shown options.
+ * @param {readonly SelectOption[]} options - Shown options.
  * @returns {boolean} True when grouped.
  */
-export function isGrouped(options: readonly ComboboxOption[]): boolean {
+export function isGrouped(options: readonly SelectOption[]): boolean {
   return options.some((option) => option.group !== undefined);
 }
 
@@ -154,11 +158,11 @@ export function isGrouped(options: readonly ComboboxOption[]): boolean {
  * Options for Zag's `combobox.collection`. Groups only when an option names one.
  *
  * @function optionCollection
- * @template {ComboboxOption} T
+ * @template {SelectOption} T
  * @param {readonly T[]} options - Shown options.
  * @returns {object} Collection options.
  */
-export function optionCollection<T extends ComboboxOption>(
+export function optionCollection<T extends SelectOption>(
   options: readonly T[],
 ) {
   return definedOnly({
@@ -197,13 +201,14 @@ export function comboboxMachineProps(input: ComboboxMachineInput) {
     loopFocus: true,
     loading: input.loading,
     disabled: input.disabled,
+    required: input.required,
     placeholder: input.placeholder,
     translations: {
-      triggerLabel: labels.comboboxTrigger,
-      clearTriggerLabel: formatLabel(labels.comboboxClear, {
+      triggerLabel: labels.selectTrigger,
+      clearTriggerLabel: formatLabel(labels.selectClear, {
         label: input.label,
       }),
-      noResults: labels.comboboxEmpty,
+      noResults: labels.selectEmpty,
       loading: labels.loading,
       resultsCount: (count: number) =>
         formatPlural(labels.results, count, input.locale ?? DEFAULT_LOCALE),

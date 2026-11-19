@@ -1,6 +1,7 @@
 /**
  * @fileoverview Motion: hover grow and press shrink, accent glow, row slide,
- * keyframes shared by components. Everything stays still under reduced motion.
+ * keyframes shared by components. Under reduced motion nothing travels,
+ * scales or turns fast; fades and colour changes stay.
  */
 
 /**
@@ -8,6 +9,15 @@
  */
 @mixin still {
   @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+/**
+ * Wraps rules that apply only when motion is welcome.
+ */
+@mixin moving {
+  @media (prefers-reduced-motion: no-preference) {
     @content;
   }
 }
@@ -25,7 +35,7 @@
     filter var(--dur-2) ease,
     transform var(--dur-1) ease;
 
-  @media (prefers-reduced-motion: no-preference) {
+  @include moving {
     &:hover:not(:disabled, [aria-disabled='true']) {
       transform: scale($scale);
     }
@@ -33,10 +43,6 @@
     &:active:not(:disabled, [aria-disabled='true']) {
       transform: scale(var(--scale-press));
     }
-  }
-
-  @include still {
-    transition: none;
   }
 }
 
@@ -56,36 +62,32 @@
  * Slides a row sideways on hover.
  */
 @mixin slides {
-  transition: transform var(--dur-4) var(--ease-springy);
-
-  &:hover {
-    transform: translateX(var(--shift-hover));
-  }
-
-  @include still {
-    transition: none;
+  @include moving {
+    transition: transform var(--dur-4) var(--ease-springy);
 
     &:hover {
-      transform: none;
+      transform: translateX(var(--shift-hover));
     }
   }
 }
 
 /**
  * Fades and lifts in when shown; fades out when `hidden` is set. The element
- * must stay mounted: the `hidden` attribute drives both directions.
+ * must stay mounted: the `hidden` attribute drives both directions. Under
+ * reduced motion it only fades.
  *
  * @param {string} $display - Display while shown.
  * @param {length} $lift - Travel on entry and exit.
+ * @param {time} $duration - Length of the fade.
  */
-@mixin reveal($display: block, $lift: 0.5rem) {
+@mixin reveal($display: block, $lift: 0.5rem, $duration: var(--dur-3)) {
   display: $display;
   opacity: 1;
   translate: 0 0;
   transition:
-    opacity var(--dur-3) var(--ease-out-quart),
-    translate var(--dur-3) var(--ease-out-quart),
-    display var(--dur-3) allow-discrete;
+    opacity $duration var(--ease-out-quart),
+    translate $duration var(--ease-out-quart),
+    display $duration allow-discrete;
 
   @starting-style {
     opacity: 0;
@@ -99,7 +101,14 @@
   }
 
   @include still {
-    transition: none;
+    &,
+    &[hidden] {
+      translate: 0 0;
+    }
+
+    @starting-style {
+      translate: 0 0;
+    }
   }
 }
 

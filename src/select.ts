@@ -25,6 +25,7 @@ import { definedOnly, valueArray } from './machine.js';
  * @property {string | null} [defaultValue] - First selection when uncontrolled.
  * @property {string} [name] - Form field name, carried by the hidden native select.
  * @property {boolean} [required] - A value must be chosen.
+ * @property {string} [autoComplete] - Autofill hint of the hidden native select, such as `country`.
  * @property {boolean} [disabled] - Blocks interaction.
  * @property {Placement} [placement] - Side of the list. Defaults to `bottom-start`.
  * @property {() => RootNode} getRootNode - Root node for Zag.
@@ -37,6 +38,7 @@ export interface SelectMachineInput {
   readonly defaultValue?: string | null;
   readonly name?: string;
   readonly required?: boolean;
+  readonly autoComplete?: string;
   readonly disabled?: boolean;
   readonly placement?: Placement;
   readonly getRootNode: () => RootNode;
@@ -60,10 +62,11 @@ export function selectMachineProps(input: SelectMachineInput) {
     defaultValue: valueArray(input.defaultValue),
     name: input.name,
     required: input.required,
+    autoComplete: input.autoComplete,
     disabled: input.disabled,
     loopFocus: true,
     translations: {
-      clearTriggerLabel: formatLabel(input.labels.comboboxClear, {
+      clearTriggerLabel: formatLabel(input.labels.selectClear, {
         label: input.label,
       }),
     },

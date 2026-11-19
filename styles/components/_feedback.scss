@@ -66,7 +66,10 @@
       var(--skeleton-surface);
     background-size: 200% 100%;
     opacity: 0.5;
-    animation: arkhe-sweep 1.6s linear infinite;
+
+    @include moving {
+      animation: arkhe-sweep 1.6s linear infinite;
+    }
 
     &[data-shape='block'] {
       height: var(--skeleton-height, 4rem);
@@ -82,10 +85,6 @@
       animation: none;
     }
 
-    @include still {
-      animation: none;
-    }
-
     @include forced {
       @include forced-paint(GrayText);
       animation: none;
@@ -97,7 +96,12 @@
     gap: var(--space-1);
 
     &[data-over] [data-part='fill'] {
-      background: var(--color-error);
+      background: repeating-linear-gradient(
+        135deg,
+        var(--color-error) 0 0.375rem,
+        color-mix(in oklab, var(--color-error) 55%, transparent) 0.375rem
+          0.75rem
+      );
 
       @include forced {
         background: Mark;
@@ -182,7 +186,7 @@
       animation: arkhe-turn 1.2s linear infinite;
 
       @include still {
-        animation: none;
+        animation-duration: 6s;
       }
     }
   }

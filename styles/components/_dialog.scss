@@ -1,6 +1,7 @@
 /**
  * @fileoverview Modal: dimmed backdrop, a square panel centred in the
- * viewport. Entry and exit run on CSS transitions keyed to `hidden`.
+ * viewport, or a sheet that rises from the bottom edge. Entry and exit run
+ * on CSS transitions keyed to `hidden`.
  */
 
 @use '../part' as *;
@@ -30,6 +31,11 @@
     justify-content: center;
     padding: var(--space-4);
     pointer-events: none;
+
+    &[data-sheet] {
+      align-items: flex-end;
+      padding: 0;
+    }
   }
 
   @include part('dialog', 'content') {
@@ -38,6 +44,7 @@
     width: min(32rem, 100%);
     max-height: calc(100dvh - 2 * var(--space-4));
     overflow: auto;
+    overscroll-behavior: contain;
     border: var(--border-width-xs) solid var(--color-border-secondary);
     background: var(--color-surface);
     color: var(--color-text);
@@ -46,6 +53,13 @@
     outline: none;
     @include scrollbar-thin;
     @include reveal(block);
+
+    &[data-sheet] {
+      width: 100%;
+      max-height: 85dvh;
+      border-width: var(--border-width-xs) 0 0;
+      @include reveal(block, 100%);
+    }
   }
 
   @include part('dialog', 'header') {

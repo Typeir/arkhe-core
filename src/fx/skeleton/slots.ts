@@ -80,7 +80,7 @@ function cut(
   const lo = (c: Slotted) => (vertical ? c.y : c.x);
   const hi = (c: Slotted) => (vertical ? c.y + c.h : c.x + c.w);
   const groups: { lo: number; hi: number; items: Slotted[] }[] = [];
-  for (const c of [...items].sort((a, b) => lo(a) - lo(b))) {
+  for (const c of items.toSorted((a, b) => lo(a) - lo(b))) {
     const g = groups[groups.length - 1];
     if (g && lo(c) < g.hi) {
       g.items.push(c);

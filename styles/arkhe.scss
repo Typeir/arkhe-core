@@ -14,6 +14,7 @@
 @use 'components/numeric';
 @use 'components/select';
 @use 'components/tabs';
+@use 'components/virtual';
 
 @layer arkhe {
   @include tokens.tokens;
@@ -27,4 +28,5 @@
   @include numeric.numeric;
   @include select.select;
   @include tabs.tabs;
+  @include virtual.virtual;
 }

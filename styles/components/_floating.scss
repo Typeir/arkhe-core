@@ -17,8 +17,9 @@
  * Shared look of a floating panel.
  *
  * @param {length} $lift - Travel on entry and exit.
+ * @param {time} $duration - Length of the fade.
  */
-@mixin floating-surface($lift: 0.25rem) {
+@mixin floating-surface($lift: 0.25rem, $duration: var(--dur-3)) {
   box-sizing: border-box;
   border: var(--border-width-xs) solid var(--color-border-secondary);
   background: var(--color-surface);
@@ -26,7 +27,18 @@
   font-size: var(--font-size-small);
   box-shadow: 0 0.5rem 1.5rem rgb(var(--color-shadow));
   outline: none;
-  @include reveal(block, $lift);
+  @include reveal(block, $lift, $duration);
+}
+
+/**
+ * Caps a floating surface to the room Zag measures beside its trigger and
+ * keeps its scroll from reaching the page.
+ */
+@mixin fits-viewport {
+  max-height: var(--available-height, none);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  @include scrollbar-thin;
 }
 
 /**
@@ -62,10 +74,6 @@
   &[hidden] {
     display: none;
   }
-
-  @include still {
-    transition: none;
-  }
 }
 
 @mixin floating {
@@ -100,6 +108,10 @@
 
     &[data-pinned] {
       border-color: var(--color-accent);
+
+      @include forced {
+        outline: var(--border-width-s) solid Highlight;
+      }
     }
   }
 
@@ -128,6 +140,10 @@
   @each $scope in ('popover', 'menu') {
     @include part($scope, 'trigger') {
       @include button-face;
+
+      &[data-icon-only] {
+        @include button-icon-only;
+      }
     }
 
     @include part($scope, 'positioner') {
@@ -137,6 +153,7 @@
 
   @include part('popover', 'content') {
     @include floating-surface;
+    @include fits-viewport;
     min-width: 14rem;
     max-width: 24rem;
   }
@@ -172,7 +189,8 @@
   }
 
   @include part('menu', 'content') {
-    @include floating-surface;
+    @include floating-surface($duration: var(--dur-1));
+    @include fits-viewport;
     min-width: 11rem;
     margin: 0;
     padding: var(--space-1);

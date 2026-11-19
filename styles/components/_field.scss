@@ -29,7 +29,8 @@
     border-color: var(--color-accent);
   }
 
-  &[aria-invalid='true'] {
+  &[aria-invalid='true'],
+  &:user-invalid {
     border-color: var(--color-error);
   }
 
@@ -54,7 +55,8 @@
     border-color: var(--color-accent);
   }
 
-  &[data-invalid] {
+  &[data-invalid],
+  &:has(input:user-invalid) {
     border-color: var(--color-error);
   }
 

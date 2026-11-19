@@ -61,6 +61,10 @@ export interface NumericMachineApi {
  * @property {number} [min] - Lowest value.
  * @property {number} [max] - Highest value.
  * @property {number} [step] - Step size.
+ * @property {string} [name] - Form field name.
+ * @property {boolean} [required] - A value must be given.
+ * @property {boolean} [disabled] - Blocks input.
+ * @property {boolean} [readOnly] - Shows the value without taking edits.
  * @property {() => RootNode} getRootNode - Root node for Zag.
  */
 export interface NumericMachineInput extends NumericBounds {
@@ -71,6 +75,10 @@ export interface NumericMachineInput extends NumericBounds {
   readonly value?: NumericValue;
   readonly defaultValue?: NumericValue;
   readonly step?: number;
+  readonly name?: string;
+  readonly required?: boolean;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly getRootNode: () => RootNode;
 }
 
@@ -142,6 +150,10 @@ export function numericMachineProps(input: NumericMachineInput) {
     min: input.min,
     max: input.max,
     step: input.step,
+    name: input.name,
+    required: input.required,
+    disabled: input.disabled,
+    readOnly: input.readOnly,
     translations: {
       incrementLabel: formatLabel(input.labels.numericIncrement, {
         label: input.label,
