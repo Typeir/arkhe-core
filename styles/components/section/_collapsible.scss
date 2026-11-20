@@ -1,0 +1,188 @@
+/**
+ * @fileoverview Collapsible, Disclosure and Accordion: square frames that
+ * share their borders when stacked, a chevron before the title that turns
+ * rather than swaps, and a height that eases between zero and its natural
+ * size. Collapsible regions are `hidden="until-found"` and Disclosure
+ * content is `::details-content`; Chromium hides both with
+ * `content-visibility`, so one recipe serves both: the size transitions
+ * while `content-visibility` flips discretely at the end of a close.
+ * Padding sits on the inner body, never on the animated box.
+ */
+
+@use '../../motion' as *;
+@use '../../part' as *;
+@use '../../shape' as *;
+@use '../action/button' as *;
+
+@mixin frame {
+  border: var(--border-width-xs) solid var(--color-secondary);
+
+  & + & {
+    margin-block-start: calc(-1 * var(--border-width-xs));
+  }
+}
+
+@mixin trigger-face {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-block-size: 24px;
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+  @include focus-ring;
+
+  &:focus-visible {
+    outline-offset: calc(-1 * var(--outline-width));
+  }
+
+  @media (pointer: coarse) {
+    min-block-size: var(--hit-min);
+  }
+
+  &:where(:not([aria-disabled='true'])):hover {
+    color: var(--color-accent);
+  }
+
+  &[aria-disabled='true'] {
+    cursor: default;
+  }
+
+  &[aria-disabled='true'][aria-expanded='false'] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@mixin marker {
+  display: inline-flex;
+  flex: none;
+  rotate: -90deg;
+
+  &:dir(rtl) {
+    rotate: 90deg;
+  }
+
+  @include moving {
+    transition: rotate var(--dur-2) ease;
+  }
+}
+
+@mixin grows-open {
+  interpolate-size: allow-keywords;
+  overflow: clip;
+  contain: layout;
+
+  @include moving {
+    transition:
+      block-size var(--dur-3) ease-in-out,
+      content-visibility var(--dur-3) allow-discrete;
+  }
+}
+
+@mixin grows-open-details {
+  &::details-content {
+    @include grows-open;
+  }
+
+  &:not([open])::details-content {
+    block-size: 0;
+  }
+}
+
+@mixin collapsible {
+  @include part('collapsible', 'root') {
+    @include frame;
+  }
+
+  @include part('collapsible', 'header') {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  @include part('collapsible', 'heading') {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    margin: 0;
+    font: inherit;
+  }
+
+  @include part('collapsible', 'trigger') {
+    @include trigger-face;
+    flex: 1 1 auto;
+    inline-size: 100%;
+    border: 0;
+    background: transparent;
+
+    &[aria-expanded='true'] [data-part='marker'] {
+      rotate: 0deg;
+    }
+  }
+
+  @include part('collapsible', 'marker') {
+    @include marker;
+  }
+
+  @include part('collapsible', 'actions') {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-1);
+    padding-inline-end: var(--space-2);
+  }
+
+  @include part('collapsible', 'content') {
+    @include grows-open;
+
+    &[hidden] {
+      block-size: 0;
+    }
+  }
+
+  @include part('collapsible', 'body') {
+    padding: 0 var(--space-3) var(--space-3);
+  }
+
+  @include part('disclosure', 'root') {
+    @include frame;
+    @include grows-open-details;
+  }
+
+  @include part('disclosure', 'summary') {
+    @include trigger-face;
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    [open] > & [data-part='marker'] {
+      rotate: 0deg;
+    }
+  }
+
+  @include part('disclosure', 'marker') {
+    @include marker;
+  }
+
+  @include part('disclosure', 'body') {
+    padding: 0 var(--space-3) var(--space-3);
+  }
+
+  @include part('accordion', 'root') {
+    display: flex;
+    flex-direction: column;
+  }
+
+  @include part('accordion', 'toggle-all') {
+    @include button-face;
+    align-self: flex-end;
+    margin-block-end: var(--space-1);
+    border-color: transparent;
+    color: var(--color-text-secondary);
+  }
+}

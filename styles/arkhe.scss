@@ -5,20 +5,20 @@
 
 @use 'tokens';
 @use 'motion';
-@use 'components/button';
-@use 'components/checkbox';
-@use 'components/chip';
-@use 'components/collapsible';
-@use 'components/dialog';
-@use 'components/feedback';
-@use 'components/field';
-@use 'components/floating';
-@use 'components/numeric';
-@use 'components/radio';
-@use 'components/select';
-@use 'components/tabs';
-@use 'components/toggle';
-@use 'components/virtual';
+@use 'components/action/button';
+@use 'components/choice/checkbox';
+@use 'components/action/chip';
+@use 'components/section/collapsible';
+@use 'components/overlay/dialog';
+@use 'components/feedback/feedback';
+@use 'components/field/field';
+@use 'components/overlay/floating';
+@use 'components/field/numeric';
+@use 'components/choice/radio';
+@use 'components/select/select';
+@use 'components/section/tabs';
+@use 'components/choice/toggle';
+@use 'components/list/virtual';
 
 @layer arkhe {
   @include tokens.tokens;

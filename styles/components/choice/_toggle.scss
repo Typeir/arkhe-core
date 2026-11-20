@@ -1,0 +1,62 @@
+/**
+ * @fileoverview Toggle group: a wrapping row (or column) of button faces.
+ * A pressed toggle reads by its accent edge and text, not its tint alone;
+ * show more and clear are quieter, borderless buttons at the end.
+ */
+
+@use '../../contrast' as *;
+@use '../../part' as *;
+@use '../action/button' as *;
+
+@mixin toggle-target {
+  min-block-size: 24px;
+
+  @media (pointer: coarse) {
+    min-block-size: var(--hit-min);
+  }
+}
+
+@mixin toggle {
+  @include part('toggle-group', 'root') {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1);
+
+    &[data-orientation='vertical'] {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  @include part('toggle-group', 'item') {
+    @include button-face;
+    @include toggle-target;
+
+    &[aria-pressed='true'] {
+      border-color: var(--color-accent);
+      background: var(--color-accent-a10);
+      color: var(--color-accent);
+    }
+
+    @include forced {
+      &[aria-pressed='true'] {
+        @include forced-highlight;
+      }
+    }
+  }
+
+  @include part('toggle-group', 'more') {
+    @include button-face;
+    @include toggle-target;
+    border-color: transparent;
+    color: var(--color-text-secondary);
+  }
+
+  @include part('toggle-group', 'clear') {
+    @include button-face;
+    @include toggle-target;
+    border-color: transparent;
+    color: var(--color-text-secondary);
+  }
+}

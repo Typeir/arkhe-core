@@ -1,0 +1,52 @@
+/**
+ * @fileoverview Virtual rows: a scroll box that draws only the rows in view.
+ * Spacers before and after hold the height of the rows not drawn; every row
+ * is one pitch high. VirtualList is a plain scroll box of such rows.
+ */
+
+@use '../../part' as *;
+@use '../../shape' as *;
+
+/**
+ * Spacers and fixed row pitch, once the box is marked `data-virtual`.
+ */
+@mixin virtual-rows {
+  &[data-virtual] {
+    &::before,
+    &::after {
+      content: '';
+      display: block;
+    }
+
+    &::before {
+      block-size: var(--virtual-before);
+    }
+
+    &::after {
+      block-size: var(--virtual-after);
+    }
+
+    > * {
+      box-sizing: border-box;
+      block-size: var(--row-pitch);
+      overflow: hidden;
+    }
+  }
+}
+
+@mixin virtual {
+  @include part('virtual-list', 'root') {
+    display: block;
+    max-block-size: var(--virtual-max, 37.5rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    @include scrollbar-thin;
+    @include virtual-rows;
+  }
+
+  @include part('virtual-list', 'item') {
+    display: flex;
+    align-items: center;
+    min-inline-size: 0;
+  }
+}

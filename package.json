@@ -13,8 +13,8 @@
       "default": "./dist/index.js"
     },
     "./fx": {
-      "types": "./dist/fx/index.d.ts",
-      "default": "./dist/fx/index.js"
+      "types": "./dist/feedback/fx/index.d.ts",
+      "default": "./dist/feedback/fx/index.js"
     },
     "./arkhe.css": "./dist/arkhe.css",
     "./styles/*": "./styles/*"
@@ -24,7 +24,7 @@
     "styles"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && sass --no-source-map styles/arkhe.scss dist/arkhe.css",
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.build.json && sass --no-source-map styles/arkhe.scss dist/arkhe.css",
     "typecheck": "tsc -p tsconfig.json"
   },
   "devDependencies": {
