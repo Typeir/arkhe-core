@@ -6,27 +6,35 @@
 @use 'tokens';
 @use 'motion';
 @use 'components/button';
+@use 'components/checkbox';
 @use 'components/chip';
+@use 'components/collapsible';
 @use 'components/dialog';
 @use 'components/feedback';
 @use 'components/field';
 @use 'components/floating';
 @use 'components/numeric';
+@use 'components/radio';
 @use 'components/select';
 @use 'components/tabs';
+@use 'components/toggle';
 @use 'components/virtual';
 
 @layer arkhe {
   @include tokens.tokens;
   @include motion.keyframes;
   @include button.button;
+  @include checkbox.checkbox;
   @include chip.chip;
+  @include collapsible.collapsible;
   @include dialog.dialog;
   @include feedback.feedback;
   @include field.field;
   @include floating.floating;
   @include numeric.numeric;
+  @include radio.radio;
   @include select.select;
   @include tabs.tabs;
+  @include toggle.toggle;
   @include virtual.virtual;
 }

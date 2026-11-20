@@ -8,9 +8,12 @@
  * @since 0.1.0
  */
 
+export * from './accordion.js';
 export * from './announcer.js';
 export * from './cardAccess.js';
+export * from './checkbox.js';
 export * from './chip.js';
+export * from './collapsible.js';
 export * from './combobox.js';
 export * from './dialog.js';
 export * from './effects.js';
@@ -33,8 +36,11 @@ export * from './numeric.js';
 export * from './numericSync.js';
 export * from './parts.js';
 export * from './progress.js';
+export * from './radioGroup.js';
+export * from './rovingFocus.js';
 export * from './searchRequest.js';
 export * from './select.js';
 export * from './status.js';
 export * from './tabs.js';
+export * from './toggleGroup.js';
 export * from './virtual.js';

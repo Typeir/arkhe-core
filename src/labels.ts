@@ -43,6 +43,11 @@ export type PluralLabel = Readonly<
  * @property {string} selectTrigger - Name of a searchable select's open button.
  * @property {string} selectClear - Name of a select's clear button; `{label}` is the field.
  * @property {string} selectEmpty - Shown when nothing matches.
+ * @property {string} showMore - Button that shows a group's hidden items.
+ * @property {string} showLess - Button that hides them again.
+ * @property {string} clearSelection - Button that unpresses every item of a group.
+ * @property {string} expandAll - Button that opens every section of an accordion.
+ * @property {string} collapseAll - Button that closes them.
  * @property {PluralLabel} results - Announced count of results; `{count}`.
  */
 export interface ArkheLabels {
@@ -62,6 +67,11 @@ export interface ArkheLabels {
   readonly selectTrigger: string;
   readonly selectClear: string;
   readonly selectEmpty: string;
+  readonly showMore: string;
+  readonly showLess: string;
+  readonly clearSelection: string;
+  readonly expandAll: string;
+  readonly collapseAll: string;
   readonly results: PluralLabel;
 }
 
@@ -88,6 +98,11 @@ export const DEFAULT_LABELS: ArkheLabels = {
   selectTrigger: 'Show options',
   selectClear: 'Clear {label}',
   selectEmpty: 'No matches.',
+  showMore: 'Show more',
+  showLess: 'Show less',
+  clearSelection: 'Clear',
+  expandAll: 'Expand all',
+  collapseAll: 'Collapse all',
   results: { one: '{count} result', other: '{count} results' },
 };
 
