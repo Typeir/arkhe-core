@@ -44,9 +44,9 @@ export type RadioOrientation = 'horizontal' | 'vertical';
  * What a port passes to `radioRootAttrs`.
  *
  * @interface RadioRootInput
- * @property {RadioLook} [look] - Look; pip by default.
- * @property {CheckboxSize} [size] - Pip size; m by default.
- * @property {RadioOrientation} [orientation] - Direction; horizontal by default.
+ * @property {RadioLook} [look] - Look. Defaults to `pip`.
+ * @property {CheckboxSize} [size] - Pip size. Defaults to `m`.
+ * @property {RadioOrientation} [orientation] - Direction. Defaults to `horizontal`.
  * @property {boolean} [invalid] - True while an error shows.
  * @property {boolean} [labelHidden] - Hides the legend visually; it still names the group.
  */

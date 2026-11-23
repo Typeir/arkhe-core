@@ -13,7 +13,7 @@
 
 import { CanvasTile } from './tile.js';
 import { CAP_PX, planTiles, type Tile, type TilePlan } from './tiles.js';
-import { VISIBLE_MARGIN, type Region, type SurfaceContext } from './view.js';
+import { type Region, type SurfaceContext, VISIBLE_MARGIN } from './view.js';
 
 /**
  * True when any tile in `list` overlaps `tile`.
@@ -24,7 +24,9 @@ import { VISIBLE_MARGIN, type Region, type SurfaceContext } from './view.js';
  * @returns {boolean} Overlaps.
  */
 function overlaps(list: readonly Tile[], tile: Tile): boolean {
-  return list.some((o) => o.y < tile.y + tile.h && o.y + o.h > tile.y);
+  return list.some(
+    (other) => other.y < tile.y + tile.h && other.y + other.h > tile.y,
+  );
 }
 
 /**
@@ -33,21 +35,57 @@ function overlaps(list: readonly Tile[], tile: Tile): boolean {
  * @class TiledSurface
  */
 export class TiledSurface {
+  /**
+   * How the region is cut: DPR, backing width and tiles.
+   *
+   * @type {TilePlan}
+   */
   plan: TilePlan = { dpr: 1, pxWidth: 1, cssWidth: 1, tiles: [] };
-  private tiles: CanvasTile[] = [];
-  private viewT = -1;
-  private viewRange: readonly [number, number] = [0, 0];
-  private built = '';
+  /**
+   * Shared services.
+   *
+   * @type {SurfaceContext}
+   */
+  readonly ctx: SurfaceContext;
+  /**
+   * What it draws.
+   *
+   * @type {Region}
+   */
+  readonly region: Region;
+  /**
+   * Tiles of the current plan, top to bottom.
+   *
+   * @type {CanvasTile[]}
+   */
+  #tiles: CanvasTile[] = [];
+  /**
+   * Frame time of the cached viewport rows.
+   *
+   * @type {number}
+   */
+  #viewT = -1;
+  /**
+   * Viewport rows in region-local px, cached per frame time.
+   *
+   * @type {readonly [number, number]}
+   */
+  #viewRange: readonly [number, number] = [0, 0];
+  /**
+   * Geometry key the current plan was built for.
+   *
+   * @type {string}
+   */
+  #built = '';
 
   /**
    * @param {SurfaceContext} ctx - Shared services.
    * @param {Region} region - What it draws.
    */
-  constructor(
-    readonly ctx: SurfaceContext,
-    readonly region: Region,
-  ) {
-    this.build();
+  constructor(ctx: SurfaceContext, region: Region) {
+    this.ctx = ctx;
+    this.region = region;
+    this.#build();
   }
 
   /**
@@ -57,12 +95,12 @@ export class TiledSurface {
    * @returns {readonly [number, number]} Top and bottom.
    */
   view(t: number): readonly [number, number] {
-    if (t !== this.viewT) {
+    if (t !== this.#viewT) {
       const top = this.region.box().top;
-      this.viewRange = [-top, this.ctx.display.viewH - top];
-      this.viewT = t;
+      this.#viewRange = [-top, this.ctx.display.viewH - top];
+      this.#viewT = t;
     }
-    return this.viewRange;
+    return this.#viewRange;
   }
 
   /**
@@ -71,19 +109,23 @@ export class TiledSurface {
    * @returns {void}
    */
   rebuild(): void {
-    if (this.key() === this.built) {
+    if (this.#key() === this.#built) {
       const t = performance.now();
-      for (const b of this.tiles) b.repaint(t, false);
+      for (const tile of this.#tiles) tile.repaint(t, false);
       return;
     }
-    const near = this.tiles.filter((b) => !b.asleep).map((b) => b.tile);
-    const seen = this.tiles.filter((b) => b.visible).map((b) => b.tile);
-    this.teardown();
-    this.build();
+    const near = this.#tiles
+      .filter((tile) => !tile.asleep)
+      .map((tile) => tile.tile);
+    const seen = this.#tiles
+      .filter((tile) => tile.visible)
+      .map((tile) => tile.tile);
+    this.#removeTiles();
+    this.#build();
     const t = performance.now();
-    for (const b of this.tiles) {
-      b.visible = overlaps(seen, b.tile);
-      if (overlaps(near, b.tile)) b.wake(t);
+    for (const tile of this.#tiles) {
+      tile.visible = overlaps(seen, tile.tile);
+      if (overlaps(near, tile.tile)) tile.wake(t);
     }
   }
 
@@ -94,7 +136,7 @@ export class TiledSurface {
    * @returns {boolean} Near, or not yet reported.
    */
   near(): boolean {
-    return this.tiles.some((b) => !b.reported || !b.asleep);
+    return this.#tiles.some((tile) => !tile.reported || !tile.asleep);
   }
 
   /**
@@ -103,7 +145,7 @@ export class TiledSurface {
    * @returns {void}
    */
   kick(): void {
-    for (const b of this.tiles) b.ensure();
+    for (const tile of this.#tiles) tile.ensure();
   }
 
   /**
@@ -117,10 +159,10 @@ export class TiledSurface {
   paintNow(top: number): void {
     const t = performance.now();
     if (Number.isFinite(top)) {
-      this.viewT = t;
-      this.viewRange = [-top, this.ctx.display.viewH - top];
+      this.#viewT = t;
+      this.#viewRange = [-top, this.ctx.display.viewH - top];
     }
-    for (const b of this.tiles) b.repaint(t);
+    for (const tile of this.#tiles) tile.repaint(t);
   }
 
   /**
@@ -130,7 +172,7 @@ export class TiledSurface {
    * @returns {void}
    */
   scrolled(): void {
-    for (const b of this.tiles) if (b.visible) b.ensure();
+    for (const tile of this.#tiles) if (tile.visible) tile.ensure();
   }
 
   /**
@@ -139,7 +181,7 @@ export class TiledSurface {
    * @returns {void}
    */
   tileDone(): void {
-    if (this.tiles.every((b) => b.done)) this.ctx.done(this.region);
+    if (this.#tiles.every((tile) => tile.done)) this.ctx.done(this.region);
   }
 
   /**
@@ -154,13 +196,22 @@ export class TiledSurface {
   }
 
   /**
-   * Removes every tile.
+   * Removes every tile, canvas and sentinel; the surface is done.
    *
    * @returns {void}
    */
-  teardown(): void {
-    for (const b of this.tiles) b.destroy();
-    this.tiles = [];
+  destroy(): void {
+    this.#removeTiles();
+  }
+
+  /**
+   * Removes every tile, ahead of a rebuild or for good.
+   *
+   * @returns {void}
+   */
+  #removeTiles(): void {
+    for (const tile of this.#tiles) tile.destroy();
+    this.#tiles = [];
   }
 
   /**
@@ -169,10 +220,16 @@ export class TiledSurface {
    * @returns {number} Count.
    */
   liveCanvases(): number {
-    return this.tiles.filter((b) => b.hasCanvas).length;
+    return this.#tiles.filter((tile) => tile.hasCanvas).length;
   }
 
-  private key(): string {
+  /**
+   * Identity of everything the plan depends on: size, DPR, tile height,
+   * pixel budget and the region's own geometry.
+   *
+   * @returns {string} Key.
+   */
+  #key(): string {
     const { region, ctx } = this;
     return JSON.stringify([
       region.width,
@@ -184,9 +241,14 @@ export class TiledSurface {
     ]);
   }
 
-  private build(): void {
+  /**
+   * Plans the tiles and makes them, each watched for wake and visibility.
+   *
+   * @returns {void}
+   */
+  #build(): void {
     const { region, ctx } = this;
-    this.built = this.key();
+    this.#built = this.#key();
     this.plan = planTiles(
       region.width,
       region.height,
@@ -197,21 +259,21 @@ export class TiledSurface {
         step: region.step,
       },
     );
-    this.tiles = this.plan.tiles.map((tile) => {
-      const b = new CanvasTile(
+    this.#tiles = this.plan.tiles.map((rows) => {
+      const tile = new CanvasTile(
         this,
-        tile,
-        region.slice(tile.y, tile.y + tile.h),
+        rows,
+        region.slice(rows.y, rows.y + rows.h),
       );
-      ctx.hub.observe(b.sentinel, ctx.wakeMargin, (near) => {
-        b.reported = true;
-        if (near) b.wake(performance.now());
-        else b.sleep();
+      ctx.hub.observe(tile.sentinel, ctx.wakeMargin, (near) => {
+        tile.reported = true;
+        if (near) tile.wake(performance.now());
+        else tile.sleep();
       });
-      ctx.hub.observe(b.sentinel, VISIBLE_MARGIN, (visible) =>
-        b.setVisible(visible),
-      );
-      return b;
+      ctx.hub.observe(tile.sentinel, VISIBLE_MARGIN, (visible) => {
+        tile.setVisible(visible);
+      });
+      return tile;
     });
   }
 }

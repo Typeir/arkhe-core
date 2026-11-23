@@ -28,14 +28,37 @@ export type LoadState<T> =
  * @template T
  */
 export class ContentLoader<T> {
-  private state: LoadState<T> = { status: 'idle' };
-  private readonly listeners = new Set<() => void>();
-  private pending: Promise<void> | undefined;
+  /**
+   * Where the load stands.
+   *
+   * @type {LoadState<T>}
+   */
+  #state: LoadState<T> = { status: 'idle' };
+  /**
+   * Callbacks told of every state change.
+   *
+   * @type {Set<() => void>}
+   */
+  readonly #listeners = new Set<() => void>();
+  /**
+   * The load in flight; null while none runs.
+   *
+   * @type {Promise<void> | null}
+   */
+  #pending: Promise<void> | null = null;
+  /**
+   * Fetches the content.
+   *
+   * @type {() => Promise<T>}
+   */
+  readonly #source: () => Promise<T>;
 
   /**
    * @param {() => Promise<T>} source - Fetches the content.
    */
-  constructor(private readonly source: () => Promise<T>) {}
+  constructor(source: () => Promise<T>) {
+    this.#source = source;
+  }
 
   /**
    * Returns the current state.
@@ -43,7 +66,7 @@ export class ContentLoader<T> {
    * @returns {LoadState<T>} State.
    */
   snapshot(): LoadState<T> {
-    return this.state;
+    return this.#state;
   }
 
   /**
@@ -53,8 +76,8 @@ export class ContentLoader<T> {
    * @returns {() => void} Unsubscribe.
    */
   subscribe(listener: () => void): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
+    this.#listeners.add(listener);
+    return () => this.#listeners.delete(listener);
   }
 
   /**
@@ -63,24 +86,35 @@ export class ContentLoader<T> {
    * @returns {Promise<void>} Resolves when the load settles.
    */
   load(): Promise<void> {
-    if (this.state.status === 'ready') return Promise.resolve();
-    this.pending ??= this.run().finally(() => {
-      this.pending = undefined;
+    if (this.#state.status === 'ready') return Promise.resolve();
+    this.#pending ??= this.#run().finally(() => {
+      this.#pending = null;
     });
-    return this.pending;
+    return this.#pending;
   }
 
-  private async run(): Promise<void> {
-    this.set({ status: 'loading' });
+  /**
+   * Runs the source once, moving through loading to ready or error.
+   *
+   * @returns {Promise<void>} Resolves when the source settles.
+   */
+  async #run(): Promise<void> {
+    this.#set({ status: 'loading' });
     try {
-      this.set({ status: 'ready', value: await this.source() });
+      this.#set({ status: 'ready', value: await this.#source() });
     } catch (error) {
-      this.set({ status: 'error', error });
+      this.#set({ status: 'error', error });
     }
   }
 
-  private set(state: LoadState<T>): void {
-    this.state = state;
-    for (const listener of this.listeners) listener();
+  /**
+   * Replaces the state and tells every listener.
+   *
+   * @param {LoadState<T>} state - New state.
+   * @returns {void}
+   */
+  #set(state: LoadState<T>): void {
+    this.#state = state;
+    for (const listener of this.#listeners) listener();
   }
 }

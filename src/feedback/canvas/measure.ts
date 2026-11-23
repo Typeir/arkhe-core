@@ -10,6 +10,8 @@
  * @since 0.1.0
  */
 
+import { windowOf } from '../../base/dom.js';
+
 /**
  * Border widths around a padding box.
  *
@@ -52,12 +54,12 @@ export interface PaddingBox {
  * @returns {Edges} Edges.
  */
 export function borderEdges(el: Element): Edges {
-  const cs = getComputedStyle(el);
+  const style = windowOf(el).getComputedStyle(el);
   return {
-    left: parseFloat(cs.borderLeftWidth) || 0,
-    top: parseFloat(cs.borderTopWidth) || 0,
-    right: parseFloat(cs.borderRightWidth) || 0,
-    bottom: parseFloat(cs.borderBottomWidth) || 0,
+    left: parseFloat(style.borderLeftWidth) || 0,
+    top: parseFloat(style.borderTopWidth) || 0,
+    right: parseFloat(style.borderRightWidth) || 0,
+    bottom: parseFloat(style.borderBottomWidth) || 0,
   };
 }
 
@@ -71,12 +73,12 @@ export function borderEdges(el: Element): Edges {
  * @returns {PaddingBox} Box.
  */
 export function boxFromEdges(el: Element, edges: Edges): PaddingBox {
-  const r = el.getBoundingClientRect();
+  const rect = el.getBoundingClientRect();
   return {
-    left: r.left + edges.left,
-    top: r.top + edges.top,
-    width: r.width - edges.left - edges.right,
-    height: r.height - edges.top - edges.bottom,
+    left: rect.left + edges.left,
+    top: rect.top + edges.top,
+    width: rect.width - edges.left - edges.right,
+    height: rect.height - edges.top - edges.bottom,
     edges,
   };
 }
@@ -102,16 +104,18 @@ export function paddingBox(el: Element): PaddingBox {
  * @returns {boolean} Needs in-flow canvases.
  */
 export function needsInFlowCanvas(el: Element): boolean {
-  if (el.closest('dialog,[role="dialog"],[role="alertdialog"],[popover]'))
+  if (el.closest('dialog,[role="dialog"],[role="alertdialog"],[popover]')) {
     return true;
+  }
   const doc = el.ownerDocument;
+  const view = windowOf(el);
   for (
-    let e = el.parentElement;
-    e && e !== doc.body && e !== doc.documentElement;
-    e = e.parentElement
+    let parent = el.parentElement;
+    parent && parent !== doc.body && parent !== doc.documentElement;
+    parent = parent.parentElement
   ) {
-    const o = getComputedStyle(e);
-    if (/(auto|scroll)/.test(o.overflowY + o.overflowX)) return true;
+    const style = view.getComputedStyle(parent);
+    if (/(auto|scroll)/.test(style.overflowY + style.overflowX)) return true;
   }
   return false;
 }

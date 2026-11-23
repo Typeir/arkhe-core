@@ -77,34 +77,40 @@ function cut(
     Object.assign(items[0] as Slotted, { sx0: x0, sx1: x1, sy0: y0, sy1: y1 });
     return;
   }
-  const lo = (c: Slotted) => (vertical ? c.y : c.x);
-  const hi = (c: Slotted) => (vertical ? c.y + c.h : c.x + c.w);
+  const lo = (box: Slotted) => (vertical ? box.y : box.x);
+  const hi = (box: Slotted) => (vertical ? box.y + box.h : box.x + box.w);
   const groups: { lo: number; hi: number; items: Slotted[] }[] = [];
-  for (const c of items.toSorted((a, b) => lo(a) - lo(b))) {
-    const g = groups[groups.length - 1];
-    if (g && lo(c) < g.hi) {
-      g.items.push(c);
-      g.hi = Math.max(g.hi, hi(c));
-    } else groups.push({ lo: lo(c), hi: hi(c), items: [c] });
+  for (const box of items.toSorted((first, second) => lo(first) - lo(second))) {
+    const group = groups.at(-1);
+    if (group && lo(box) < group.hi) {
+      group.items.push(box);
+      group.hi = Math.max(group.hi, hi(box));
+    } else {
+      groups.push({ lo: lo(box), hi: hi(box), items: [box] });
+    }
   }
   if (groups.length === 1) {
-    if (!retried) cut(items, x0, y0, x1, y1, !vertical, true);
-    else
-      for (const c of items)
-        Object.assign(c, {
-          sx0: c.x,
-          sx1: c.x + c.w,
-          sy0: c.y,
-          sy1: c.y + c.h,
+    if (!retried) {
+      cut(items, x0, y0, x1, y1, !vertical, true);
+    } else {
+      for (const box of items) {
+        Object.assign(box, {
+          sx0: box.x,
+          sx1: box.x + box.w,
+          sy0: box.y,
+          sy1: box.y + box.h,
         });
+      }
+    }
     return;
   }
+  const outer = vertical ? y1 : x1;
   let start = vertical ? y0 : x0;
-  groups.forEach((g, i) => {
-    const next = groups[i + 1];
-    const end = next ? (g.hi + next.lo) / 2 : vertical ? y1 : x1;
-    if (vertical) cut(g.items, x0, start, x1, end, false, false);
-    else cut(g.items, start, y0, end, y1, true, false);
+  for (const [i, group] of groups.entries()) {
+    const next = groups.at(i + 1);
+    const end = next ? (group.hi + next.lo) / 2 : outer;
+    if (vertical) cut(group.items, x0, start, x1, end, false, false);
+    else cut(group.items, start, y0, end, y1, true, false);
     start = end;
-  });
+  }
 }

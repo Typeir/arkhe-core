@@ -4,7 +4,8 @@
  * back out with Shift+Tab, and on past the trigger from its last stop. Focus
  * leaving an unpinned card closes it. Escape closes the innermost card, a
  * pinned one included (pinned cards stack, last pinned first), and focus
- * inside a closing card returns to its trigger.
+ * inside a closing card returns to its trigger. Escape inside a menu, such
+ * as a card's move menu, is the menu's own.
  *
  * @module packages/core/src/hint/cardAccess
  * @version 1.0.0
@@ -12,17 +13,10 @@
  * @since 0.2.0
  */
 
-import { documentOf, type RootNode } from '../base/environment.js';
+import type { EventNames } from '../base/events.js';
 import type { HintNode } from './hintTree.js';
-
-const FOCUSABLE = [
-  'a[href]',
-  'button:not(:disabled)',
-  'input:not(:disabled)',
-  'select:not(:disabled)',
-  'textarea:not(:disabled)',
-  '[tabindex]',
-].join(', ');
+import { FOCUSABLE, isElement } from '../base/dom.js';
+import { documentOf, type RootNode } from '../base/environment.js';
 
 /**
  * What a card hands to `CardAccess`.
@@ -79,9 +73,9 @@ export function elementById(root: RootNode, id: string): HTMLElement | null {
  *
  * @function tabbables
  * @param {ParentNode} scope - Where to look.
- * @returns {HTMLElement[]} Tab stops.
+ * @returns {readonly HTMLElement[]} Tab stops.
  */
-export function tabbables(scope: ParentNode): HTMLElement[] {
+export function tabbables(scope: ParentNode): readonly HTMLElement[] {
   return [...scope.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
     (element) => element.tabIndex >= 0 && !element.closest('[hidden], [inert]'),
   );
@@ -109,12 +103,46 @@ export function cardTriggerAria(
 }
 
 /**
+ * Zag's card content props. A pinned card drops the pointer leave, so the
+ * machine stays open and keeps the layers nested in it, such as the move
+ * menu.
+ *
+ * @function cardContentProps
+ * @template {object} P
+ * @param {P} props - Zag's content props.
+ * @param {boolean} pinned - The card is pinned.
+ * @param {EventNames} names - The framework's event prop names.
+ * @returns {P} Props to spread on the card.
+ */
+export function cardContentProps<P extends object>(
+  props: P,
+  pinned: boolean,
+  names: EventNames,
+): P {
+  if (!pinned) return props;
+  return Object.fromEntries(
+    Object.entries(props).filter(([key]) => key !== names.pointerleave),
+  ) as P;
+}
+
+/**
  * Keyboard access to one hover card.
  *
  * @class CardAccess
  */
 export class CardAccess {
+  /**
+   * Pinned cards, oldest first; the last answers Escape first.
+   *
+   * @type {CardAccess[]}
+   */
   static #pinned: CardAccess[] = [];
+
+  /**
+   * Trigger, card, nesting and close actions.
+   *
+   * @type {CardAccessInput}
+   */
   readonly #input: CardAccessInput;
 
   /**
@@ -129,6 +157,7 @@ export class CardAccess {
    * first.
    *
    * @param {boolean} on - Pinned.
+   * @returns {void}
    */
   pin(on: boolean): void {
     CardAccess.#pinned = CardAccess.#pinned.filter((card) => card !== this);
@@ -145,8 +174,12 @@ export class CardAccess {
   attach(): () => void {
     const doc = documentOf(this.#input.getRootNode());
     const view = doc.defaultView ?? doc;
-    const keydown = (event: Event) => this.#key(event as KeyboardEvent);
-    const focusout = (event: FocusEvent) => this.#left(event);
+    const keydown = (event: Event) => {
+      this.#key(event as KeyboardEvent);
+    };
+    const focusout = (event: FocusEvent) => {
+      this.#left(event);
+    };
     view.addEventListener('keydown', keydown, true);
     doc.addEventListener('focusout', focusout);
     return () => {
@@ -156,6 +189,14 @@ export class CardAccess {
     };
   }
 
+  /**
+   * Escape: returns focus to the trigger and releases a pinned card, the
+   * last pinned first. Tab: moves from the trigger into the card, and out of
+   * it back to the trigger or on to the stop after the trigger.
+   *
+   * @param {KeyboardEvent} event - Key press on the window.
+   * @returns {void}
+   */
   #key(event: KeyboardEvent): void {
     const trigger = this.#input.trigger();
     const content = this.#input.content();
@@ -164,6 +205,7 @@ export class CardAccess {
     const inside = at !== undefined && content.contains(at);
     if (event.key === 'Escape') {
       if (this.#input.node.nested()) return;
+      if (isElement(at) && at.closest('[role="menu"]')) return;
       const pinned = CardAccess.#pinned.includes(this);
       if (pinned && CardAccess.#pinned.at(-1) !== this) return;
       if (inside) trigger.focus();
@@ -174,22 +216,39 @@ export class CardAccess {
     const stops = tabbables(content);
     const first = stops[0];
     const last = stops.at(-1);
-    let next: HTMLElement | undefined;
-    if (at === trigger && !event.shiftKey) next = first;
-    else if (inside && event.shiftKey && at === first) next = trigger;
-    else if (inside && !event.shiftKey && at === last)
+    let next: HTMLElement | null = null;
+    if (at === trigger && !event.shiftKey) {
+      next = first ?? null;
+    } else if (inside && event.shiftKey && at === first) {
+      next = trigger;
+    } else if (inside && !event.shiftKey && at === last) {
       next = this.#after(trigger, content);
+    }
     if (!next) return;
     event.preventDefault();
     next.focus();
   }
 
-  #after(trigger: HTMLElement, content: HTMLElement): HTMLElement | undefined {
+  /**
+   * The tab stop after `trigger` outside the card.
+   *
+   * @param {HTMLElement} trigger - The trigger element.
+   * @param {HTMLElement} content - The card content element.
+   * @returns {HTMLElement | null} Next stop, `null` at the end.
+   */
+  #after(trigger: HTMLElement, content: HTMLElement): HTMLElement | null {
     const root = this.#input.getRootNode() as unknown as ParentNode;
     const order = tabbables(root).filter((stop) => !content.contains(stop));
-    return order[order.indexOf(trigger) + 1];
+    return order[order.indexOf(trigger) + 1] ?? null;
   }
 
+  /**
+   * Closes an unpinned card once focus leaves it for somewhere other than
+   * its trigger or a hint it holds.
+   *
+   * @param {FocusEvent} event - Focus leaving an element.
+   * @returns {void}
+   */
   #left(event: FocusEvent): void {
     const content = this.#input.content();
     const from = event.target as Node | null;

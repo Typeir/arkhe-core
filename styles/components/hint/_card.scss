@@ -1,0 +1,208 @@
+/**
+ * @fileoverview Hover card, drawn as the host's draggable card: a flat panel
+ * that fades in, a header bar holding a two-bar grip, the title and plain
+ * glyph buttons, then a scrolling body. The grip is a button for the
+ * keyboard and assistive tech; it only looks like the bars. The close button
+ * of a pinned card grows in and out, so the bar never jumps. A detached card
+ * holds the place it was dropped.
+ */
+
+@use '../../contrast' as *;
+@use '../../motion' as *;
+@use '../../part' as *;
+@use '../overlay/floating' as *;
+
+$grip: "[data-scope='menu'][data-part='trigger']";
+
+@mixin card {
+  @include part('hover-card', 'positioner') {
+    @include hint-positioner;
+    transition-duration: 0.15s;
+  }
+
+  @include part('hover-card', 'trigger') {
+    @include inline-trigger;
+    cursor: pointer;
+  }
+
+  @include part('hover-card', 'content') {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: max-content;
+    max-width: 22rem;
+    max-height: 80vh;
+    overflow: hidden;
+    border: var(--border-width-xs) solid var(--color-border);
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text);
+    box-shadow: 0 10px 28px var(--color-shadow);
+    text-align: left;
+    outline: none;
+    opacity: 1;
+    transition:
+      opacity 0.18s ease,
+      display 0.18s allow-discrete;
+
+    @starting-style {
+      opacity: 0;
+    }
+
+    &[hidden] {
+      display: none;
+      opacity: 0;
+    }
+
+    &[data-width='narrow'] {
+      max-width: 15.625rem;
+    }
+
+    &[data-width='wide'] {
+      max-width: 32rem;
+    }
+
+    &:has([data-dragging]) {
+      opacity: 0.92;
+    }
+
+    &[data-pinned] {
+      @include forced {
+        outline: var(--border-width-s) solid Highlight;
+      }
+    }
+
+    @include still {
+      transition: none;
+    }
+  }
+
+  @include part('hover-card', 'header') {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    padding-block: 4px;
+    padding-inline: 8px;
+    border-bottom: var(--border-width-xs) solid var(--color-border);
+    color: var(--color-text-secondary);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    cursor: grab;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+
+    &:active,
+    &[data-dragging] {
+      cursor: grabbing;
+    }
+
+    &:has(> #{$grip}:focus-visible) {
+      outline: var(--outline-width) solid var(--color-accent);
+      outline-offset: -2px;
+    }
+
+    > #{$grip} {
+      &,
+      &:hover:not(:disabled, [aria-disabled='true']),
+      &:active:not(:disabled, [aria-disabled='true']),
+      &:focus-visible {
+        box-sizing: border-box;
+        flex: none;
+        width: 10px;
+        height: 6px;
+        padding: 0;
+        border: 0;
+        border-block: 2px solid currentColor;
+        background: transparent;
+        color: inherit;
+        opacity: 0.4;
+        aspect-ratio: auto;
+        cursor: inherit;
+        transform: none;
+        outline: none;
+      }
+
+      > [data-scope='icon'] {
+        display: none;
+      }
+
+      @include forced {
+        &,
+        &:hover:not(:disabled, [aria-disabled='true']) {
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  @include part('hover-card', 'title') {
+    flex: 1;
+    min-width: 0;
+  }
+
+  @include part('hover-card', 'close') {
+    display: inline-flex;
+    flex: none;
+    width: auto;
+    min-width: 0;
+    overflow: clip;
+    overflow-clip-margin: calc((var(--hit-min) - 1.5rem) / 2);
+    opacity: 1;
+    interpolate-size: allow-keywords;
+
+    &[hidden] {
+      display: none;
+      width: 0;
+      margin-inline-start: -6px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @include moving {
+      transition:
+        width var(--dur-2) var(--ease-out-quart),
+        margin-inline-start var(--dur-2) var(--ease-out-quart),
+        opacity var(--dur-2) ease,
+        display var(--dur-2);
+      transition-behavior: allow-discrete;
+
+      @starting-style {
+        width: 0;
+        margin-inline-start: -6px;
+        opacity: 0;
+      }
+    }
+  }
+
+  @include part('hover-card', 'actions') {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  @include part('hover-card', 'body') {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    text-align: left;
+    overflow-wrap: break-word;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  @include part('hover-card', 'frame') {
+    &[data-detached] > [data-part='positioner'] {
+      position: fixed !important;
+      top: var(--card-y) !important;
+      left: var(--card-x) !important;
+      transform: none !important;
+      translate: none !important;
+      z-index: calc(var(--layer-floating) + var(--card-layer, 0)) !important;
+    }
+  }
+}

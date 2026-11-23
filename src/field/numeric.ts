@@ -11,11 +11,11 @@
  */
 
 import type { RootNode } from '../base/environment.js';
-import { formatLabel, type ArkheLabels } from '../base/labels.js';
+import { type ArkheLabels, formatLabel } from '../base/labels.js';
 import {
   DEFAULT_LOCALE,
-  NUMERIC_FORMAT,
   formatNumber,
+  NUMERIC_FORMAT,
 } from '../base/locale.js';
 import { definedOnly } from '../base/machine.js';
 
@@ -48,8 +48,8 @@ export interface NumericBounds {
  */
 export interface NumericMachineApi {
   readonly valueAsNumber: number;
-  setValue(value: number): void;
-  clearValue(): void;
+  setValue: (value: number) => void;
+  clearValue: () => void;
 }
 
 /**
@@ -111,9 +111,8 @@ export function formatDraft(
   value: NumericValue | undefined,
   locale: string = DEFAULT_LOCALE,
 ): string {
-  return value === null || value === undefined
-    ? ''
-    : formatNumber(value, locale);
+  if (value === null || value === undefined) return '';
+  return formatNumber(value, locale);
 }
 
 /**
@@ -139,13 +138,52 @@ export function clampToBounds(
 }
 
 /**
+ * Zag number-input machine props, minus change callbacks.
+ *
+ * @interface NumericMachineProps
+ * @property {string} id - Instance id.
+ * @property {string} locale - BCP 47 locale.
+ * @property {Intl.NumberFormatOptions} formatOptions - Format options.
+ * @property {string} defaultValue - First draft text.
+ * @property {number} [min] - Lowest value.
+ * @property {number} [max] - Highest value.
+ * @property {number} [step] - Step size.
+ * @property {string} [name] - Form field name.
+ * @property {boolean} [required] - A value must be given.
+ * @property {boolean} [invalid] - Marks the control invalid.
+ * @property {boolean} [disabled] - Blocks input.
+ * @property {boolean} [readOnly] - Shows the value without taking edits.
+ * @property {{ incrementLabel: string, decrementLabel: string }} translations - Step button names.
+ * @property {() => RootNode} getRootNode - Root node for Zag.
+ */
+export interface NumericMachineProps extends NumericBounds {
+  readonly id: string;
+  readonly locale: string;
+  readonly formatOptions: Intl.NumberFormatOptions;
+  readonly defaultValue: string;
+  readonly step?: number;
+  readonly name?: string;
+  readonly required?: boolean;
+  readonly invalid?: boolean;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
+  readonly translations: {
+    readonly incrementLabel: string;
+    readonly decrementLabel: string;
+  };
+  readonly getRootNode: () => RootNode;
+}
+
+/**
  * Builds Zag number-input machine props, with Arkhé's step button names.
  *
  * @function numericMachineProps
  * @param {NumericMachineInput} input - Port input.
- * @returns {object} Machine props, minus change callbacks.
+ * @returns {NumericMachineProps} Machine props, minus change callbacks.
  */
-export function numericMachineProps(input: NumericMachineInput) {
+export function numericMachineProps(
+  input: NumericMachineInput,
+): NumericMachineProps {
   const initial = input.value !== undefined ? input.value : input.defaultValue;
   const locale = input.locale ?? DEFAULT_LOCALE;
   return definedOnly({

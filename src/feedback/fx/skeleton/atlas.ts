@@ -8,12 +8,18 @@
  * @since 0.1.0
  */
 
+import type { Palette } from './palette.js';
 import { createStampGrid } from '../../canvas/draw/atlas.js';
 import { pathPen } from '../../canvas/draw/pen.js';
 import { CELL_H, CELL_W, GLYPHS, LEVELS } from './constants.js';
-import type { Palette } from './palette.js';
 import { RAMP } from './ramp.js';
 
+/**
+ * Cells per atlas row.
+ *
+ * @constant COLS
+ * @type {number}
+ */
 const COLS = 16;
 
 /**
@@ -30,8 +36,8 @@ export interface SkeletonAtlas {
   readonly canvas: HTMLCanvasElement;
   readonly cw: number;
   readonly ch: number;
-  shape(level: number): readonly [number, number];
-  glyph(index: number): readonly [number, number];
+  shape: (level: number) => readonly [number, number];
+  glyph: (index: number) => readonly [number, number];
 }
 
 /**
@@ -40,37 +46,39 @@ export interface SkeletonAtlas {
  * @function buildAtlas
  * @param {number} dpr - Backing scale.
  * @param {Palette} palette - Colours and glyph font.
+ * @param {Document} [doc] - Document that makes the canvas. Defaults to the document of the window core was loaded in.
  * @returns {SkeletonAtlas | null} Atlas; null without a 2D context.
  */
 export function buildAtlas(
   dpr: number,
   palette: Palette,
+  doc?: Document,
 ): SkeletonAtlas | null {
   const cw = Math.ceil(CELL_W * dpr);
   const ch = Math.ceil(CELL_H * dpr);
   const glyphs = [...GLYPHS];
   const glyphRows = Math.ceil(glyphs.length / COLS);
-  const grid = createStampGrid(COLS, 1 + glyphRows, cw, ch);
+  const grid = createStampGrid(COLS, 1 + glyphRows, cw, ch, doc);
   if (!grid) return null;
-  const c = grid.ctx;
-  const pen = pathPen(c);
-  for (let l = 0; l < LEVELS; l++) {
-    const [x, y] = grid.at(l, 0);
-    c.setTransform(dpr, 0, 0, dpr, x, y);
-    c.fillStyle = palette.tones[l] ?? palette.front;
-    c.beginPath();
-    RAMP[l]?.(pen, CELL_W / 2, CELL_H / 2);
-    c.fill('evenodd');
+  const ctx = grid.ctx;
+  const pen = pathPen(ctx);
+  for (let level = 0; level < LEVELS; level += 1) {
+    const [x, y] = grid.at(level, 0);
+    ctx.setTransform(dpr, 0, 0, dpr, x, y);
+    ctx.fillStyle = palette.tones[level] ?? palette.front;
+    ctx.beginPath();
+    RAMP[level]?.(pen, CELL_W / 2, CELL_H / 2);
+    ctx.fill('evenodd');
   }
-  c.setTransform(dpr, 0, 0, dpr, 0, 0);
-  c.font = `${CELL_H - 1}px ${palette.font}`;
-  c.textAlign = 'center';
-  c.textBaseline = 'middle';
-  c.fillStyle = palette.front;
-  glyphs.forEach((g, i) => {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.font = `${CELL_H - 1}px ${palette.font}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = palette.front;
+  for (const [i, glyph] of glyphs.entries()) {
     const [x, y] = grid.at(i, 1);
-    c.fillText(g, x / dpr + CELL_W / 2, y / dpr + CELL_H / 2 + 0.5);
-  });
+    ctx.fillText(glyph, x / dpr + CELL_W / 2, y / dpr + CELL_H / 2 + 0.5);
+  }
   return {
     canvas: grid.canvas,
     cw,

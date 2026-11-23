@@ -91,20 +91,21 @@ export function planTiles(
 ): TilePlan {
   const { capPx = CAP_PX, maxSide = MAX_SIDE, step = 1 } = limits;
   const w = Math.max(1, Math.ceil(width));
-  let d = Math.min(dpr, maxSide / w, Math.sqrt(capPx / (w * step)));
+  let scale = Math.min(dpr, maxSide / w, Math.sqrt(capPx / (w * step)));
   const fit = Math.min(
     tileHeight,
-    (capPx / (w * d) - 1) / d,
-    (maxSide - 1) / d,
+    (capPx / (w * scale) - 1) / scale,
+    (maxSide - 1) / scale,
   );
   const tileH = Math.max(step, Math.floor(fit / step) * step);
-  if (d < dpr) d = Math.floor(d * 8) / 8 || d;
-  const pxWidth = Math.max(1, Math.floor(Math.max(1, width) * d));
+  if (scale < dpr) scale = Math.floor(scale * 8) / 8 || scale;
+  const pxWidth = Math.max(1, Math.floor(Math.max(1, width) * scale));
   const tiles: Tile[] = [];
   const fullH = Math.max(1, height);
-  for (let y = 0; y < fullH; y += tileH)
+  for (let y = 0; y < fullH; y += tileH) {
     tiles.push({ y, h: Math.min(tileH, fullH - y) });
-  return { dpr: d, pxWidth, cssWidth: pxWidth / d, tiles };
+  }
+  return { dpr: scale, pxWidth, cssWidth: pxWidth / scale, tiles };
 }
 
 /**

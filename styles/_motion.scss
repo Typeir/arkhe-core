@@ -116,6 +116,18 @@
  * Shared keyframes: sweep across, glide across, turn.
  */
 @mixin keyframes {
+  @keyframes arkhe-tab-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   @keyframes arkhe-glide {
     from {
       background-position: -70% 0;

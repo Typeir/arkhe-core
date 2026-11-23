@@ -15,10 +15,10 @@
 
 import type { BudgetClient } from './budget.js';
 import type { Frameable } from './loop.js';
-import { ManagedCanvas } from './managed.js';
-import { tilePxHeight, type Tile } from './tiles.js';
 import type { TiledSurface } from './tiled.js';
 import type { Slice } from './view.js';
+import { ManagedCanvas } from './managed.js';
+import { type Tile, tilePxHeight } from './tiles.js';
 
 /**
  * Attribute that marks a tile's sentinel.
@@ -42,39 +42,108 @@ export const SLICE_MARGIN = 64;
  * @class CanvasTile
  */
 export class CanvasTile implements BudgetClient, Frameable {
+  /**
+   * Outside the wake margin.
+   *
+   * @type {boolean}
+   */
   asleep = true;
+  /**
+   * The wake observer has reported it at least once.
+   *
+   * @type {boolean}
+   */
   reported = false;
+  /**
+   * On screen; the budget never evicts it.
+   *
+   * @type {boolean}
+   */
   visible = false;
+  /**
+   * Time it last woke.
+   *
+   * @type {number}
+   */
   lastSeen = 0;
+  /**
+   * Nothing is left to draw; it is being removed.
+   *
+   * @type {boolean}
+   */
   done = false;
+  /**
+   * Rows it covers.
+   *
+   * @type {Tile}
+   */
+  readonly tile: Tile;
+  /**
+   * What it draws.
+   *
+   * @type {Slice}
+   */
+  readonly slice: Slice;
+  /**
+   * Invisible element over its rows that the observers watch.
+   *
+   * @type {HTMLElement}
+   */
   readonly sentinel: HTMLElement;
-  private fresh = true;
-  private settle = 0;
-  private revision = -1;
-  private readonly canvas: ManagedCanvas;
+  /**
+   * The next frame paints in full.
+   *
+   * @type {boolean}
+   */
+  #fresh = true;
+  /**
+   * Timer that finishes it once its last reveal ends; null while none runs.
+   *
+   * @type {ReturnType<typeof setTimeout> | null}
+   */
+  #settle: ReturnType<typeof setTimeout> | null = null;
+  /**
+   * Surface revision of the last paint; a new one means repaint all.
+   *
+   * @type {number}
+   */
+  #revision = -1;
+  /**
+   * Its budgeted canvas.
+   *
+   * @type {ManagedCanvas}
+   */
+  readonly #canvas: ManagedCanvas;
+  /**
+   * Surface it belongs to.
+   *
+   * @type {TiledSurface}
+   */
+  readonly #owner: TiledSurface;
 
   /**
    * @param {TiledSurface} owner - Surface.
    * @param {Tile} tile - Rows it covers.
    * @param {Slice} slice - What it draws.
    */
-  constructor(
-    private readonly owner: TiledSurface,
-    readonly tile: Tile,
-    readonly slice: Slice,
-  ) {
-    this.canvas = new ManagedCanvas(owner.ctx.budget, this, {
+  constructor(owner: TiledSurface, tile: Tile, slice: Slice) {
+    this.#owner = owner;
+    this.tile = tile;
+    this.slice = slice;
+    this.#canvas = new ManagedCanvas(owner.ctx.budget, this, {
       lost: () => {
         if (!this.visible) this.evict();
       },
-      restored: () => this.repaint(performance.now()),
+      restored: () => {
+        this.repaint(performance.now());
+      },
     });
-    const s = owner.region.host.ownerDocument.createElement('div');
-    s.setAttribute(SENTINEL_ATTR, '');
-    s.setAttribute('aria-hidden', 'true');
-    s.style.cssText = `position:absolute;left:0;top:${tile.y}px;width:${owner.plan.cssWidth}px;height:${tile.h}px;pointer-events:none;opacity:0`;
-    owner.region.host.append(s);
-    this.sentinel = s;
+    const sentinel = owner.region.host.ownerDocument.createElement('div');
+    sentinel.setAttribute(SENTINEL_ATTR, '');
+    sentinel.setAttribute('aria-hidden', 'true');
+    sentinel.style.cssText = `position:absolute;left:0;top:${tile.y}px;width:${owner.plan.cssWidth}px;height:${tile.h}px;pointer-events:none;opacity:0`;
+    owner.region.host.append(sentinel);
+    this.sentinel = sentinel;
   }
 
   /**
@@ -92,7 +161,7 @@ export class CanvasTile implements BudgetClient, Frameable {
    * @returns {boolean} Has a canvas.
    */
   get hasCanvas(): boolean {
-    return this.canvas.live;
+    return this.#canvas.live;
   }
 
   /**
@@ -115,11 +184,11 @@ export class CanvasTile implements BudgetClient, Frameable {
    */
   ensure(): void {
     if (this.asleep || this.done) return;
-    const created = !this.canvas.live;
-    if (created && !this.allocate()) return;
-    if (!this.visible) this.fresh = true;
+    const created = !this.#canvas.live;
+    if (created && !this.#allocate()) return;
+    if (!this.visible) this.#fresh = true;
     if (created && this.visible && !this.frame(performance.now())) return;
-    this.owner.ctx.loop.add(this);
+    this.#owner.ctx.loop.add(this);
   }
 
   /**
@@ -130,10 +199,10 @@ export class CanvasTile implements BudgetClient, Frameable {
    * @returns {void}
    */
   repaint(t: number, now: boolean = this.visible): void {
-    if (!this.canvas.live || this.done) return;
-    this.fresh = true;
+    if (!this.#canvas.live || this.done) return;
+    this.#fresh = true;
     if (now) this.frame(t);
-    else this.owner.ctx.loop.add(this);
+    else this.#owner.ctx.loop.add(this);
   }
 
   /**
@@ -143,8 +212,8 @@ export class CanvasTile implements BudgetClient, Frameable {
    */
   sleep(): void {
     this.asleep = true;
-    this.owner.ctx.loop.delete(this);
-    if (this.owner.ctx.sleep === 'release') this.canvas.free();
+    this.#owner.ctx.loop.delete(this);
+    if (this.#owner.ctx.sleep === 'release') this.#canvas.release();
   }
 
   /**
@@ -153,8 +222,8 @@ export class CanvasTile implements BudgetClient, Frameable {
    * @returns {void}
    */
   evict(): void {
-    this.owner.ctx.loop.delete(this);
-    this.canvas.free();
+    this.#owner.ctx.loop.delete(this);
+    this.#canvas.release();
   }
 
   /**
@@ -164,23 +233,23 @@ export class CanvasTile implements BudgetClient, Frameable {
    * @returns {boolean} Still animating.
    */
   frame(t: number): boolean {
-    const { ctx, canvas } = this.canvas;
+    const { ctx, canvas } = this.#canvas;
     if (!ctx || !canvas) return false;
-    const [top, bottom] = this.owner.view(t);
+    const [top, bottom] = this.#owner.view(t);
     const { y, h } = this.tile;
     this.slice.start(t, top, bottom);
     if (!this.slice.pending(t)) {
-      this.finish();
+      this.#finish();
       return false;
     }
-    const dpr = this.owner.plan.dpr;
-    const y0 = this.fresh ? y : Math.max(y, top - SLICE_MARGIN);
-    const y1 = this.fresh ? y + h : Math.min(y + h, bottom + SLICE_MARGIN);
-    const revision = this.owner.ctx.revision();
+    const dpr = this.#owner.plan.dpr;
+    const y0 = this.#fresh ? y : Math.max(y, top - SLICE_MARGIN);
+    const y1 = this.#fresh ? y + h : Math.min(y + h, bottom + SLICE_MARGIN);
+    const revision = this.#owner.ctx.revision();
     const keep =
-      !this.fresh && revision === this.revision && this.slice.retains;
-    this.revision = revision;
-    this.fresh = false;
+      !this.#fresh && revision === this.#revision && this.slice.retains;
+    this.#revision = revision;
+    this.#fresh = false;
     if (y1 > y0) {
       const d0 = Math.floor((y0 - y) * dpr);
       const d1 = Math.ceil((y1 - y) * dpr);
@@ -190,14 +259,14 @@ export class CanvasTile implements BudgetClient, Frameable {
       ctx.rect(0, d0, canvas.width, d1 - d0);
       ctx.clip();
       if (!keep) ctx.clearRect(0, d0, canvas.width, d1 - d0);
-      const viewH = this.owner.ctx.display.viewH;
+      const viewH = this.#owner.ctx.display.viewH;
       this.slice.paint({ ctx, dpr, ox: 0, oy: -y, y0, y1, viewH }, t, keep);
       ctx.restore();
-      this.owner.ctx.painted(this.owner.region);
+      this.#owner.ctx.painted(this.#owner.region);
     }
     const top1 = Math.max(top, y);
     const animating = this.slice.animating(t, top1, Math.min(bottom, y + h));
-    if (!animating) this.settleLater();
+    if (!animating) this.#settleLater();
     return animating;
   }
 
@@ -209,9 +278,12 @@ export class CanvasTile implements BudgetClient, Frameable {
    */
   setVisible(visible: boolean): void {
     this.visible = visible;
-    if (visible) return this.ensure();
-    if (this.owner.ctx.budget.over) this.evict();
-    this.settleLater();
+    if (visible) {
+      this.ensure();
+      return;
+    }
+    if (this.#owner.ctx.budget.over) this.evict();
+    this.#settleLater();
   }
 
   /**
@@ -220,42 +292,71 @@ export class CanvasTile implements BudgetClient, Frameable {
    * @returns {void}
    */
   destroy(): void {
-    clearTimeout(this.settle);
+    this.#cancelSettle();
     this.evict();
-    this.owner.unobserve(this.sentinel);
+    this.#owner.unobserve(this.sentinel);
     this.sentinel.remove();
   }
 
-  private settleLater(): void {
+  /**
+   * Stops the settle timer, if one runs.
+   *
+   * @returns {void}
+   */
+  #cancelSettle(): void {
+    if (this.#settle !== null) clearTimeout(this.#settle);
+    this.#settle = null;
+  }
+
+  /**
+   * Finishes the tile once its last started reveal ends, unless it still
+   * has something to draw then. Waits while any reveal has not started.
+   *
+   * @returns {void}
+   */
+  #settleLater(): void {
     const end = this.slice.settlesAt();
     if (!Number.isFinite(end)) return;
-    clearTimeout(this.settle);
-    this.settle = window.setTimeout(
+    this.#cancelSettle();
+    this.#settle = setTimeout(
       () => {
-        if (!this.done && !this.slice.pending(performance.now())) this.finish();
+        if (!this.done && !this.slice.pending(performance.now())) {
+          this.#finish();
+        }
       },
       Math.max(0, end - performance.now()) + 16,
     );
   }
 
-  private allocate(): boolean {
-    const { plan, region } = this.owner;
+  /**
+   * Asks for a canvas over its rows at the plan's DPR.
+   *
+   * @returns {boolean} True when granted.
+   */
+  #allocate(): boolean {
+    const { plan, region } = this.#owner;
     const h = tilePxHeight(this.tile, plan.dpr);
-    const ok = this.canvas.allocate(region.host, plan.pxWidth, h, {
+    const ok = this.#canvas.allocate(region.host, plan.pxWidth, h, {
       top: this.tile.y,
       width: plan.cssWidth,
       height: this.tile.h,
     });
-    this.fresh = true;
+    this.#fresh = true;
     return ok;
   }
 
-  private finish(): void {
+  /**
+   * Marks it done, leaves the loop and, after this task, removes it and
+   * tells the surface.
+   *
+   * @returns {void}
+   */
+  #finish(): void {
     this.done = true;
-    this.owner.ctx.loop.delete(this);
+    this.#owner.ctx.loop.delete(this);
     queueMicrotask(() => {
       this.destroy();
-      this.owner.tileDone();
+      this.#owner.tileDone();
     });
   }
 }

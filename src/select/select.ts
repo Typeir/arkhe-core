@@ -10,9 +10,13 @@
  */
 
 import type { RootNode } from '../base/environment.js';
-import { floatingMachineProps, type Placement } from '../overlay/floating.js';
-import { formatLabel, type ArkheLabels } from '../base/labels.js';
+import { type ArkheLabels, formatLabel } from '../base/labels.js';
 import { definedOnly, valueArray } from '../base/machine.js';
+import {
+  floatingMachineProps,
+  type FloatingMachineProps,
+  type Placement,
+} from '../overlay/floating.js';
 
 /**
  * What a port passes to `selectMachineProps`.
@@ -47,13 +51,41 @@ export interface SelectMachineInput {
 }
 
 /**
+ * Zag select machine props, minus the collection and callbacks.
+ *
+ * @interface SelectMachineProps
+ * @property {string[]} [value] - Controlled selection.
+ * @property {string[]} [defaultValue] - First selection when uncontrolled.
+ * @property {string} [name] - Form field name.
+ * @property {boolean} [required] - A value must be chosen.
+ * @property {boolean} [invalid] - Marks the control invalid.
+ * @property {string} [autoComplete] - Autofill hint.
+ * @property {boolean} [disabled] - Blocks interaction.
+ * @property {boolean} loopFocus - Arrows wrap at the ends.
+ * @property {{ clearTriggerLabel: string }} translations - Clear button name.
+ */
+export interface SelectMachineProps extends FloatingMachineProps {
+  readonly value?: string[];
+  readonly defaultValue?: string[];
+  readonly name?: string;
+  readonly required?: boolean;
+  readonly invalid?: boolean;
+  readonly autoComplete?: string;
+  readonly disabled?: boolean;
+  readonly loopFocus: boolean;
+  readonly translations: { readonly clearTriggerLabel: string };
+}
+
+/**
  * Builds Zag select machine props, minus the collection and callbacks.
  *
  * @function selectMachineProps
  * @param {SelectMachineInput} input - Port input.
- * @returns {object} Machine props.
+ * @returns {SelectMachineProps} Machine props.
  */
-export function selectMachineProps(input: SelectMachineInput) {
+export function selectMachineProps(
+  input: SelectMachineInput,
+): SelectMachineProps {
   return definedOnly({
     ...floatingMachineProps({
       id: input.id,

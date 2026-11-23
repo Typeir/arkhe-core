@@ -16,8 +16,8 @@
  * @since 0.1.0
  */
 
-import { documentOf, type RootNode } from '../base/environment.js';
 import type { FocusReturn } from '../base/focusReturn.js';
+import { documentOf, type RootNode } from '../base/environment.js';
 import { definedOnly } from '../base/machine.js';
 
 /**
@@ -54,13 +54,37 @@ export interface DialogMachineInput {
 }
 
 /**
+ * Zag dialog machine props.
+ *
+ * @interface DialogMachineProps
+ * @property {string} id - Instance id.
+ * @property {boolean} open - Open state.
+ * @property {DialogRole} [role] - Dialog role.
+ * @property {() => HTMLElement | null} [initialFocusEl] - Element to focus on open.
+ * @property {(details: { open: boolean }) => void} onOpenChange - Zag's open-state callback.
+ * @property {() => HTMLElement | null} [finalFocusEl] - Element to focus on close.
+ * @property {() => RootNode} getRootNode - Root node for Zag.
+ */
+export interface DialogMachineProps {
+  readonly id: string;
+  readonly open: boolean;
+  readonly role?: DialogRole;
+  readonly initialFocusEl?: () => HTMLElement | null;
+  readonly onOpenChange: (details: { open: boolean }) => void;
+  readonly finalFocusEl?: () => HTMLElement | null;
+  readonly getRootNode: () => RootNode;
+}
+
+/**
  * Builds Zag dialog machine props.
  *
  * @function dialogMachineProps
  * @param {DialogMachineInput} input - Port input.
- * @returns {object} Machine props.
+ * @returns {DialogMachineProps} Machine props.
  */
-export function dialogMachineProps(input: DialogMachineInput) {
+export function dialogMachineProps(
+  input: DialogMachineInput,
+): DialogMachineProps {
   const open = input.open && (input.ready ?? true);
   const memory = input.focusReturn;
   memory?.track(open, input.getRootNode());
@@ -69,8 +93,9 @@ export function dialogMachineProps(input: DialogMachineInput) {
     open,
     role: input.role,
     initialFocusEl: input.initialFocus,
-    onOpenChange: (details: { open: boolean }) =>
-      input.onOpenChange(details.open),
+    onOpenChange: (details: { open: boolean }) => {
+      input.onOpenChange(details.open);
+    },
     finalFocusEl:
       input.finalFocus || memory
         ? () => input.finalFocus?.() ?? memory?.target() ?? null
@@ -133,8 +158,8 @@ export function hideShadowSiblings(content: Element): () => void {
  * @property {() => void} destroy - Stops watching.
  */
 interface CloseWatcherLike {
-  addEventListener(type: 'close', listener: () => void): void;
-  destroy(): void;
+  addEventListener: (type: 'close', listener: () => void) => void;
+  destroy: () => void;
 }
 
 /**
@@ -156,5 +181,7 @@ export function watchCloseRequest(
   if (!view?.CloseWatcher) return () => undefined;
   const watcher = new view.CloseWatcher();
   watcher.addEventListener('close', onClose);
-  return () => watcher.destroy();
+  return () => {
+    watcher.destroy();
+  };
 }

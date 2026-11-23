@@ -28,6 +28,7 @@ export const ARKHE_ICON_NAMES = [
   'pin',
   'pin-off',
   'external-link',
+  'grip-vertical',
 ] as const;
 
 /**
@@ -53,15 +54,15 @@ export type IconSet<R> = Readonly<Partial<Record<string, R>>>;
  * @template R
  * @param {readonly IconSet<R>[]} sets - Sets in priority order, overrides first.
  * @param {string} name - Lucide name.
- * @returns {R | undefined} Icon, or undefined when no set has it.
+ * @returns {R | null} Icon, or null when no set has it.
  */
 export function resolveIcon<R>(
   sets: readonly IconSet<R>[],
   name: string,
-): R | undefined {
+): R | null {
   for (const set of sets) {
     const icon = Object.hasOwn(set, name) ? set[name] : undefined;
     if (icon !== undefined) return icon;
   }
-  return undefined;
+  return null;
 }

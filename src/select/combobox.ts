@@ -12,10 +12,14 @@
 
 import type { RootNode } from '../base/environment.js';
 import type { EventNames } from '../base/events.js';
-import { floatingMachineProps, type Placement } from '../overlay/floating.js';
-import { formatLabel, formatPlural, type ArkheLabels } from '../base/labels.js';
+import { type ArkheLabels, formatLabel, formatPlural } from '../base/labels.js';
 import { DEFAULT_LOCALE } from '../base/locale.js';
 import { definedOnly, uniqueByValue, valueArray } from '../base/machine.js';
+import {
+  floatingMachineProps,
+  type FloatingMachineProps,
+  type Placement,
+} from '../overlay/floating.js';
 
 /**
  * One choice.
@@ -118,13 +122,13 @@ export function matchOption(option: SelectOption, query: string): boolean {
  * @param {readonly T[]} options - All options.
  * @param {string} query - Typed text.
  * @param {OptionFilter<T>} [filter] - Match rule. Defaults to `matchOption`.
- * @returns {T[]} Matching options, in order.
+ * @returns {readonly T[]} Matching options, in order.
  */
 export function filterOptions<T extends SelectOption>(
   options: readonly T[],
   query: string,
   filter: OptionFilter<T> = matchOption,
-): T[] {
+): readonly T[] {
   const unique = uniqueByValue(options);
   if (filter === false || !query.trim()) return unique;
   return unique.filter((option) => filter(option, query));
@@ -157,16 +161,35 @@ export function isGrouped(options: readonly SelectOption[]): boolean {
 }
 
 /**
+ * Options for Zag's `combobox.collection`.
+ *
+ * @interface OptionCollection
+ * @template {SelectOption} T
+ * @property {T[]} items - Options, copied.
+ * @property {(option: T) => string} itemToValue - Key of an option.
+ * @property {(option: T) => string} itemToString - Text of an option.
+ * @property {(option: T) => boolean} isItemDisabled - Says whether an option is blocked.
+ * @property {(option: T) => string} [groupBy] - Group of an option, when any option names one.
+ */
+export interface OptionCollection<T extends SelectOption> {
+  readonly items: T[];
+  readonly itemToValue: (option: T) => string;
+  readonly itemToString: (option: T) => string;
+  readonly isItemDisabled: (option: T) => boolean;
+  readonly groupBy?: (option: T) => string;
+}
+
+/**
  * Options for Zag's `combobox.collection`. Groups only when an option names one.
  *
  * @function optionCollection
  * @template {SelectOption} T
  * @param {readonly T[]} options - Shown options.
- * @returns {object} Collection options.
+ * @returns {OptionCollection<T>} Collection options.
  */
 export function optionCollection<T extends SelectOption>(
   options: readonly T[],
-) {
+): OptionCollection<T> {
   return definedOnly({
     items: [...options],
     itemToValue: (option: T) => option.value,
@@ -177,13 +200,53 @@ export function optionCollection<T extends SelectOption>(
 }
 
 /**
+ * Zag combobox machine props, minus the collection and callbacks.
+ *
+ * @interface ComboboxMachineProps
+ * @property {string[]} [value] - Controlled selection.
+ * @property {string[]} [defaultValue] - First selection when uncontrolled.
+ * @property {'clear' | 'replace'} selectionBehavior - What a choice does to the input.
+ * @property {'none' | 'autohighlight'} inputBehavior - Whether typing highlights.
+ * @property {boolean} openOnClick - A click opens the list.
+ * @property {boolean} loopFocus - Arrows wrap at the ends.
+ * @property {boolean} [loading] - Results are on their way.
+ * @property {boolean} [disabled] - Blocks input.
+ * @property {boolean} [required] - The input must not be empty.
+ * @property {boolean} [invalid] - Marks the control invalid.
+ * @property {string} [placeholder] - Input placeholder.
+ * @property {{ triggerLabel: string, clearTriggerLabel: string, noResults: string, loading: string, resultsCount: (count: number) => string }} translations - Names and announcements.
+ */
+export interface ComboboxMachineProps extends FloatingMachineProps {
+  readonly value?: string[];
+  readonly defaultValue?: string[];
+  readonly selectionBehavior: 'clear' | 'replace';
+  readonly inputBehavior: 'none' | 'autohighlight';
+  readonly openOnClick: boolean;
+  readonly loopFocus: boolean;
+  readonly loading?: boolean;
+  readonly disabled?: boolean;
+  readonly required?: boolean;
+  readonly invalid?: boolean;
+  readonly placeholder?: string;
+  readonly translations: {
+    readonly triggerLabel: string;
+    readonly clearTriggerLabel: string;
+    readonly noResults: string;
+    readonly loading: string;
+    readonly resultsCount: (count: number) => string;
+  };
+}
+
+/**
  * Builds Zag combobox machine props, minus the collection and callbacks.
  *
  * @function comboboxMachineProps
  * @param {ComboboxMachineInput} input - Port input.
- * @returns {object} Machine props.
+ * @returns {ComboboxMachineProps} Machine props.
  */
-export function comboboxMachineProps(input: ComboboxMachineInput) {
+export function comboboxMachineProps(
+  input: ComboboxMachineInput,
+): ComboboxMachineProps {
   const { labels } = input;
   return definedOnly({
     ...floatingMachineProps({
@@ -279,4 +342,32 @@ export function guardComboboxKeys<P extends object>(
     zagKeydown?.(event);
   };
   return record as P;
+}
+
+/**
+ * What stands in for the list: results loading, the request failed, or
+ * nothing matches.
+ *
+ * @typedef {'loading' | 'failed' | 'empty'} ListNote
+ */
+export type ListNote = 'loading' | 'failed' | 'empty';
+
+/**
+ * Picks the line that stands in for the options: loading first, then
+ * failure, then no match.
+ *
+ * @function listNote
+ * @param {boolean | undefined} loading - Results are loading.
+ * @param {boolean | undefined} failed - The request failed.
+ * @param {number} count - Options shown.
+ * @returns {ListNote | undefined} Line, or none while options show.
+ */
+export function listNote(
+  loading: boolean | undefined,
+  failed: boolean | undefined,
+  count: number,
+): ListNote | undefined {
+  if (loading) return 'loading';
+  if (failed) return 'failed';
+  return count === 0 ? 'empty' : undefined;
 }

@@ -9,6 +9,8 @@
  * @since 0.4.0
  */
 
+import { watchFindable } from '../base/dom.js';
+
 /**
  * Heading level that may wrap a collapsible's trigger.
  *
@@ -54,6 +56,25 @@ export function headingTag(
 }
 
 /**
+ * Elements of a collapsible's root and header. With a heading it is a
+ * document section: `<section>`, unnamed so not a landmark, and a scoped
+ * `<header>` holding the trigger and the actions. Without one, plain
+ * containers.
+ *
+ * @function sectionTags
+ * @param {HeadingLevel} [heading] - Heading level of the trigger.
+ * @returns {{ root: 'section' | 'div', header: 'header' | 'div' }} Tag names.
+ */
+export function sectionTags(heading: HeadingLevel | undefined): {
+  root: 'section' | 'div';
+  header: 'header' | 'div';
+} {
+  return heading === undefined
+    ? { root: 'div', header: 'div' }
+    : { root: 'section', header: 'header' };
+}
+
+/**
  * Keeps a closed region findable: the framework writes plain `hidden`, this
  * turns it into `hidden="until-found"`; when find-in-page or a text
  * fragment reveals the region, `onFound` opens the collapsible. A nested
@@ -68,24 +89,9 @@ export function findableRegion(
   root: HTMLElement,
   onFound: () => void,
 ): () => void {
-  const mark = () => {
-    for (const region of root.querySelectorAll<HTMLElement>(
-      ':scope > [data-findable][hidden]',
-    )) {
-      if (region.getAttribute('hidden') !== 'until-found') {
-        region.setAttribute('hidden', 'until-found');
-      }
-    }
-  };
-  mark();
-  const View = root.ownerDocument.defaultView?.MutationObserver;
-  const observer = View ? new View(mark) : undefined;
-  observer?.observe(root, { subtree: true, attributeFilter: ['hidden'] });
-  root.addEventListener('beforematch', onFound, true);
-  return () => {
-    observer?.disconnect();
-    root.removeEventListener('beforematch', onFound, true);
-  };
+  return watchFindable(root, () => {
+    onFound();
+  });
 }
 
 /**

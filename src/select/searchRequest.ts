@@ -45,6 +45,22 @@ export interface SearchState<T> {
 export const SEARCH_DEBOUNCE = 200;
 
 /**
+ * How a search shows a pending query: the loading line while it has no
+ * results, else its earlier results dimmed.
+ *
+ * @function searchBusy
+ * @param {boolean} loading - A query is waiting or running.
+ * @param {number} count - Results on show.
+ * @returns {{ readonly loading: boolean; readonly stale: boolean }} Loading line, dimmed results.
+ */
+export function searchBusy(
+  loading: boolean,
+  count: number,
+): { readonly loading: boolean; readonly stale: boolean } {
+  return { loading: loading && count === 0, stale: loading && count > 0 };
+}
+
+/**
  * Debounces, runs and aborts the host's search requests; reports each
  * change of state.
  *
@@ -52,8 +68,39 @@ export const SEARCH_DEBOUNCE = 200;
  * @template T
  */
 export class SearchRequest<T> {
-  #timer: ReturnType<typeof setTimeout> | undefined;
-  #controller: AbortController | undefined;
+  /**
+   * Receives every state change.
+   *
+   * @type {(state: SearchState<T>) => void}
+   */
+  readonly report: (state: SearchState<T>) => void;
+
+  /**
+   * Debounce in milliseconds.
+   *
+   * @type {number}
+   */
+  readonly delay: number;
+
+  /**
+   * The waiting query's debounce, `null` when none waits.
+   *
+   * @type {ReturnType<typeof setTimeout> | null}
+   */
+  #timer: ReturnType<typeof setTimeout> | null = null;
+
+  /**
+   * Aborts the running request, `null` before the first one runs.
+   *
+   * @type {AbortController | null}
+   */
+  #controller: AbortController | null = null;
+
+  /**
+   * Latest results.
+   *
+   * @type {readonly T[]}
+   */
   #items: readonly T[] = [];
 
   /**
@@ -61,9 +108,12 @@ export class SearchRequest<T> {
    * @param {number} [delay] - Debounce in milliseconds. Defaults to `SEARCH_DEBOUNCE`.
    */
   constructor(
-    readonly report: (state: SearchState<T>) => void,
-    readonly delay: number = SEARCH_DEBOUNCE,
-  ) {}
+    report: (state: SearchState<T>) => void,
+    delay: number = SEARCH_DEBOUNCE,
+  ) {
+    this.report = report;
+    this.delay = delay;
+  }
 
   /**
    * Queues `query`: drops the waiting or running one, then runs `run` once
@@ -77,6 +127,7 @@ export class SearchRequest<T> {
     this.#cancel();
     this.#emit(true, false);
     this.#timer = setTimeout(() => {
+      this.#timer = null;
       const controller = new AbortController();
       this.#controller = controller;
       run(query, controller.signal).then(
@@ -99,7 +150,7 @@ export class SearchRequest<T> {
    *
    * @returns {void}
    */
-  dispose(): void {
+  destroy(): void {
     this.#cancel();
   }
 
@@ -109,7 +160,8 @@ export class SearchRequest<T> {
    * @returns {void}
    */
   #cancel(): void {
-    clearTimeout(this.#timer);
+    if (this.#timer !== null) clearTimeout(this.#timer);
+    this.#timer = null;
     this.#controller?.abort();
   }
 

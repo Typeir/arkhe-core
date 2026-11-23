@@ -52,11 +52,11 @@ export interface View {
  */
 export interface Slice {
   readonly retains: boolean;
-  start(t: number, top: number, bottom: number): void;
-  pending(t: number): boolean;
-  animating(t: number, top: number, bottom: number): boolean;
-  settlesAt(): number;
-  paint(view: View, t: number, keep: boolean): void;
+  start: (t: number, top: number, bottom: number) => void;
+  pending: (t: number) => boolean;
+  animating: (t: number, top: number, bottom: number) => boolean;
+  settlesAt: () => number;
+  paint: (view: View, t: number, keep: boolean) => void;
 }
 
 /**
@@ -76,9 +76,9 @@ export interface Region {
   readonly width: number;
   readonly height: number;
   readonly step: number;
-  box(): { left: number; top: number; bottom: number };
-  key(): string;
-  slice(y0: number, y1: number): Slice;
+  box: () => { left: number; top: number; bottom: number };
+  key: () => string;
+  slice: (y0: number, y1: number) => Slice;
 }
 
 /**
@@ -101,12 +101,12 @@ export interface SurfaceContext {
   readonly budget: CanvasBudget;
   readonly hub: ObserverHub;
   readonly display: DisplayWatcher;
-  revision(): number;
+  revision: () => number;
   readonly sleep: 'keep' | 'release';
   readonly tileScale: number;
   readonly wakeMargin: string;
-  painted(region: Region): void;
-  done(region: Region): void;
+  painted: (region: Region) => void;
+  done: (region: Region) => void;
 }
 
 /**
@@ -121,7 +121,7 @@ export const VISIBLE_MARGIN = '0px';
  * Snaps a region-local rect of `view` to whole device px.
  *
  * @function snapRect
- * @param {View} v - View.
+ * @param {View} view - View.
  * @param {number} x - Left.
  * @param {number} y - Top.
  * @param {number} w - Width.
@@ -129,18 +129,18 @@ export const VISIBLE_MARGIN = '0px';
  * @returns {readonly [number, number, number, number]} Device x, y, width, height.
  */
 export function snapRect(
-  v: View,
+  view: View,
   x: number,
   y: number,
   w: number,
   h: number,
 ): readonly [number, number, number, number] {
-  const x0 = Math.round((x + v.ox) * v.dpr);
-  const y0 = Math.round((y + v.oy) * v.dpr);
+  const x0 = Math.round((x + view.ox) * view.dpr);
+  const y0 = Math.round((y + view.oy) * view.dpr);
   return [
     x0,
     y0,
-    Math.round((x + w + v.ox) * v.dpr) - x0,
-    Math.round((y + h + v.oy) * v.dpr) - y0,
+    Math.round((x + w + view.ox) * view.dpr) - x0,
+    Math.round((y + h + view.oy) * view.dpr) - y0,
   ];
 }

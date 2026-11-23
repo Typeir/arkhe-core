@@ -9,6 +9,8 @@
  * @since 0.1.0
  */
 
+import { windowOf } from '../../base/dom.js';
+
 /**
  * Red, green and blue channels, 0 to 255.
  *
@@ -21,31 +23,32 @@ export type Rgb = readonly [number, number, number];
  *
  * @function resolveColor
  * @param {string} value - CSS colour.
+ * @param {Document} [doc] - Document that makes the canvas. Defaults to the document of the window core was loaded in.
  * @returns {Rgb} Channels.
  */
-export function resolveColor(value: string): Rgb {
-  const c = document.createElement('canvas');
-  c.width = c.height = 1;
-  const ctx = c.getContext('2d', { willReadFrequently: true });
+export function resolveColor(value: string, doc?: Document): Rgb {
+  const canvas = (doc ?? windowOf().document).createElement('canvas');
+  canvas.width = canvas.height = 1;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) return [0, 0, 0];
   ctx.fillStyle = value || 'transparent';
   ctx.fillRect(0, 0, 1, 1);
-  const d = ctx.getImageData(0, 0, 1, 1).data;
-  return [d[0] ?? 0, d[1] ?? 0, d[2] ?? 0];
+  const data = ctx.getImageData(0, 0, 1, 1).data;
+  return [data[0] ?? 0, data[1] ?? 0, data[2] ?? 0];
 }
 
 /**
  * Formats RGB plus alpha as an 8-digit hex colour.
  *
  * @function formatColor
- * @param {Rgb} c - Channels.
+ * @param {Rgb} rgb - Channels.
  * @param {number} alpha - Alpha, 0 to 1.
  * @returns {string} CSS colour.
  */
-export function formatColor(c: Rgb, alpha: number): string {
-  const a = Math.round(Math.min(1, Math.max(0, alpha)) * 255);
-  const hex = [...c, a]
-    .map((n) => Math.round(n).toString(16).padStart(2, '0'))
+export function formatColor(rgb: Rgb, alpha: number): string {
+  const alphaByte = Math.round(Math.min(1, Math.max(0, alpha)) * 255);
+  const hex = [...rgb, alphaByte]
+    .map((channel) => Math.round(channel).toString(16).padStart(2, '0'))
     .join('');
   return `#${hex}`;
 }
@@ -54,16 +57,16 @@ export function formatColor(c: Rgb, alpha: number): string {
  * Mixes two colours channel by channel.
  *
  * @function mixRgb
- * @param {Rgb} a - From.
- * @param {Rgb} b - To.
- * @param {number} k - Weight of `b`, 0 to 1.
+ * @param {Rgb} from - From.
+ * @param {Rgb} to - To.
+ * @param {number} k - Weight of `to`, 0 to 1.
  * @returns {Rgb} Mixed.
  */
-export function mixRgb(a: Rgb, b: Rgb, k: number): Rgb {
+export function mixRgb(from: Rgb, to: Rgb, k: number): Rgb {
   return [
-    Math.round(a[0] + (b[0] - a[0]) * k),
-    Math.round(a[1] + (b[1] - a[1]) * k),
-    Math.round(a[2] + (b[2] - a[2]) * k),
+    Math.round(from[0] + (to[0] - from[0]) * k),
+    Math.round(from[1] + (to[1] - from[1]) * k),
+    Math.round(from[2] + (to[2] - from[2]) * k),
   ];
 }
 
@@ -84,7 +87,7 @@ export function computeColor(el: Element, value: string): string {
   probe.style.color = value;
   if (!probe.style.color) return value;
   el.append(probe);
-  const color = getComputedStyle(probe).color;
+  const color = windowOf(el).getComputedStyle(probe).color;
   probe.remove();
   return color || value;
 }
@@ -102,8 +105,8 @@ export function readTokens<K extends string>(
   el: Element,
   names: readonly K[],
 ): Record<K, string> {
-  const cs = getComputedStyle(el);
+  const style = windowOf(el).getComputedStyle(el);
   return Object.fromEntries(
-    names.map((name) => [name, cs.getPropertyValue(name).trim()]),
+    names.map((name) => [name, style.getPropertyValue(name).trim()]),
   ) as Record<K, string>;
 }

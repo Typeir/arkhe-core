@@ -19,9 +19,9 @@
  * @property {(cx: number, cy: number, h: number) => void} triangle - Upward triangle of half-size `h`.
  */
 export interface Pen {
-  rect(x: number, y: number, w: number, h: number): void;
-  diamond(cx: number, cy: number, h: number): void;
-  triangle(cx: number, cy: number, h: number): void;
+  rect: (x: number, y: number, w: number, h: number) => void;
+  diamond: (cx: number, cy: number, h: number) => void;
+  triangle: (cx: number, cy: number, h: number) => void;
 }
 
 /**
@@ -40,7 +40,9 @@ export type PathTarget = Path2D | CanvasRenderingContext2D;
  */
 export function pathPen(path: PathTarget): Pen {
   return {
-    rect: (x, y, w, h) => path.rect(x, y, w, h),
+    rect: (x, y, w, h) => {
+      path.rect(x, y, w, h);
+    },
     diamond: (cx, cy, h) => {
       path.moveTo(cx, cy - h);
       path.lineTo(cx + h, cy);

@@ -17,19 +17,19 @@
  */
 export const BAYER4: readonly number[] = [
   0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5,
-].map((r) => (r + 0.5) / 16);
+].map((rank) => (rank + 0.5) / 16);
 
 /**
  * Integer hash of up to three keys to [0, 1).
  *
  * @function hash3
- * @param {number} a - First key.
- * @param {number} [b] - Second key.
- * @param {number} [c] - Third key.
+ * @param {number} first - First key.
+ * @param {number} [second] - Second key. Defaults to 0.
+ * @param {number} [third] - Third key. Defaults to 0.
  * @returns {number} Hash.
  */
-export function hash3(a: number, b = 0, c = 0): number {
-  let h = (a * 374761393 + b * 668265263 + c * 2147483647) | 0;
+export function hash3(first: number, second = 0, third = 0): number {
+  let h = (first * 374761393 + second * 668265263 + third * 2147483647) | 0;
   h = Math.imul(h ^ (h >>> 13), 1274126177);
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }

@@ -12,6 +12,7 @@
  */
 
 import type { Fx, FxOptions } from './fx/api.js';
+import { type OwnerWindow, ownWindow, windowOf } from '../base/dom.js';
 
 export type { Fx, FxOptions, FxStats } from './fx/api.js';
 
@@ -20,10 +21,10 @@ export type { Fx, FxOptions, FxStats } from './fx/api.js';
  * with its `createFx`.
  *
  * @interface FxModule
- * @property {(options?: Partial<FxOptions>) => Fx} createFx - Builds an engine.
+ * @property {(options?: Partial<FxOptions>, view?: OwnerWindow) => Fx} createFx - Builds an engine for a window.
  */
 export interface FxModule {
-  createFx(options?: Partial<FxOptions>): Fx;
+  createFx: (options?: Partial<FxOptions>, view?: OwnerWindow) => Fx;
 }
 
 /**
@@ -40,18 +41,45 @@ export type EffectsSetting = Partial<FxOptions> | false;
  * @class FxLoader
  */
 export class FxLoader {
-  private current: Fx | null = null;
-  private pending: Promise<Fx | null> | null = null;
-  private mounts = 0;
+  /**
+   * Options, or `false` for none.
+   *
+   * @type {EffectsSetting}
+   */
+  readonly setting: EffectsSetting;
+  /**
+   * The engine once made; null before that and after destroy.
+   *
+   * @type {Fx | null}
+   */
+  #current: Fx | null = null;
+  /**
+   * The load in flight; null while none runs.
+   *
+   * @type {Promise<Fx | null> | null}
+   */
+  #pending: Promise<Fx | null> | null = null;
+  /**
+   * Providers holding the engine now.
+   *
+   * @type {number}
+   */
+  #mounts = 0;
+  /**
+   * Imports the engine module.
+   *
+   * @type {() => Promise<FxModule>}
+   */
+  readonly #load: () => Promise<FxModule>;
 
   /**
    * @param {EffectsSetting} setting - Options, or `false` for none.
    * @param {() => Promise<FxModule>} load - Imports the engine module.
    */
-  constructor(
-    readonly setting: EffectsSetting,
-    private readonly load: () => Promise<FxModule>,
-  ) {}
+  constructor(setting: EffectsSetting, load: () => Promise<FxModule>) {
+    this.setting = setting;
+    this.#load = load;
+  }
 
   /**
    * The engine, once loaded; null before that and when effects are off.
@@ -59,32 +87,36 @@ export class FxLoader {
    * @returns {Fx | null} Engine.
    */
   get engine(): Fx | null {
-    return this.current;
+    return this.#current;
   }
 
   /**
-   * Loads and makes the engine once. Resolves to null when effects are
-   * off, outside a browser, or when loading fails.
+   * Loads and makes the engine once, for the window of the first host that
+   * asks. Resolves to null when effects are off, outside a browser, or when
+   * loading fails.
    *
+   * @param {HTMLElement} [host] - Owner asking; its window gets the engine. Defaults to the window core was loaded in.
    * @returns {Promise<Fx | null>} Engine.
    */
-  request(): Promise<Fx | null> {
+  request(host?: HTMLElement): Promise<Fx | null> {
     const setting = this.setting;
-    if (setting === false || typeof window === 'undefined')
+    const view = host ? windowOf(host) : ownWindow();
+    if (setting === false || view === null) {
       return Promise.resolve(null);
-    if (this.current) return Promise.resolve(this.current);
-    this.pending ??= this.load().then(
+    }
+    if (this.#current) return Promise.resolve(this.#current);
+    this.#pending ??= this.#load().then(
       (mod) => {
-        this.pending = null;
-        this.current ??= mod.createFx(setting);
-        return this.current;
+        this.#pending = null;
+        this.#current ??= mod.createFx(setting, view);
+        return this.#current;
       },
       () => {
-        this.pending = null;
+        this.#pending = null;
         return null;
       },
     );
-    return this.pending;
+    return this.#pending;
   }
 
   /**
@@ -93,13 +125,13 @@ export class FxLoader {
    * @returns {() => void} Destroys the engine once every mount has undone.
    */
   mount(): () => void {
-    this.mounts += 1;
+    this.#mounts += 1;
     let done = false;
     return () => {
       if (done) return;
       done = true;
-      this.mounts -= 1;
-      if (this.mounts === 0) this.destroy();
+      this.#mounts -= 1;
+      if (this.#mounts === 0) this.destroy();
     };
   }
 
@@ -109,7 +141,7 @@ export class FxLoader {
    * @returns {void}
    */
   destroy(): void {
-    this.current?.destroy();
-    this.current = null;
+    this.#current?.destroy();
+    this.#current = null;
   }
 }

@@ -59,9 +59,9 @@ export const SKELETON_TOKENS = [
  * @returns {Palette} Palette.
  */
 export function readPalette(el: Element): Palette {
-  const v = readTokens(el, SKELETON_TOKENS);
+  const tokens = readTokens(el, SKELETON_TOKENS);
   const color = (name: (typeof SKELETON_TOKENS)[number]) =>
-    resolveColor(computeColor(el, v[name]));
+    resolveColor(computeColor(el, tokens[name]), el.ownerDocument);
   const surface = color('--skeleton-surface');
   const glint1 = color('--skeleton-glint-1');
   const glint2 = color('--skeleton-glint-2');
@@ -71,19 +71,19 @@ export function readPalette(el: Element): Palette {
     [glint1, 0.9],
     [glint2, 0.95],
   ];
-  const tones = Array.from({ length: LEVELS }, (_, l) => {
-    const x = (l / (LEVELS - 1)) * 3;
+  const tones = [...Array(LEVELS).keys()].map((level) => {
+    const x = (level / (LEVELS - 1)) * 3;
     const i = Math.min(2, Math.floor(x));
-    const f = x - i;
+    const weight = x - i;
     const [c0, a0] = stops[i] ?? stops[0];
     const [c1, a1] = stops[i + 1] ?? stops[0];
-    return formatColor(mixRgb(c0, c1, f), a0 + (a1 - a0) * f);
+    return formatColor(mixRgb(c0, c1, weight), a0 + (a1 - a0) * weight);
   });
-  const p = {
+  const colors = {
     tones,
     front: formatColor(glint2, 1),
-    bg: computeColor(el, v['--skeleton-bg']) || 'transparent',
-    font: v['--skeleton-glyph-font'] || 'serif',
+    bg: computeColor(el, tokens['--skeleton-bg']) || 'transparent',
+    font: tokens['--skeleton-glyph-font'] || 'serif',
   };
-  return { ...p, key: JSON.stringify(p) };
+  return { ...colors, key: JSON.stringify(colors) };
 }

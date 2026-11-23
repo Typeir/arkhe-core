@@ -11,6 +11,8 @@
 export * from './section/accordion.js';
 export * from './base/announcer.js';
 export * from './hint/cardAccess.js';
+export * from './hint/cardDrag.js';
+export * from './hint/cardPlace.js';
 export * from './choice/checkbox.js';
 export * from './action/chip.js';
 export * from './section/collapsible.js';
@@ -44,5 +46,6 @@ export * from './select/searchRequest.js';
 export * from './select/select.js';
 export * from './feedback/status.js';
 export * from './section/tabs.js';
+export * from './section/tabsLook.js';
 export * from './choice/toggleGroup.js';
 export * from './list/virtual.js';

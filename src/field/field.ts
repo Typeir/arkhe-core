@@ -8,6 +8,8 @@
  * @since 0.1.0
  */
 
+import { hasText } from '../base/parts.js';
+
 /**
  * Ids of a field's parts.
  *
@@ -71,8 +73,8 @@ export function fieldDescribedBy(
   hint?: string,
   error?: string,
 ): string | undefined {
-  if (error) return ids.error;
-  return hint ? ids.hint : undefined;
+  if (hasText(error)) return ids.error;
+  return hasText(hint) ? ids.hint : undefined;
 }
 
 /**

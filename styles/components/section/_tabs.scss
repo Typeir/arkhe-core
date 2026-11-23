@@ -1,7 +1,9 @@
 /**
- * @fileoverview Tabs: caps triggers on a rule, an accent bar with a rhombus
- * that slides to the selected tab. Zag sets the bar's transition inline from
- * the `--transition-*` variables, so those carry the timing.
+ * @fileoverview Tabs. `line`: caps triggers on a rule, an accent bar with a
+ * rhombus that slides to the selected tab. `folder`: the host's drawer tabs,
+ * which take the layer opposite their ground so they nest to any depth. Zag
+ * sets the bar's transition inline from the `--transition-*` variables, so
+ * those carry the timing.
  */
 
 @use '../../contrast' as *;
@@ -90,5 +92,99 @@
   @include part('tabs', 'content') {
     color: var(--color-text);
     @include focus-ring;
+  }
+
+  @include part('tabs', 'root') {
+    &[data-look='folder'] {
+      --tabs-layer: var(--color-surface);
+      gap: 0;
+
+      &[data-layer='bg'] {
+        --tabs-layer: var(--color-bg);
+      }
+
+      > [data-part='list'] {
+        gap: 0.25rem;
+        overflow: auto hidden;
+        min-width: 0;
+        margin-bottom: -1px;
+        padding: 1.25rem 0.125rem 0;
+        border: var(--border-width-m) solid var(--tabs-layer);
+        border-bottom-width: var(--border-width-xs);
+        background: linear-gradient(
+          0deg,
+          var(--tabs-layer) 20%,
+          transparent 30%
+        );
+      }
+
+      > [data-part='list'] > [data-part='trigger'] {
+        position: relative;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.75rem 0.85rem;
+        border: var(--border-width-xs) solid var(--tabs-layer);
+        border-bottom: none;
+        background: transparent;
+        color: var(--color-secondary);
+        font-size: 0.8rem;
+        font-weight: 500;
+        letter-spacing: normal;
+        text-transform: none;
+        white-space: nowrap;
+        transition:
+          color 0.2s ease,
+          background 0.2s ease,
+          filter 0.2s ease;
+
+        &:hover:not([data-disabled]) {
+          background: color-mix(in srgb, var(--tabs-layer) 60%, transparent);
+          color: var(--color-text);
+        }
+
+        &[data-selected] {
+          background: var(--tabs-layer);
+          color: var(--color-accent);
+
+          &:hover:not([data-disabled]) {
+            filter: brightness(1.05);
+          }
+
+          &::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--tabs-layer);
+          }
+        }
+
+        @include forced {
+          &[data-selected] {
+            outline: var(--border-width-s) solid Highlight;
+            outline-offset: -2px;
+          }
+        }
+      }
+
+      > [data-part='list'] > [data-part='indicator'] {
+        display: none;
+      }
+
+      > [data-part='content']:not([hidden]) {
+        padding: 1rem;
+        border: var(--border-width-xs) solid var(--tabs-layer);
+        background: var(--tabs-layer);
+        animation: arkhe-tab-in 0.2s ease-in;
+
+        @include still {
+          animation: none;
+        }
+      }
+    }
   }
 }

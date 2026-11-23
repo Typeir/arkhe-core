@@ -9,7 +9,20 @@
  * @since 0.1.0
  */
 
+/**
+ * Selector of a chip's root.
+ *
+ * @constant CHIP_ROOT
+ * @type {string}
+ */
 const CHIP_ROOT = '[data-scope="chip"][data-part="root"]';
+
+/**
+ * Selector of a chip's remove button.
+ *
+ * @constant CHIP_REMOVE
+ * @type {string}
+ */
 const CHIP_REMOVE = '[data-scope="chip"][data-part="remove"]';
 
 /**

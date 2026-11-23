@@ -11,6 +11,8 @@
  * @since 0.1.0
  */
 
+import { windowOf } from '../../base/dom.js';
+
 /**
  * Receives whether an element intersects its margin.
  *
@@ -24,7 +26,12 @@ export type IntersectionWatch = (inside: boolean) => void;
  * @class ObserverHub
  */
 export class ObserverHub {
-  private readonly hubs = new Map<
+  /**
+   * One observer per root margin, with the watch of each element it sees.
+   *
+   * @type {Map<string, { io: IntersectionObserver, watches: Map<Element, IntersectionWatch> }>}
+   */
+  readonly #hubs = new Map<
     string,
     {
       readonly io: IntersectionObserver;
@@ -41,17 +48,19 @@ export class ObserverHub {
    * @returns {void}
    */
   observe(el: Element, margin: string, watch: IntersectionWatch): void {
-    let hub = this.hubs.get(margin);
+    let hub = this.#hubs.get(margin);
     if (!hub) {
       const watches = new Map<Element, IntersectionWatch>();
-      const io = new IntersectionObserver(
+      const io = new (windowOf(el).IntersectionObserver)(
         (entries) => {
-          for (const e of entries) watches.get(e.target)?.(e.isIntersecting);
+          for (const entry of entries) {
+            watches.get(entry.target)?.(entry.isIntersecting);
+          }
         },
         { rootMargin: margin },
       );
       hub = { io, watches };
-      this.hubs.set(margin, hub);
+      this.#hubs.set(margin, hub);
     }
     hub.watches.set(el, watch);
     hub.io.observe(el);
@@ -65,7 +74,7 @@ export class ObserverHub {
    * @returns {void}
    */
   unobserve(el: Element, margin: string): void {
-    const hub = this.hubs.get(margin);
+    const hub = this.#hubs.get(margin);
     if (!hub) return;
     hub.watches.delete(el);
     hub.io.unobserve(el);
@@ -77,8 +86,8 @@ export class ObserverHub {
    * @returns {void}
    */
   disconnect(): void {
-    for (const hub of this.hubs.values()) hub.io.disconnect();
-    this.hubs.clear();
+    for (const hub of this.#hubs.values()) hub.io.disconnect();
+    this.#hubs.clear();
   }
 }
 
@@ -99,31 +108,44 @@ export function sizeOf(el: HTMLElement): string {
  * @class SizeWatcher
  */
 export class SizeWatcher {
-  private readonly sizes = new Map<HTMLElement, string>();
-  private readonly ro: ResizeObserver;
+  /**
+   * Known size of each watched element.
+   *
+   * @type {Map<HTMLElement, string>}
+   */
+  readonly #sizes = new Map<HTMLElement, string>();
+  /**
+   * The observer, made from the first watched element's window; null
+   * before the first watch.
+   *
+   * @type {ResizeObserver | null}
+   */
+  #ro: ResizeObserver | null = null;
+  /**
+   * Receives every changed element of one callback at once.
+   *
+   * @type {(changed: HTMLElement[]) => void}
+   */
+  readonly #onChange: (changed: HTMLElement[]) => void;
 
   /**
    * @param {(changed: HTMLElement[]) => void} onChange - Receives every changed element of one callback at once.
    */
   constructor(onChange: (changed: HTMLElement[]) => void) {
-    this.ro = new ResizeObserver((entries) => {
-      const changed = entries
-        .map((e) => e.target as HTMLElement)
-        .filter((el) => this.sizes.has(el) && this.update(el));
-      if (changed.length) onChange(changed);
-    });
+    this.#onChange = onChange;
   }
 
   /**
    * Watches `el`, taking its size now as the known one.
    *
    * @param {HTMLElement} el - Element.
-   * @param {string} [size] - Its size, when already read.
+   * @param {string} [size] - Its size, when already read. Defaults to its size now.
    * @returns {void}
    */
   watch(el: HTMLElement, size: string = sizeOf(el)): void {
-    this.sizes.set(el, size);
-    this.ro.observe(el);
+    this.#sizes.set(el, size);
+    this.#ro ??= new (windowOf(el).ResizeObserver)(this.#onResize);
+    this.#ro.observe(el);
   }
 
   /**
@@ -134,8 +156,8 @@ export class SizeWatcher {
    */
   update(el: HTMLElement): boolean {
     const size = sizeOf(el);
-    if (this.sizes.get(el) === size) return false;
-    this.sizes.set(el, size);
+    if (this.#sizes.get(el) === size) return false;
+    this.#sizes.set(el, size);
     return true;
   }
 
@@ -146,8 +168,8 @@ export class SizeWatcher {
    * @returns {void}
    */
   unwatch(el: HTMLElement): void {
-    this.sizes.delete(el);
-    this.ro.unobserve(el);
+    this.#sizes.delete(el);
+    this.#ro?.unobserve(el);
   }
 
   /**
@@ -156,7 +178,20 @@ export class SizeWatcher {
    * @returns {void}
    */
   disconnect(): void {
-    this.sizes.clear();
-    this.ro.disconnect();
+    this.#sizes.clear();
+    this.#ro?.disconnect();
   }
+
+  /**
+   * Reports the watched elements of one callback whose size really changed.
+   *
+   * @param {ResizeObserverEntry[]} entries - Observer entries.
+   * @returns {void}
+   */
+  readonly #onResize = (entries: ResizeObserverEntry[]): void => {
+    const changed = entries
+      .map((entry) => entry.target as HTMLElement)
+      .filter((el) => this.#sizes.has(el) && this.update(el));
+    if (changed.length) this.#onChange(changed);
+  };
 }

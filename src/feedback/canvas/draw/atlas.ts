@@ -10,6 +10,8 @@
  * @since 0.1.0
  */
 
+import { windowOf } from '../../../base/dom.js';
+
 /**
  * A grid of stamp cells on one canvas.
  *
@@ -27,7 +29,7 @@ export interface StampGrid {
   readonly cw: number;
   readonly ch: number;
   readonly cols: number;
-  at(index: number, row: number): readonly [number, number];
+  at: (index: number, row: number) => readonly [number, number];
 }
 
 /**
@@ -38,6 +40,7 @@ export interface StampGrid {
  * @param {number} rows - Rows.
  * @param {number} cw - Cell width, device px.
  * @param {number} ch - Cell height, device px.
+ * @param {Document} [doc] - Document that makes the canvas. Defaults to the document of the window core was loaded in.
  * @returns {StampGrid | null} Grid; null without a 2D context.
  */
 export function createStampGrid(
@@ -45,8 +48,9 @@ export function createStampGrid(
   rows: number,
   cw: number,
   ch: number,
+  doc?: Document,
 ): StampGrid | null {
-  const canvas = document.createElement('canvas');
+  const canvas = (doc ?? windowOf().document).createElement('canvas');
   canvas.width = cw * cols;
   canvas.height = ch * rows;
   const ctx = canvas.getContext('2d');
@@ -69,7 +73,12 @@ export function createStampGrid(
  * @template T
  */
 export class StampCache<T> {
-  private readonly built = new Map<string, T>();
+  /**
+   * Atlases built so far, by key.
+   *
+   * @type {Map<string, T>}
+   */
+  readonly #built = new Map<string, T>();
 
   /**
    * Returns the atlas for `key`, building it on first use.
@@ -79,10 +88,10 @@ export class StampCache<T> {
    * @returns {T} Atlas.
    */
   get(key: string, build: () => T): T {
-    let atlas = this.built.get(key);
+    let atlas = this.#built.get(key);
     if (atlas === undefined) {
       atlas = build();
-      this.built.set(key, atlas);
+      this.#built.set(key, atlas);
     }
     return atlas;
   }
@@ -93,6 +102,6 @@ export class StampCache<T> {
    * @returns {void}
    */
   clear(): void {
-    this.built.clear();
+    this.#built.clear();
   }
 }

@@ -28,8 +28,8 @@ export type CheckboxSize = 's' | 'm' | 'l';
  * What a port passes to `checkboxRootAttrs`.
  *
  * @interface CheckboxRootInput
- * @property {CheckboxLook} [look] - Look; pip by default.
- * @property {CheckboxSize} [size] - Size; m by default.
+ * @property {CheckboxLook} [look] - Look. Defaults to `pip`.
+ * @property {CheckboxSize} [size] - Size. Defaults to `m`.
  * @property {boolean} [invalid] - True while an error shows.
  * @property {boolean} [labelHidden] - Hides the label visually; it still names the box.
  */

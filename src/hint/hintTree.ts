@@ -15,6 +15,7 @@
  */
 
 import type { RootNode } from '../base/environment.js';
+import { isNode } from '../base/dom.js';
 
 /**
  * What a node asks of the hint that owns it.
@@ -36,15 +37,48 @@ export interface HintHandle {
  * @class HintNode
  */
 export class HintNode {
+  /**
+   * Node of the hint this one renders in, `undefined` at the top.
+   *
+   * @type {HintNode | undefined}
+   */
+  readonly parent: HintNode | undefined;
+
+  /**
+   * Nodes of the hints rendered in this one.
+   *
+   * @type {Set<HintNode>}
+   */
   readonly #children = new Set<HintNode>();
-  #handle: HintHandle | undefined;
+
+  /**
+   * The owning hint, `null` while detached.
+   *
+   * @type {HintHandle | null}
+   */
+  #handle: HintHandle | null = null;
+
+  /**
+   * Whether the hint shows, as last reported.
+   *
+   * @type {boolean}
+   */
   #open = false;
+
+  /**
+   * A refused close waiting for nested hints: after a pointer leave
+   * (`hover`), after a dismissal (`hard`), or none.
+   *
+   * @type {'none' | 'hover' | 'hard'}
+   */
   #pending: 'none' | 'hover' | 'hard' = 'none';
 
   /**
    * @param {HintNode} [parent] - Node of the hint this one renders in.
    */
-  constructor(readonly parent?: HintNode) {}
+  constructor(parent?: HintNode) {
+    this.parent = parent;
+  }
 
   /**
    * Binds the owning hint and joins the parent.
@@ -57,7 +91,7 @@ export class HintNode {
     this.#handle = handle;
     if (parent) parent.#children.add(this);
     return () => {
-      this.#handle = undefined;
+      this.#handle = null;
       if (!parent) return;
       parent.#children.delete(this);
       parent.#settle();
@@ -86,6 +120,7 @@ export class HintNode {
    * lets the parent finish a close it refused.
    *
    * @param {boolean} open - Whether the hint shows.
+   * @returns {void}
    */
   report(open: boolean): void {
     if (open === this.#open) return;
@@ -101,9 +136,9 @@ export class HintNode {
   /**
    * Ids of this hint's trigger and positioner and of every hint it holds.
    *
-   * @returns {string[]} Element ids.
+   * @returns {readonly string[]} Element ids.
    */
-  ids(): string[] {
+  ids(): readonly string[] {
     return [
       ...(this.#handle?.ids() ?? []),
       ...[...this.#children].flatMap((child) => child.ids()),
@@ -119,7 +154,7 @@ export class HintNode {
    * @returns {boolean} True when inside.
    */
   holds(root: RootNode, target: EventTarget | null): boolean {
-    if (!(target instanceof Node)) return false;
+    if (!isNode(target)) return false;
     return this.ids().some(
       (id) => root.getElementById(id)?.contains(target) ?? false,
     );
@@ -146,6 +181,8 @@ export class HintNode {
   /**
    * Finishes a refused close once nothing nested is open: always after a
    * dismissal, and after a pointer leave only if the pointer stayed away.
+   *
+   * @returns {void}
    */
   #settle(): void {
     if (this.#pending === 'none' || this.#holding()) return;

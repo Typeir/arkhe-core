@@ -11,6 +11,7 @@
  */
 
 import { formatNumber, pluralCategory } from './locale.js';
+import { hasText } from './parts.js';
 
 /**
  * A counted label: one template per plural category the language uses
@@ -40,6 +41,7 @@ export type PluralLabel = Readonly<
  * @property {string} pin - Name of a hover card's pin button; `{label}` is the card.
  * @property {string} unpin - Name of a pinned card's unpin button; `{label}` is the card.
  * @property {string} openLink - Name of a hover card's link to its address; `{label}` is the card.
+ * @property {string} closeCard - Name of a hover card's close button; `{label}` is the card.
  * @property {string} selectTrigger - Name of a searchable select's open button.
  * @property {string} selectClear - Name of a select's clear button; `{label}` is the field.
  * @property {string} selectEmpty - Shown when nothing matches.
@@ -48,6 +50,14 @@ export type PluralLabel = Readonly<
  * @property {string} clearSelection - Button that unpresses every item of a group.
  * @property {string} expandAll - Button that opens every section of an accordion.
  * @property {string} collapseAll - Button that closes them.
+ * @property {string} moveCard - Name of a card's grip, which drags it and opens its move menu; `{label}` is the card.
+ * @property {string} moveTopLeft - Move menu item: top left corner of the screen.
+ * @property {string} moveTopRight - Move menu item: top right corner.
+ * @property {string} moveBottomLeft - Move menu item: bottom left corner.
+ * @property {string} moveBottomRight - Move menu item: bottom right corner.
+ * @property {string} moveBack - Move menu item: back beside its trigger.
+ * @property {string} cardMoved - Announced once a card has moved; `{label}` is the card.
+ * @property {string} cardMovedTo - Announced after a menu move; `{label}` is the card, `{place}` the menu item.
  * @property {PluralLabel} results - Announced count of results; `{count}`.
  */
 export interface ArkheLabels {
@@ -64,6 +74,7 @@ export interface ArkheLabels {
   readonly pin: string;
   readonly unpin: string;
   readonly openLink: string;
+  readonly closeCard: string;
   readonly selectTrigger: string;
   readonly selectClear: string;
   readonly selectEmpty: string;
@@ -72,6 +83,14 @@ export interface ArkheLabels {
   readonly clearSelection: string;
   readonly expandAll: string;
   readonly collapseAll: string;
+  readonly moveCard: string;
+  readonly moveTopLeft: string;
+  readonly moveTopRight: string;
+  readonly moveBottomLeft: string;
+  readonly moveBottomRight: string;
+  readonly moveBack: string;
+  readonly cardMoved: string;
+  readonly cardMovedTo: string;
   readonly results: PluralLabel;
 }
 
@@ -95,6 +114,7 @@ export const DEFAULT_LABELS: ArkheLabels = {
   pin: 'Pin {label}',
   unpin: 'Unpin {label}',
   openLink: 'Open {label}',
+  closeCard: 'Close {label}',
   selectTrigger: 'Show options',
   selectClear: 'Clear {label}',
   selectEmpty: 'No matches.',
@@ -103,6 +123,14 @@ export const DEFAULT_LABELS: ArkheLabels = {
   clearSelection: 'Clear',
   expandAll: 'Expand all',
   collapseAll: 'Collapse all',
+  moveCard: 'Move {label}. Arrow keys move it.',
+  moveTopLeft: 'Top left',
+  moveTopRight: 'Top right',
+  moveBottomLeft: 'Bottom left',
+  moveBottomRight: 'Bottom right',
+  moveBack: 'Back beside its trigger',
+  cardMoved: '{label} moved',
+  cardMovedTo: '{label} moved: {place}',
   results: { one: '{count} result', other: '{count} results' },
 };
 
@@ -161,7 +189,7 @@ export function formatLabel(
   return template.replace(/\{(\w+)\}/g, (match, name: string) => {
     if (!Object.hasOwn(values, name)) return match;
     const value = values[name];
-    return typeof value === 'number' && locale
+    return typeof value === 'number' && hasText(locale)
       ? formatNumber(value, locale)
       : String(value);
   });

@@ -5,8 +5,9 @@
  * that sets `color-scheme: light dark`. Names follow the
  * host app's, so an app drops its own palette instead of renaming anything.
  * The palettes are the authored colours; each token read as text is then
- * floored at 4.5:1 and each component edge or fill at 3:1 against both the
- * page and the surface (WCAG 1.4.3, 1.4.11), by arithmetic in `luminance`.
+ * floored at 4.5:1 and each component edge or fill at 3:1 against the page,
+ * the surface and a card's ground (WCAG 1.4.3, 1.4.11), by arithmetic in
+ * `luminance`.
  */
 
 @use 'sass:list';
@@ -87,7 +88,11 @@ $part-tokens: (secondary, border-secondary, actionable);
  */
 @function token($palette, $name) {
   $color: map.get($palette, $name);
-  $grounds: (map.get($palette, bg), map.get($palette, surface));
+  $grounds: (
+    map.get($palette, bg),
+    map.get($palette, surface),
+    map.get($palette, bg-tertiary)
+  );
   @if list.index($text-tokens, $name) {
     @return contrast-floor($color, $grounds, 4.5);
   }

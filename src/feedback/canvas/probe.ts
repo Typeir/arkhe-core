@@ -11,6 +11,15 @@
  * @since 0.1.0
  */
 
+import { type OwnerWindow, windowOf } from '../../base/dom.js';
+import { hasText } from '../../base/parts.js';
+
+/**
+ * Renderer names of known software rasterisers.
+ *
+ * @constant SOFTWARE
+ * @type {RegExp}
+ */
 const SOFTWARE = /swiftshader|llvmpipe|softpipe|basic render|software/i;
 
 /**
@@ -38,39 +47,50 @@ export interface Acceleration {
  * read its renderer. A context costs tens of milliseconds on some devices.
  *
  * @function probeAcceleration
+ * @param {OwnerWindow} [view] - Window whose canvases and session are probed. Defaults to the window core was loaded in.
  * @returns {Acceleration} Result.
  */
-export function probeAcceleration(): Acceleration {
-  const cached = readCache();
+export function probeAcceleration(
+  view: OwnerWindow = windowOf(),
+): Acceleration {
+  const cached = readCache(view);
   if (cached) return cached;
-  const gl = document
+  const gl = view.document
     .createElement('canvas')
     .getContext('webgl', { failIfMajorPerformanceCaveat: true });
-  const ext = gl?.getExtension('WEBGL_debug_renderer_info');
-  const renderer = gl
-    ? ext
-      ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL))
-      : 'masked'
-    : 'no fast webgl';
+  const renderer = gl ? rendererOf(gl) : 'no fast webgl';
   gl?.getExtension('WEBGL_lose_context')?.loseContext();
   const result = {
     accelerated: gl !== null && !SOFTWARE.test(renderer),
     renderer,
   };
-  writeCache(result);
+  writeCache(view, result);
   return result;
+}
+
+/**
+ * Reads the renderer name of a WebGL context.
+ *
+ * @function rendererOf
+ * @param {WebGLRenderingContext} gl - Context.
+ * @returns {string} Renderer name; `masked` when the browser hides it.
+ */
+function rendererOf(gl: WebGLRenderingContext): string {
+  const ext = gl.getExtension('WEBGL_debug_renderer_info');
+  return ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : 'masked';
 }
 
 /**
  * Reads this session's probe result.
  *
  * @function readCache
+ * @param {OwnerWindow} view - Window whose session storage holds it.
  * @returns {Acceleration | null} Cached result; null when absent or storage is blocked.
  */
-function readCache(): Acceleration | null {
+function readCache(view: OwnerWindow): Acceleration | null {
   try {
-    const cached = sessionStorage.getItem(PROBE_KEY);
-    return cached ? (JSON.parse(cached) as Acceleration) : null;
+    const cached = view.sessionStorage.getItem(PROBE_KEY);
+    return hasText(cached) ? (JSON.parse(cached) as Acceleration) : null;
   } catch {
     return null;
   }
@@ -80,12 +100,13 @@ function readCache(): Acceleration | null {
  * Keeps the probe result for this session; a blocked storage is ignored.
  *
  * @function writeCache
+ * @param {OwnerWindow} view - Window whose session storage keeps it.
  * @param {Acceleration} result - Probe result.
  * @returns {void}
  */
-function writeCache(result: Acceleration): void {
+function writeCache(view: OwnerWindow, result: Acceleration): void {
   try {
-    sessionStorage.setItem(PROBE_KEY, JSON.stringify(result));
+    view.sessionStorage.setItem(PROBE_KEY, JSON.stringify(result));
   } catch {
     return;
   }

@@ -12,6 +12,7 @@
  * @since 0.1.0
  */
 
+import { mainDocument } from './dom.js';
 import { ARKHE_CLASS, partAttrs } from './parts.js';
 
 /**
@@ -38,7 +39,13 @@ export const ANNOUNCE_DELAY = 100;
  */
 export const ANNOUNCE_HOLD = 7000;
 
-const ROLES: Record<Politeness, string> = {
+/**
+ * ARIA role of each region: `status` for polite, `alert` for assertive.
+ *
+ * @constant ROLES
+ * @type {Readonly<Record<Politeness, string>>}
+ */
+const ROLES: Readonly<Record<Politeness, string>> = {
   polite: 'status',
   assertive: 'alert',
 };
@@ -54,8 +61,11 @@ const ROLES: Record<Politeness, string> = {
 function makeRegion(doc: Document, politeness: Politeness): HTMLElement {
   const region = doc.createElement('div');
   region.className = ARKHE_CLASS;
-  for (const [name, value] of Object.entries(partAttrs('announcer', 'region')))
+  for (const [name, value] of Object.entries(
+    partAttrs('announcer', 'region'),
+  )) {
     region.setAttribute(name, value);
+  }
   region.setAttribute('data-live-announcer', '');
   region.setAttribute('data-politeness', politeness);
   region.setAttribute('role', ROLES[politeness]);
@@ -69,26 +79,54 @@ function makeRegion(doc: Document, politeness: Politeness): HTMLElement {
  * @class Announcer
  */
 export class Announcer {
-  private regions: Partial<Record<Politeness, HTMLElement>> = {};
-  private mounts = 0;
-  private readonly timers = new Set<ReturnType<typeof setTimeout>>();
+  /**
+   * Live regions by urgency, made on demand.
+   *
+   * @type {Partial<Record<Politeness, HTMLElement>>}
+   */
+  #regions: Partial<Record<Politeness, HTMLElement>> = {};
+
+  /**
+   * Document the regions live in: the last mounted one, `null` while
+   * nothing is mounted.
+   *
+   * @type {Document | null}
+   */
+  #doc: Document | null = null;
+
+  /**
+   * Mounts not yet undone.
+   *
+   * @type {number}
+   */
+  #mounts = 0;
+
+  /**
+   * Pending delayed messages and line removals.
+   *
+   * @type {Set<ReturnType<typeof setTimeout>>}
+   */
+  readonly #timers = new Set<ReturnType<typeof setTimeout>>();
 
   /**
    * Puts both regions in the body now, ahead of any message. The provider
    * calls it on mount.
    *
-   * @param {Document} [doc] - Owner document. Defaults to the global one.
+   * @param {Document} [doc] - Owner document. Defaults to the main one.
    * @returns {() => void} Removes the regions once every mount has undone.
    */
-  mount(doc: Document = document): () => void {
-    this.mounts += 1;
-    this.ensure(doc);
+  mount(doc?: Document): () => void {
+    const owner = doc ?? mainDocument();
+    if (!owner) return () => undefined;
+    this.#mounts += 1;
+    this.#doc = owner;
+    this.#ensure(owner);
     let done = false;
     return () => {
       if (done) return;
       done = true;
-      this.mounts -= 1;
-      if (this.mounts === 0) this.clear();
+      this.#mounts -= 1;
+      if (this.#mounts === 0) this.#clear();
     };
   }
 
@@ -102,43 +140,65 @@ export class Announcer {
    */
   announce(text: string, politeness: Politeness = 'polite'): void {
     const message = text.trim();
-    if (!message || typeof document === 'undefined') return;
-    const fresh = !this.regions[politeness]?.isConnected;
-    if (fresh) this.ensure(document);
-    const region = this.regions[politeness];
+    const doc = this.#doc ?? mainDocument();
+    if (!message || !doc) return;
+    const fresh = !this.#regions[politeness]?.isConnected;
+    if (fresh) this.#ensure(doc);
+    const region = this.#regions[politeness];
     if (!region) return;
     const add = () => {
       const line = region.ownerDocument.createElement('div');
       line.textContent = message;
       region.append(line);
-      this.later(() => line.remove(), ANNOUNCE_HOLD);
+      this.#later(() => {
+        line.remove();
+      }, ANNOUNCE_HOLD);
     };
-    if (fresh) this.later(add, ANNOUNCE_DELAY);
+    if (fresh) this.#later(add, ANNOUNCE_DELAY);
     else add();
   }
 
-  private ensure(doc: Document): void {
+  /**
+   * Puts any missing region in `doc`'s body.
+   *
+   * @param {Document} doc - Owner document.
+   * @returns {void}
+   */
+  #ensure(doc: Document): void {
     for (const politeness of ['polite', 'assertive'] as const) {
-      if (this.regions[politeness]?.isConnected) continue;
+      if (this.#regions[politeness]?.isConnected) continue;
       const region = makeRegion(doc, politeness);
       doc.body.append(region);
-      this.regions[politeness] = region;
+      this.#regions[politeness] = region;
     }
   }
 
-  private later(run: () => void, delay: number): void {
+  /**
+   * Runs `run` after `delay`, unless the regions are cleared first.
+   *
+   * @param {() => void} run - Deferred work.
+   * @param {number} delay - Wait in ms.
+   * @returns {void}
+   */
+  #later(run: () => void, delay: number): void {
     const timer = setTimeout(() => {
-      this.timers.delete(timer);
+      this.#timers.delete(timer);
       run();
     }, delay);
-    this.timers.add(timer);
+    this.#timers.add(timer);
   }
 
-  private clear(): void {
-    for (const timer of this.timers) clearTimeout(timer);
-    this.timers.clear();
-    for (const region of Object.values(this.regions)) region?.remove();
-    this.regions = {};
+  /**
+   * Cancels pending work and removes both regions.
+   *
+   * @returns {void}
+   */
+  #clear(): void {
+    for (const timer of this.#timers) clearTimeout(timer);
+    this.#timers.clear();
+    for (const region of Object.values(this.#regions)) region?.remove();
+    this.#regions = {};
+    this.#doc = null;
   }
 }
 
@@ -165,7 +225,12 @@ export function announceText(
     announcer.announce(text, politeness());
   };
   speak();
-  const observer = new MutationObserver(speak);
-  observer.observe(el, { childList: true, subtree: true, characterData: true });
-  return () => observer.disconnect();
+  const Observer = el.ownerDocument.defaultView?.MutationObserver;
+  const observer = Observer ? new Observer(speak) : null;
+  observer?.observe(el, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+  });
+  return () => observer?.disconnect();
 }

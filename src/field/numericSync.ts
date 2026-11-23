@@ -9,25 +9,28 @@
  * @since 0.1.0
  */
 
+import type { EventNames } from '../base/events.js';
 import {
   clampToBounds,
-  toNumericValue,
   type NumericBounds,
   type NumericMachineApi,
   type NumericValue,
+  toNumericValue,
 } from './numeric.js';
-import type { EventNames } from '../base/events.js';
 
 /**
  * Says whether two field values are the same, treating -0 and 0 apart.
  *
  * @function sameValue
- * @param {NumericValue} a - First value.
- * @param {NumericValue} b - Second value.
+ * @param {NumericValue} first - First value.
+ * @param {NumericValue} second - Second value.
  * @returns {boolean} True when equal.
  */
-function sameValue(a: NumericValue, b: NumericValue): boolean {
-  return a === b || (a !== null && b !== null && Object.is(a, b));
+function sameValue(first: NumericValue, second: NumericValue): boolean {
+  return (
+    first === second ||
+    (first !== null && second !== null && Object.is(first, second))
+  );
 }
 
 /**
@@ -38,15 +41,47 @@ function sameValue(a: NumericValue, b: NumericValue): boolean {
  * @class NumericSync
  */
 export class NumericSync {
-  private controlled: NumericValue | undefined;
-  private awaitingAnswer = false;
-  private focused = false;
-  private silent = 0;
+  /**
+   * Last controlled value, `undefined` while the field is uncontrolled.
+   *
+   * @type {NumericValue | undefined}
+   */
+  #controlled: NumericValue | undefined;
+
+  /**
+   * The field reported its own change and the parent has yet to answer.
+   *
+   * @type {boolean}
+   */
+  #awaitingAnswer = false;
+
+  /**
+   * The input has focus.
+   *
+   * @type {boolean}
+   */
+  #focused = false;
+
+  /**
+   * Sends still in flight whose draft change must not be reported.
+   *
+   * @type {number}
+   */
+  #silent = 0;
+
+  /**
+   * Returns the live Zag API.
+   *
+   * @type {() => NumericMachineApi}
+   */
+  readonly #api: () => NumericMachineApi;
 
   /**
    * @param {() => NumericMachineApi} api - Returns the live Zag API.
    */
-  constructor(private readonly api: () => NumericMachineApi) {}
+  constructor(api: () => NumericMachineApi) {
+    this.#api = api;
+  }
 
   /**
    * Reports a draft change, unless the change came from `receive` or
@@ -61,8 +96,8 @@ export class NumericSync {
     valueAsNumber: number,
     onValueChange?: (value: NumericValue) => void,
   ): void {
-    if (this.silent > 0) return;
-    this.awaitingAnswer = this.controlled !== undefined;
+    if (this.#silent > 0) return;
+    this.#awaitingAnswer = this.#controlled !== undefined;
     onValueChange?.(toNumericValue(valueAsNumber));
   }
 
@@ -91,16 +126,16 @@ export class NumericSync {
    * @returns {void}
    */
   receive(value: NumericValue | undefined): void {
-    this.controlled = value;
-    if (value === undefined || sameValue(value, this.current())) {
-      this.awaitingAnswer = false;
+    this.#controlled = value;
+    if (value === undefined || sameValue(value, this.#current())) {
+      this.#awaitingAnswer = false;
       return;
     }
-    if (this.focused && this.awaitingAnswer) {
-      this.awaitingAnswer = false;
+    if (this.#focused && this.#awaitingAnswer) {
+      this.#awaitingAnswer = false;
       return;
     }
-    this.apply(value);
+    this.#apply(value);
   }
 
   /**
@@ -109,7 +144,7 @@ export class NumericSync {
    * @returns {void}
    */
   focus(): void {
-    this.focused = true;
+    this.#focused = true;
   }
 
   /**
@@ -118,26 +153,37 @@ export class NumericSync {
    * @returns {void}
    */
   blur(): void {
-    this.focused = false;
-    this.awaitingAnswer = false;
-    const value = this.controlled;
-    if (value !== undefined && !sameValue(value, this.current())) {
-      this.apply(value);
+    this.#focused = false;
+    this.#awaitingAnswer = false;
+    const value = this.#controlled;
+    if (value !== undefined && !sameValue(value, this.#current())) {
+      this.#apply(value);
     }
   }
 
-  private current(): NumericValue {
-    return toNumericValue(this.api().valueAsNumber);
+  /**
+   * The value Zag holds now.
+   *
+   * @returns {NumericValue} Current value.
+   */
+  #current(): NumericValue {
+    return toNumericValue(this.#api().valueAsNumber);
   }
 
-  private apply(value: NumericValue): void {
-    this.silent += 1;
+  /**
+   * Sets Zag's value without reporting the resulting draft change.
+   *
+   * @param {NumericValue} value - Value to apply.
+   * @returns {void}
+   */
+  #apply(value: NumericValue): void {
+    this.#silent += 1;
     try {
-      if (value === null) this.api().clearValue();
-      else this.api().setValue(value);
+      if (value === null) this.#api().clearValue();
+      else this.#api().setValue(value);
     } finally {
       queueMicrotask(() => {
-        this.silent -= 1;
+        this.#silent -= 1;
       });
     }
   }

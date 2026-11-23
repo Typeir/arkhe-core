@@ -24,7 +24,7 @@ export interface BudgetClient {
   readonly asleep: boolean;
   readonly visible: boolean;
   readonly lastSeen: number;
-  evict(): void;
+  evict: () => void;
 }
 
 /**
@@ -33,19 +33,51 @@ export interface BudgetClient {
  * @class CanvasBudget
  */
 export class CanvasBudget {
-  private readonly held = new Map<BudgetClient, number>();
-  private pixels = 0;
+  /**
+   * Device pixels granted to each holder.
+   *
+   * @type {Map<BudgetClient, number>}
+   */
+  readonly #held = new Map<BudgetClient, number>();
+  /**
+   * Device pixels granted in all.
+   *
+   * @type {number}
+   */
+  #pixels = 0;
+  /**
+   * Most canvases live at once since the last reset.
+   *
+   * @type {number}
+   */
   peakCount = 0;
+  /**
+   * Most device pixels live at once since the last reset.
+   *
+   * @type {number}
+   */
   peakPixels = 0;
+  /**
+   * Live canvas budget.
+   *
+   * @type {number}
+   */
+  readonly maxCount: number;
+  /**
+   * Device pixel budget; the engine moves it with the screen size.
+   *
+   * @type {number}
+   */
+  maxPixels: number;
 
   /**
    * @param {number} maxCount - Live canvas budget.
    * @param {number} maxPixels - Device pixel budget.
    */
-  constructor(
-    readonly maxCount: number,
-    public maxPixels: number,
-  ) {}
+  constructor(maxCount: number, maxPixels: number) {
+    this.maxCount = maxCount;
+    this.maxPixels = maxPixels;
+  }
 
   /**
    * Live canvases.
@@ -53,7 +85,7 @@ export class CanvasBudget {
    * @returns {number} Count.
    */
   get count(): number {
-    return this.held.size;
+    return this.#held.size;
   }
 
   /**
@@ -62,7 +94,7 @@ export class CanvasBudget {
    * @returns {number} Pixels.
    */
   get livePixels(): number {
-    return this.pixels;
+    return this.#pixels;
   }
 
   /**
@@ -71,7 +103,7 @@ export class CanvasBudget {
    * @returns {boolean} Over budget.
    */
   get over(): boolean {
-    return this.held.size > this.maxCount || this.pixels > this.maxPixels;
+    return this.#held.size > this.maxCount || this.#pixels > this.maxPixels;
   }
 
   /**
@@ -85,10 +117,10 @@ export class CanvasBudget {
     this.release(client);
     if (px > this.maxPixels && !client.visible) return false;
     while (
-      this.held.size + 1 > this.maxCount ||
-      this.pixels + px > this.maxPixels
+      this.#held.size + 1 > this.maxCount ||
+      this.#pixels + px > this.maxPixels
     ) {
-      const victim = this.victim(client);
+      const victim = this.#victim(client);
       if (!victim) {
         if (client.visible) break;
         return false;
@@ -96,10 +128,10 @@ export class CanvasBudget {
       victim.evict();
       this.release(victim);
     }
-    this.held.set(client, px);
-    this.pixels += px;
-    this.peakCount = Math.max(this.peakCount, this.held.size);
-    this.peakPixels = Math.max(this.peakPixels, this.pixels);
+    this.#held.set(client, px);
+    this.#pixels += px;
+    this.peakCount = Math.max(this.peakCount, this.#held.size);
+    this.peakPixels = Math.max(this.peakPixels, this.#pixels);
     return true;
   }
 
@@ -110,10 +142,10 @@ export class CanvasBudget {
    * @returns {void}
    */
   release(client: BudgetClient): void {
-    const px = this.held.get(client);
+    const px = this.#held.get(client);
     if (px === undefined) return;
-    this.held.delete(client);
-    this.pixels -= px;
+    this.#held.delete(client);
+    this.#pixels -= px;
   }
 
   /**
@@ -122,20 +154,28 @@ export class CanvasBudget {
    * @returns {void}
    */
   resetPeaks(): void {
-    this.peakCount = this.held.size;
-    this.peakPixels = this.pixels;
+    this.peakCount = this.#held.size;
+    this.peakPixels = this.#pixels;
   }
 
-  private victim(except: BudgetClient): BudgetClient | undefined {
-    let best: BudgetClient | undefined;
-    for (const c of this.held.keys()) {
-      if (c === except || c.visible) continue;
+  /**
+   * Picks the holder to evict for `except`: never a visible one; sleeping
+   * holders first, then the least recently seen.
+   *
+   * @param {BudgetClient} except - Requester, never picked.
+   * @returns {BudgetClient | null} Holder; null when none can go.
+   */
+  #victim(except: BudgetClient): BudgetClient | null {
+    let best: BudgetClient | null = null;
+    for (const client of this.#held.keys()) {
+      if (client === except || client.visible) continue;
       if (
         !best ||
-        (c.asleep && !best.asleep) ||
-        (c.asleep === best.asleep && c.lastSeen < best.lastSeen)
-      )
-        best = c;
+        (client.asleep && !best.asleep) ||
+        (client.asleep === best.asleep && client.lastSeen < best.lastSeen)
+      ) {
+        best = client;
+      }
     }
     return best;
   }

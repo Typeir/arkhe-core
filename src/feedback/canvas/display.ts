@@ -11,6 +11,8 @@
  * @since 0.1.0
  */
 
+import { type OwnerWindow, windowOf } from '../../base/dom.js';
+
 /**
  * What changed: `size` (width or DPR), `height` (height only), `fonts`
  * (a font finished loading) or `theme` (colour scheme or theme attribute).
@@ -19,6 +21,12 @@
  */
 export type DisplayChange = 'size' | 'height' | 'fonts' | 'theme';
 
+/**
+ * Root attributes a theme switch writes.
+ *
+ * @constant THEME_ATTRIBUTES
+ * @type {string[]}
+ */
 const THEME_ATTRIBUTES = ['class', 'data-theme'];
 
 /**
@@ -27,30 +35,97 @@ const THEME_ATTRIBUTES = ['class', 'data-theme'];
  * @class DisplayWatcher
  */
 export class DisplayWatcher {
-  viewW = innerWidth;
-  viewH = innerHeight;
-  private size = DisplayWatcher.sizeKey();
-  private dprQuery: MediaQueryList | null = null;
-  private readonly scheme = matchMedia('(prefers-color-scheme: dark)');
-  private readonly themeAttrs: MutationObserver;
+  /**
+   * Viewport width, CSS px, as of the last resize.
+   *
+   * @type {number}
+   */
+  viewW: number;
+  /**
+   * Viewport height, CSS px, as of the last resize.
+   *
+   * @type {number}
+   */
+  viewH: number;
+  /**
+   * Highest backing scale handed out.
+   *
+   * @type {number}
+   */
+  readonly maxDpr: number;
+  /**
+   * Window whose viewport, fonts and theme are watched.
+   *
+   * @type {OwnerWindow}
+   */
+  readonly #view: OwnerWindow;
+  /**
+   * Width and DPR of the last report, to tell a height-only resize.
+   *
+   * @type {string}
+   */
+  #size: string;
+  /**
+   * Media query that fires when the DPR leaves its current value; null
+   * before the first watch.
+   *
+   * @type {MediaQueryList | null}
+   */
+  #dprQuery: MediaQueryList | null = null;
+  /**
+   * Media query of the dark colour scheme.
+   *
+   * @type {MediaQueryList}
+   */
+  readonly #scheme: MediaQueryList;
+  /**
+   * Observer of the theme attributes on the root element.
+   *
+   * @type {MutationObserver}
+   */
+  readonly #themeAttrs: MutationObserver;
+  /**
+   * Receives each change.
+   *
+   * @type {(change: DisplayChange) => void}
+   */
+  readonly #onChange: (change: DisplayChange) => void;
 
   /**
    * @param {number} maxDpr - Highest backing scale handed out.
    * @param {(change: DisplayChange) => void} onChange - Receives each change.
+   * @param {OwnerWindow} [view] - Window to watch. Defaults to the window core was loaded in.
    */
   constructor(
-    readonly maxDpr: number,
-    private readonly onChange: (change: DisplayChange) => void,
+    maxDpr: number,
+    onChange: (change: DisplayChange) => void,
+    view: OwnerWindow = windowOf(),
   ) {
-    addEventListener('resize', this.onResize);
-    document.fonts?.addEventListener('loadingdone', this.onFonts);
-    this.scheme.addEventListener('change', this.onTheme);
-    this.themeAttrs = new MutationObserver(this.onTheme);
-    this.themeAttrs.observe(document.documentElement, {
+    this.maxDpr = maxDpr;
+    this.#onChange = onChange;
+    this.#view = view;
+    this.viewW = view.innerWidth;
+    this.viewH = view.innerHeight;
+    this.#size = this.#sizeKey();
+    this.#scheme = view.matchMedia('(prefers-color-scheme: dark)');
+    view.addEventListener('resize', this.#onResize);
+    view.document.fonts?.addEventListener('loadingdone', this.#onFonts);
+    this.#scheme.addEventListener('change', this.#onTheme);
+    this.#themeAttrs = new view.MutationObserver(this.#onTheme);
+    this.#themeAttrs.observe(view.document.documentElement, {
       attributes: true,
       attributeFilter: THEME_ATTRIBUTES,
     });
-    this.watchDpr();
+    this.#watchDpr();
+  }
+
+  /**
+   * Window being watched.
+   *
+   * @returns {OwnerWindow} Window.
+   */
+  get view(): OwnerWindow {
+    return this.#view;
   }
 
   /**
@@ -59,7 +134,7 @@ export class DisplayWatcher {
    * @returns {number} DPR.
    */
   get dpr(): number {
-    return Math.min(devicePixelRatio, this.maxDpr);
+    return Math.min(this.#view.devicePixelRatio, this.maxDpr);
   }
 
   /**
@@ -77,41 +152,83 @@ export class DisplayWatcher {
    * @returns {void}
    */
   destroy(): void {
-    removeEventListener('resize', this.onResize);
-    document.fonts?.removeEventListener('loadingdone', this.onFonts);
-    this.scheme.removeEventListener('change', this.onTheme);
-    this.themeAttrs.disconnect();
-    this.dprQuery?.removeEventListener('change', this.onDpr);
+    this.#view.removeEventListener('resize', this.#onResize);
+    this.#view.document.fonts?.removeEventListener(
+      'loadingdone',
+      this.#onFonts,
+    );
+    this.#scheme.removeEventListener('change', this.#onTheme);
+    this.#themeAttrs.disconnect();
+    this.#dprQuery?.removeEventListener('change', this.#onDpr);
   }
 
-  private static sizeKey(): string {
-    return `${innerWidth}x${devicePixelRatio}`;
+  /**
+   * Width and DPR now, as one comparable key.
+   *
+   * @returns {string} Key.
+   */
+  #sizeKey(): string {
+    return `${this.#view.innerWidth}x${this.#view.devicePixelRatio}`;
   }
 
-  private watchDpr(): void {
-    this.dprQuery?.removeEventListener('change', this.onDpr);
-    this.dprQuery = matchMedia(`(resolution: ${devicePixelRatio}dppx)`);
-    this.dprQuery.addEventListener('change', this.onDpr);
+  /**
+   * Re-arms the DPR query on the current DPR.
+   *
+   * @returns {void}
+   */
+  #watchDpr(): void {
+    this.#dprQuery?.removeEventListener('change', this.#onDpr);
+    this.#dprQuery = this.#view.matchMedia(
+      `(resolution: ${this.#view.devicePixelRatio}dppx)`,
+    );
+    this.#dprQuery.addEventListener('change', this.#onDpr);
   }
 
-  private readonly onResize = (): void => {
-    this.viewW = innerWidth;
-    this.viewH = innerHeight;
-    const size = DisplayWatcher.sizeKey();
-    if (size === this.size) return this.onChange('height');
-    this.size = size;
-    this.onChange('size');
+  /**
+   * Caches the viewport and reports a height-only or a full size change.
+   *
+   * @returns {void}
+   */
+  readonly #onResize = (): void => {
+    this.viewW = this.#view.innerWidth;
+    this.viewH = this.#view.innerHeight;
+    const size = this.#sizeKey();
+    if (size === this.#size) {
+      this.#onChange('height');
+      return;
+    }
+    this.#size = size;
+    this.#onChange('size');
   };
 
-  private readonly onDpr = (): void => {
-    this.watchDpr();
-    this.viewW = innerWidth;
-    this.viewH = innerHeight;
-    this.size = DisplayWatcher.sizeKey();
-    this.onChange('size');
+  /**
+   * Re-arms the DPR query and reports a size change.
+   *
+   * @returns {void}
+   */
+  readonly #onDpr = (): void => {
+    this.#watchDpr();
+    this.viewW = this.#view.innerWidth;
+    this.viewH = this.#view.innerHeight;
+    this.#size = this.#sizeKey();
+    this.#onChange('size');
   };
 
-  private readonly onFonts = (): void => this.onChange('fonts');
+  /**
+   * Reports a finished font load.
+   *
+   * @returns {void}
+   */
+  readonly #onFonts = (): void => {
+    this.#onChange('fonts');
+  };
 
-  private readonly onTheme = (): void => this.onChange('theme');
+  /**
+   * Reports a colour scheme or theme attribute change.
+   *
+   * @returns {void}
+   */
+  readonly #onTheme = (): void => {
+    this.#onChange('theme');
+  };
 }

@@ -29,8 +29,8 @@ export interface AccordionItem {
  *
  * @interface AccordionRules
  * @property {readonly AccordionItem[]} items - Sections, in order.
- * @property {boolean} [multiple] - Several open at once; true by default.
- * @property {boolean} [collapsible] - The last open section may close; true by default.
+ * @property {boolean} [multiple] - Several open at once. Defaults to `true`.
+ * @property {boolean} [collapsible] - The last open section may close. Defaults to `true`.
  */
 export interface AccordionRules {
   readonly items: readonly AccordionItem[];
@@ -136,7 +136,8 @@ function toggleAll(
   const first = open.find(
     (value) => !kept.some((item) => item.value === value),
   );
-  const held = rules.collapsible === false && first ? [first] : [];
+  const held =
+    rules.collapsible === false && first !== undefined ? [first] : [];
   return [...kept.map((item) => item.value), ...held];
 }
 

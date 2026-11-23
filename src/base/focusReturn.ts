@@ -15,6 +15,7 @@
  */
 
 import type { RootNode } from './environment.js';
+import { FOCUSABLE, isElement } from './dom.js';
 
 /**
  * Siblings looked at per level.
@@ -32,16 +33,6 @@ export const FOCUS_RETURN_WIDTH = 10;
  */
 export const FOCUS_RETURN_DEPTH = 2;
 
-const FOCUSABLE = [
-  'a[href]',
-  'button:not([disabled])',
-  'input:not([disabled]):not([type="hidden"])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
-  '[tabindex]:not([tabindex="-1"])',
-  '[contenteditable="true"]',
-].join(',');
-
 /**
  * Ranks the nodes near `opener`: per level, nearest first, older before
  * newer, at most `width` nodes; then one level up, `depth` times.
@@ -50,13 +41,13 @@ const FOCUSABLE = [
  * @param {Element} opener - Element that had focus on open.
  * @param {number} [width] - Siblings per level. Defaults to `FOCUS_RETURN_WIDTH`.
  * @param {number} [depth] - Levels above the opener. Defaults to `FOCUS_RETURN_DEPTH`.
- * @returns {Element[]} Candidates, best first.
+ * @returns {readonly Element[]} Candidates, best first.
  */
 export function focusCandidates(
   opener: Element,
   width: number = FOCUS_RETURN_WIDTH,
   depth: number = FOCUS_RETURN_DEPTH,
-): Element[] {
+): readonly Element[] {
   const ranked: Element[] = [];
   let node: Element | null = opener;
   for (let level = 0; node && level <= depth; level += 1) {
@@ -99,10 +90,33 @@ export function focusableIn(node: Element): HTMLElement | null {
  * @class FocusReturn
  */
 export class FocusReturn {
-  private opened = false;
-  private opener: Element | null = null;
-  private pressed: Element | null = null;
-  private ranked: Element[] = [];
+  /**
+   * Open state last fed to `track`.
+   *
+   * @type {boolean}
+   */
+  #opened = false;
+
+  /**
+   * Element that had focus on open, `null` when none.
+   *
+   * @type {Element | null}
+   */
+  #opener: Element | null = null;
+
+  /**
+   * Last element pressed in the root, `null` until a press.
+   *
+   * @type {Element | null}
+   */
+  #pressed: Element | null = null;
+
+  /**
+   * The opener's neighbours, best first.
+   *
+   * @type {readonly Element[]}
+   */
+  #ranked: readonly Element[] = [];
 
   /**
    * Remembers the last element pressed in `root`, the opener when a click
@@ -114,11 +128,13 @@ export class FocusReturn {
   watch(root: RootNode): () => void {
     const press = (event: Event) => {
       const target = event.target;
-      if (!(target instanceof Element)) return;
-      this.pressed = target.closest(FOCUSABLE) ?? target;
+      if (!isElement(target)) return;
+      this.#pressed = target.closest(FOCUSABLE) ?? target;
     };
     root.addEventListener('pointerdown', press, true);
-    return () => root.removeEventListener('pointerdown', press, true);
+    return () => {
+      root.removeEventListener('pointerdown', press, true);
+    };
   }
 
   /**
@@ -131,14 +147,14 @@ export class FocusReturn {
    * @returns {void}
    */
   track(open: boolean, root: RootNode): void {
-    if (open && !this.opened) {
+    if (open && !this.#opened) {
       const active = root.activeElement;
       const body = active?.ownerDocument.body;
-      const pressed = this.pressed?.isConnected ? this.pressed : null;
-      this.opener = active && active !== body ? active : pressed;
-      this.ranked = this.opener ? focusCandidates(this.opener) : [];
+      const pressed = this.#pressed?.isConnected ? this.#pressed : null;
+      this.#opener = active && active !== body ? active : pressed;
+      this.#ranked = this.#opener ? focusCandidates(this.#opener) : [];
     }
-    this.opened = open;
+    this.#opened = open;
   }
 
   /**
@@ -148,8 +164,8 @@ export class FocusReturn {
    * @returns {HTMLElement | null} Nearest focusable neighbour, if needed.
    */
   target(): HTMLElement | null {
-    if (!this.opener || this.opener.isConnected) return null;
-    for (const node of this.ranked) {
+    if (!this.#opener || this.#opener.isConnected) return null;
+    for (const node of this.#ranked) {
       const found = focusableIn(node);
       if (found) return found;
     }

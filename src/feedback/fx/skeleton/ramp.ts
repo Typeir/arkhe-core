@@ -10,54 +10,102 @@
  * @since 0.1.0
  */
 
-import { bayerAt } from '../../canvas/draw/noise.js';
 import type { Pen } from '../../canvas/draw/pen.js';
+import { bayerAt } from '../../canvas/draw/noise.js';
 import { LEVELS, SHAPE_SIZE } from './constants.js';
 
 /**
  * Draws one ramp level centred on a point.
  *
- * @typedef {(p: Pen, cx: number, cy: number) => void} Shape
+ * @typedef {(pen: Pen, cx: number, cy: number) => void} Shape
  */
-export type Shape = (p: Pen, cx: number, cy: number) => void;
+export type Shape = (pen: Pen, cx: number, cy: number) => void;
 
-const S = SHAPE_SIZE;
+/**
+ * Half the shape size, CSS px.
+ *
+ * @constant HALF
+ * @type {number}
+ */
+const HALF = SHAPE_SIZE / 2;
+
+/**
+ * A quarter of the shape size, CSS px: the offset of a stack's parts.
+ *
+ * @constant QUARTER
+ * @type {number}
+ */
+const QUARTER = SHAPE_SIZE / 4;
+
+/**
+ * Half the outline width of a rhombus, measured along its axes.
+ *
+ * @constant DIA
+ * @type {number}
+ */
 const DIA = Math.SQRT1_2;
+
+/**
+ * Centre shift between a triangle's outer and inner contours.
+ *
+ * @constant TRI_SHIFT
+ * @type {number}
+ */
 const TRI_SHIFT = (1 - Math.sqrt(5)) / 4;
+
+/**
+ * Half-size difference between a triangle's outer and inner contours.
+ *
+ * @constant TRI_GROW
+ * @type {number}
+ */
 const TRI_GROW = (1 + Math.sqrt(5)) / 4;
 
 /**
  * Square of half-size `h`.
  *
  * @function square
- * @param {Pen} p - Pen.
+ * @param {Pen} pen - Pen.
  * @param {number} cx - Centre x.
  * @param {number} cy - Centre y.
  * @param {number} h - Half size.
  * @param {boolean} fill - Filled or outlined.
  * @returns {void}
  */
-function square(p: Pen, cx: number, cy: number, h: number, fill: boolean) {
-  p.rect(cx - h, cy - h, 2 * h, 2 * h);
-  if (!fill) p.rect(cx - h + 1, cy - h + 1, 2 * h - 2, 2 * h - 2);
+function square(
+  pen: Pen,
+  cx: number,
+  cy: number,
+  h: number,
+  fill: boolean,
+): void {
+  pen.rect(cx - h, cy - h, 2 * h, 2 * h);
+  if (!fill) pen.rect(cx - h + 1, cy - h + 1, 2 * h - 2, 2 * h - 2);
 }
 
 /**
  * Rhombus of half-size `h`.
  *
  * @function diamond
- * @param {Pen} p - Pen.
+ * @param {Pen} pen - Pen.
  * @param {number} cx - Centre x.
  * @param {number} cy - Centre y.
  * @param {number} h - Half size.
  * @param {boolean} fill - Filled or outlined.
  * @returns {void}
  */
-function diamond(p: Pen, cx: number, cy: number, h: number, fill: boolean) {
-  if (fill) p.diamond(cx, cy, h);
-  else {
-    p.diamond(cx, cy, h + DIA);
-    p.diamond(cx, cy, h - DIA);
+function diamond(
+  pen: Pen,
+  cx: number,
+  cy: number,
+  h: number,
+  fill: boolean,
+): void {
+  if (fill) {
+    pen.diamond(cx, cy, h);
+  } else {
+    pen.diamond(cx, cy, h + DIA);
+    pen.diamond(cx, cy, h - DIA);
   }
 }
 
@@ -65,18 +113,25 @@ function diamond(p: Pen, cx: number, cy: number, h: number, fill: boolean) {
  * Upward triangle of half-size `h`.
  *
  * @function triangle
- * @param {Pen} p - Pen.
+ * @param {Pen} pen - Pen.
  * @param {number} cx - Centre x.
  * @param {number} cy - Centre y.
  * @param {number} h - Half size.
  * @param {boolean} fill - Filled or outlined.
  * @returns {void}
  */
-function triangle(p: Pen, cx: number, cy: number, h: number, fill: boolean) {
-  if (fill) p.triangle(cx, cy, h);
-  else {
-    p.triangle(cx, cy + TRI_SHIFT, h + TRI_GROW);
-    p.triangle(cx, cy - TRI_SHIFT, h - TRI_GROW);
+function triangle(
+  pen: Pen,
+  cx: number,
+  cy: number,
+  h: number,
+  fill: boolean,
+): void {
+  if (fill) {
+    pen.triangle(cx, cy, h);
+  } else {
+    pen.triangle(cx, cy + TRI_SHIFT, h + TRI_GROW);
+    pen.triangle(cx, cy - TRI_SHIFT, h - TRI_GROW);
   }
 }
 
@@ -87,43 +142,55 @@ function triangle(p: Pen, cx: number, cy: number, h: number, fill: boolean) {
  * @type {readonly Shape[]}
  */
 export const RAMP: readonly Shape[] = [
-  (p, x, y) => square(p, x, y, S / 2 - 0.3, false),
-  (p, x, y) => square(p, x, y, S / 2 - 0.3, true),
-  (p, x, y) => {
-    square(p, x, y, S / 2 - 0.3, false);
-    square(p, x, y, (S / 2) * 0.4, true);
+  (pen: Pen, x: number, y: number): void => {
+    square(pen, x, y, HALF - 0.3, false);
   },
-  (p, x, y) => {
-    const h = S / 4;
-    square(p, x - h, y - h, h - 0.45, true);
-    square(p, x + h, y - h, h - 0.45, true);
-    square(p, x - h, y + h, h - 0.45, true);
-    square(p, x + h, y + h, h - 0.45, true);
+  (pen: Pen, x: number, y: number): void => {
+    square(pen, x, y, HALF - 0.3, true);
   },
-  (p, x, y) => diamond(p, x, y, S / 2 + 0.2, false),
-  (p, x, y) => diamond(p, x, y, S / 2 + 0.3, true),
-  (p, x, y) => {
-    diamond(p, x, y, S / 2 + 0.2, false);
-    diamond(p, x, y, (S / 2) * 0.45, true);
+  (pen: Pen, x: number, y: number): void => {
+    square(pen, x, y, HALF - 0.3, false);
+    square(pen, x, y, HALF * 0.4, true);
   },
-  (p, x, y) => {
-    const h = S / 4 + 0.15;
-    diamond(p, x, y - h, h - 0.45, true);
-    diamond(p, x + h, y, h - 0.45, true);
-    diamond(p, x, y + h, h - 0.45, true);
-    diamond(p, x - h, y, h - 0.45, true);
+  (pen: Pen, x: number, y: number): void => {
+    const h = QUARTER;
+    square(pen, x - h, y - h, h - 0.45, true);
+    square(pen, x + h, y - h, h - 0.45, true);
+    square(pen, x - h, y + h, h - 0.45, true);
+    square(pen, x + h, y + h, h - 0.45, true);
   },
-  (p, x, y) => triangle(p, x, y, S / 2 - 0.4, false),
-  (p, x, y) => triangle(p, x, y, S / 2, true),
-  (p, x, y) => {
-    triangle(p, x, y, S / 2 - 0.4, false);
-    triangle(p, x, y + 0.6, (S / 2) * 0.42, true);
+  (pen: Pen, x: number, y: number): void => {
+    diamond(pen, x, y, HALF + 0.2, false);
   },
-  (p, x, y) => {
-    const h = S / 4;
-    triangle(p, x, y - h, h - 0.35, true);
-    triangle(p, x - h, y + h, h - 0.35, true);
-    triangle(p, x + h, y + h, h - 0.35, true);
+  (pen: Pen, x: number, y: number): void => {
+    diamond(pen, x, y, HALF + 0.3, true);
+  },
+  (pen: Pen, x: number, y: number): void => {
+    diamond(pen, x, y, HALF + 0.2, false);
+    diamond(pen, x, y, HALF * 0.45, true);
+  },
+  (pen: Pen, x: number, y: number): void => {
+    const h = QUARTER + 0.15;
+    diamond(pen, x, y - h, h - 0.45, true);
+    diamond(pen, x + h, y, h - 0.45, true);
+    diamond(pen, x, y + h, h - 0.45, true);
+    diamond(pen, x - h, y, h - 0.45, true);
+  },
+  (pen: Pen, x: number, y: number): void => {
+    triangle(pen, x, y, HALF - 0.4, false);
+  },
+  (pen: Pen, x: number, y: number): void => {
+    triangle(pen, x, y, HALF, true);
+  },
+  (pen: Pen, x: number, y: number): void => {
+    triangle(pen, x, y, HALF - 0.4, false);
+    triangle(pen, x, y + 0.6, HALF * 0.42, true);
+  },
+  (pen: Pen, x: number, y: number): void => {
+    const h = QUARTER;
+    triangle(pen, x, y - h, h - 0.35, true);
+    triangle(pen, x - h, y + h, h - 0.35, true);
+    triangle(pen, x + h, y + h, h - 0.35, true);
   },
 ];
 

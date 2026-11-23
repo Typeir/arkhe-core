@@ -11,6 +11,7 @@
  */
 
 import type { PainterKind } from './skeleton/painter.js';
+import { type OwnerWindow, ownWindow } from '../../base/dom.js';
 
 /**
  * Engine options.
@@ -87,27 +88,28 @@ export type FxStats = Readonly<Record<string, number>>;
  * @property {() => void} destroy - Removes every canvas, observer and listener.
  */
 export interface Fx {
-  attach(host: HTMLElement): void;
-  ready(host: HTMLElement, onRevealed?: () => void): void;
-  detach(host: HTMLElement): void;
-  stats(): FxStats;
-  resetStats(): void;
-  destroy(): void;
+  attach: (host: HTMLElement) => void;
+  ready: (host: HTMLElement, onRevealed?: () => void) => void;
+  detach: (host: HTMLElement) => void;
+  stats: () => FxStats;
+  resetStats: () => void;
+  destroy: () => void;
 }
 
 /**
  * True where the engine can run: a browser with observers and media queries.
  *
  * @function canRunFx
+ * @param {OwnerWindow | null} [view] - Window to check. Defaults to the window core was loaded in.
  * @returns {boolean} Capable.
  */
-export function canRunFx(): boolean {
+export function canRunFx(view: OwnerWindow | null = ownWindow()): boolean {
   return (
-    typeof window !== 'undefined' &&
-    typeof window.matchMedia === 'function' &&
-    typeof window.IntersectionObserver === 'function' &&
-    typeof window.ResizeObserver === 'function' &&
-    typeof window.requestAnimationFrame === 'function'
+    view !== null &&
+    typeof view.matchMedia === 'function' &&
+    typeof view.IntersectionObserver === 'function' &&
+    typeof view.ResizeObserver === 'function' &&
+    typeof view.requestAnimationFrame === 'function'
   );
 }
 

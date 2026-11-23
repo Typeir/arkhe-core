@@ -39,6 +39,30 @@ function steps(root: HTMLElement): Readonly<Record<string, number>> {
 }
 
 /**
+ * The item `key` moves focus to from index `at`: the ends for Home and End,
+ * else one step along, wrapping.
+ *
+ * @function nextItem
+ * @param {HTMLElement} root - Toolbar.
+ * @param {readonly HTMLElement[]} all - Items in order.
+ * @param {number} at - Index of the focused item.
+ * @param {string} key - Pressed key.
+ * @returns {HTMLElement | null} Item to focus, `null` for other keys.
+ */
+function nextItem(
+  root: HTMLElement,
+  all: readonly HTMLElement[],
+  at: number,
+  key: string,
+): HTMLElement | null {
+  if (key === 'Home') return all[0] ?? null;
+  if (key === 'End') return all.at(-1) ?? null;
+  const step = steps(root)[key];
+  if (step === undefined) return null;
+  return all[(at + step + all.length) % all.length] ?? null;
+}
+
+/**
  * Keeps one button of `root` in the tab order and moves it with arrows,
  * wrapping at the ends, and Home / End. Does nothing where the browser has
  * `focusgroup`. Buttons added later join; the remembered one stays.
@@ -50,7 +74,7 @@ function steps(root: HTMLElement): Readonly<Record<string, number>> {
 export function rovingFocus(root: HTMLElement): () => void {
   if (hasFocusgroup(root)) return () => undefined;
   const items = () => [...root.querySelectorAll<HTMLElement>('button')];
-  let active: HTMLElement | undefined;
+  let active: HTMLElement | null = null;
   const mark = () => {
     const all = items();
     const current = active && all.includes(active) ? active : all[0];
@@ -66,22 +90,14 @@ export function rovingFocus(root: HTMLElement): () => void {
     const all = items();
     const at = all.indexOf(event.target as HTMLElement);
     if (at === -1) return;
-    const step = steps(root)[event.key];
-    const next =
-      event.key === 'Home'
-        ? all[0]
-        : event.key === 'End'
-          ? all.at(-1)
-          : step === undefined
-            ? undefined
-            : all[(at + step + all.length) % all.length];
+    const next = nextItem(root, all, at, event.key);
     if (!next) return;
     event.preventDefault();
     next.focus();
   };
   mark();
   const View = root.ownerDocument.defaultView?.MutationObserver;
-  const observer = View ? new View(mark) : undefined;
+  const observer = View ? new View(mark) : null;
   observer?.observe(root, { childList: true, subtree: true });
   root.addEventListener('focusin', enter);
   root.addEventListener('keydown', move);

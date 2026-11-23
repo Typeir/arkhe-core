@@ -92,6 +92,12 @@ $scopes: ('combobox', 'select');
       overflow-y: auto;
     }
 
+    &[data-stale] > * {
+      opacity: 0.45;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+    }
+
     @media (pointer: coarse) {
       &:not([data-virtual]) [data-part='item'] {
         min-block-size: var(--hit-min);
@@ -131,7 +137,8 @@ $scopes: ('combobox', 'select');
     }
 
     &[data-state='checked'] {
-      box-shadow: inset var(--border-width-s) 0 var(--color-accent);
+      color: var(--color-accent);
+      font-weight: 600;
     }
 
     &[data-disabled] {
@@ -141,7 +148,7 @@ $scopes: ('combobox', 'select');
 
     @include forced {
       &[data-state='checked'] {
-        border-inline-start: var(--border-width-s) solid currentColor;
+        color: Highlight;
       }
 
       &[data-highlighted] {

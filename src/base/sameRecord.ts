@@ -29,24 +29,24 @@ function isPlain(value: unknown): value is Readonly<Record<string, unknown>> {
  * plural label set written inline still matches.
  *
  * @function sameRecord
- * @param {object | undefined} a - First record.
- * @param {object | undefined} b - Second record.
+ * @param {object | undefined} first - First record.
+ * @param {object | undefined} second - Second record.
  * @param {number} [depth] - Levels of plain objects to look into.
  * @returns {boolean} True when both hold the same entries.
  */
 export function sameRecord(
-  a: object | undefined,
-  b: object | undefined,
+  first: object | undefined,
+  second: object | undefined,
   depth = 1,
 ): boolean {
-  if (Object.is(a, b)) return true;
-  if (!isPlain(a) || !isPlain(b)) return false;
-  const keys = Object.keys(a);
-  if (keys.length !== Object.keys(b).length) return false;
+  if (Object.is(first, second)) return true;
+  if (!isPlain(first) || !isPlain(second)) return false;
+  const keys = Object.keys(first);
+  if (keys.length !== Object.keys(second).length) return false;
   return keys.every((key) => {
-    if (!Object.hasOwn(b, key)) return false;
-    const left = a[key];
-    const right = b[key];
+    if (!Object.hasOwn(second, key)) return false;
+    const left = first[key];
+    const right = second[key];
     if (Object.is(left, right)) return true;
     return (
       depth > 0 && isPlain(left) && sameRecord(left, right as object, depth - 1)

@@ -27,11 +27,13 @@ export interface SweepShape {
  * Ease in-out, quadratic.
  *
  * @function easeInOutQuad
- * @param {number} p - Progress, 0 to 1.
+ * @param {number} progress - Progress, 0 to 1.
  * @returns {number} Eased progress.
  */
-export function easeInOutQuad(p: number): number {
-  return p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2;
+export function easeInOutQuad(progress: number): number {
+  return progress < 0.5
+    ? 2 * progress * progress
+    : 1 - (-2 * progress + 2) ** 2 / 2;
 }
 
 /**
@@ -59,6 +61,6 @@ export function diagonalSweep(
   const cx =
     -half +
     easeInOutQuad((t % period) / period) * (w + 2 * half + span * slope);
-  const d = Math.abs(x - cx + (y % span) * slope);
-  return d >= half ? 0 : 1 - d / half;
+  const distance = Math.abs(x - cx + (y % span) * slope);
+  return distance >= half ? 0 : 1 - distance / half;
 }

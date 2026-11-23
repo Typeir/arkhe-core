@@ -11,11 +11,13 @@
  * @since 0.1.0
  */
 
+import type { SkeletonAtlas } from './atlas.js';
+import type { Palette } from './palette.js';
+import type { SkeletonBox, SkeletonRegion } from './region.js';
 import { hash3 } from '../../canvas/draw/noise.js';
 import { pathPen, type Pen } from '../../canvas/draw/pen.js';
 import { diagonalSweep } from '../../canvas/draw/sweep.js';
-import { snapRect, type Slice, type View } from '../../canvas/view.js';
-import type { SkeletonAtlas } from './atlas.js';
+import { type Slice, snapRect, type View } from '../../canvas/view.js';
 import {
   CELL_H,
   CELL_W,
@@ -25,9 +27,7 @@ import {
   SHAPE_SIZE,
   SWEEP,
 } from './constants.js';
-import type { Palette } from './palette.js';
 import { RAMP, rampLevel } from './ramp.js';
-import type { SkeletonBox, SkeletonRegion } from './region.js';
 
 /**
  * How shapes are drawn: stamped from the atlas, or batched `Path2D` fills.
@@ -47,7 +47,7 @@ export type PainterKind = 'atlas' | 'path';
 export interface SkeletonStyle {
   readonly painter: PainterKind;
   palette: Palette;
-  atlas(dpr: number): SkeletonAtlas | null;
+  atlas: (dpr: number) => SkeletonAtlas | null;
 }
 
 /**
@@ -57,6 +57,13 @@ export interface SkeletonStyle {
  */
 export type DrawnCells = Map<SkeletonBox, Uint8Array>;
 
+/**
+ * Half the area a resting shape may cover around its cell centre, CSS px;
+ * a changed cell clears this much before drawing again.
+ *
+ * @constant REACH
+ * @type {number}
+ */
 const REACH = SHAPE_SIZE / 2 + 1;
 
 /**
@@ -73,85 +80,124 @@ function glyphAt(col: number, row: number, tick: number): number {
 }
 
 /**
- * Paints shapes `idx` of `g` into `v`.
+ * Paints shapes `idx` of `region` into `view`.
  *
  * @function paintSkeleton
- * @param {SkeletonRegion} g - Region.
+ * @param {SkeletonRegion} region - Region.
  * @param {readonly number[]} idx - Shape indices.
- * @param {View} v - Target.
+ * @param {View} view - Target.
  * @param {number} t - Time, ms.
  * @param {DrawnCells} [drawn] - Levels already on the canvas; given only when its pixels were kept.
  * @returns {void}
  */
 export function paintSkeleton(
-  g: SkeletonRegion,
+  region: SkeletonRegion,
   idx: readonly number[],
-  v: View,
+  view: View,
   t: number,
   drawn?: DrawnCells,
 ): void {
-  const { style } = g;
-  const atlas = style.atlas(v.dpr);
+  const { style } = region;
+  const atlas = style.atlas(view.dpr);
   if (!atlas) return;
-  const pal = style.palette;
-  const span = Math.max(CELL_H, Math.min(g.height, v.viewH));
+  const palette = style.palette;
+  const span = Math.max(CELL_H, Math.min(region.height, view.viewH));
   const fills: Path2D[] | null = style.painter === 'path' ? [] : null;
   const pens: Pen[] = [];
-  const ctx = v.ctx;
-  const boxes = g.pick(idx);
+  const ctx = view.ctx;
+  const boxes = region.pick(idx);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  if (g.swapped && boxes.length) {
-    const top = Math.max(v.y0, 0);
-    ctx.fillStyle = pal.bg;
+  if (region.swapped && boxes.length) {
+    const top = Math.max(view.y0, 0);
+    ctx.fillStyle = palette.bg;
     ctx.fillRect(
-      ...snapRect(v, 0, top, g.width, Math.min(v.y1, g.height) - top),
+      ...snapRect(
+        view,
+        0,
+        top,
+        region.width,
+        Math.min(view.y1, region.height) - top,
+      ),
     );
-    for (const c of boxes) {
-      const front = g.front(c, t);
-      if (front === null || c.sy1 < v.y0 || c.sy0 > v.y1) continue;
+    for (const box of boxes) {
+      const front = region.front(box, t);
+      if (front === null || box.sy1 < view.y0 || box.sy0 > view.y1) continue;
       const right =
         front === Infinity
-          ? c.sx1
-          : Math.min(c.sx1, c.x + Math.max(0, front - FRONT_PX));
-      if (right > c.sx0)
+          ? box.sx1
+          : Math.min(box.sx1, box.x + Math.max(0, front - FRONT_PX));
+      if (right > box.sx0) {
         ctx.clearRect(
-          ...snapRect(v, c.sx0, c.sy0, right - c.sx0, c.sy1 - c.sy0),
+          ...snapRect(
+            view,
+            box.sx0,
+            box.sy0,
+            right - box.sx0,
+            box.sy1 - box.sy0,
+          ),
         );
+      }
     }
   }
-  for (const c of boxes) {
-    if (c.y + c.h < v.y0 || c.y > v.y1) continue;
-    const front = g.front(c, t);
+  for (const box of boxes) {
+    if (box.y + box.h < view.y0 || box.y > view.y1) continue;
+    const front = region.front(box, t);
     if (front === Infinity) continue;
     const cut = front === null ? 0 : Math.max(0, front - FRONT_PX);
-    const kept = g.swapped ? undefined : drawn;
-    let lv = kept?.get(c);
-    if (kept && !lv)
-      kept.set(c, (lv = new Uint8Array(c.rows * c.cols).fill(255)));
-    paintCells(c, g, v, t, span, front, cut, atlas, fills, pens, lv);
+    const kept = region.swapped ? undefined : drawn;
+    let levels = kept?.get(box);
+    if (kept && !levels) {
+      levels = new Uint8Array(box.rows * box.cols).fill(255);
+      kept.set(box, levels);
+    }
+    paintCells(
+      box,
+      region,
+      view,
+      t,
+      span,
+      front,
+      cut,
+      atlas,
+      fills,
+      pens,
+      levels,
+    );
   }
-  if (fills?.length) {
-    ctx.setTransform(v.dpr, 0, 0, v.dpr, 0, 0);
-    fills.forEach((f, l) => {
-      ctx.fillStyle = pal.tones[l] ?? pal.front;
-      ctx.fill(f, 'evenodd');
-    });
+  if (fills !== null && fills.length > 0) {
+    ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+    for (const [level, fill] of fills.entries()) {
+      if (fill === undefined) continue;
+      ctx.fillStyle = palette.tones[level] ?? palette.front;
+      ctx.fill(fill, 'evenodd');
+    }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 }
 
 /**
  * Draws one shape's cells: glyphs inside the decode front, ramp shapes
- * ahead of it. With `lv`, unchanged resting cells are skipped and changed
- * ones cleared first.
+ * ahead of it. With `levels`, unchanged resting cells are skipped and
+ * changed ones cleared first.
  *
  * @function paintCells
+ * @param {SkeletonBox} box - Shape.
+ * @param {SkeletonRegion} region - Its region.
+ * @param {View} view - Target.
+ * @param {number} t - Time, ms.
+ * @param {number} span - Sweep repeat height, CSS px.
+ * @param {number | null} front - Decode front, px from the shape's left; null before it starts.
+ * @param {number} cut - Cells left of this, px from the shape's left, are uncovered.
+ * @param {SkeletonAtlas} atlas - Stamp atlas.
+ * @param {Path2D[] | null} fills - One path per ramp level for the `path` painter; null for stamps.
+ * @param {Pen[]} pens - Pens over `fills`, made on first use.
+ * @param {Uint8Array | undefined} levels - Levels already on the canvas, written as cells change.
  * @returns {void}
  */
 function paintCells(
-  c: SkeletonBox,
-  g: SkeletonRegion,
-  v: View,
+  box: SkeletonBox,
+  region: SkeletonRegion,
+  view: View,
   t: number,
   span: number,
   front: number | null,
@@ -159,21 +205,21 @@ function paintCells(
   atlas: SkeletonAtlas,
   fills: Path2D[] | null,
   pens: Pen[],
-  lv: Uint8Array | undefined,
+  levels: Uint8Array | undefined,
 ): void {
   const tick = Math.floor(t / GLYPH_TICK_MS);
-  const ctx = v.ctx;
-  for (let r = 0; r < c.rows; r++) {
-    const y = c.cellY + r * CELL_H;
-    if (y + CELL_H < v.y0 || y > v.y1) continue;
-    const dy = Math.round((y + v.oy) * v.dpr);
-    for (let k = 0; k < c.cols; k++) {
+  const ctx = view.ctx;
+  for (let i = 0; i < box.rows; i += 1) {
+    const y = box.cellY + i * CELL_H;
+    if (y + CELL_H < view.y0 || y > view.y1) continue;
+    const dy = Math.round((y + view.oy) * view.dpr);
+    for (let k = 0; k < box.cols; k += 1) {
       const cx = k * CELL_W;
       if (cx + CELL_W <= cut) continue;
-      const x = c.x + cx;
+      const x = box.x + cx;
       const col = Math.round(x / CELL_W);
       const row = Math.round(y / CELL_H);
-      const dx = Math.round((x + v.ox) * v.dpr);
+      const dx = Math.round((x + view.ox) * view.dpr);
       if (front !== null && cx < front) {
         const [sx, sy] = atlas.glyph(glyphAt(col, row, tick));
         ctx.drawImage(
@@ -189,26 +235,34 @@ function paintCells(
         );
         continue;
       }
-      const l = g.reduced
+      const level = region.reduced
         ? 0
-        : rampLevel(diagonalSweep(x, y, t, g.width, span, SWEEP), col, row);
-      if (lv) {
-        const j = r * c.cols + k;
-        if (lv[j] === l) continue;
-        lv[j] = y >= v.y0 && y + CELL_H <= v.y1 ? l : 255;
-        const reach = Math.ceil(2 * REACH * v.dpr) + 1;
+        : rampLevel(
+            diagonalSweep(x, y, t, region.width, span, SWEEP),
+            col,
+            row,
+          );
+      if (levels) {
+        const j = i * box.cols + k;
+        if (levels[j] === level) continue;
+        levels[j] = y >= view.y0 && y + CELL_H <= view.y1 ? level : 255;
+        const reach = Math.ceil(2 * REACH * view.dpr) + 1;
         ctx.clearRect(
-          Math.floor(dx + (CELL_W / 2 - REACH) * v.dpr),
-          Math.floor(dy + (CELL_H / 2 - REACH) * v.dpr),
+          Math.floor(dx + (CELL_W / 2 - REACH) * view.dpr),
+          Math.floor(dy + (CELL_H / 2 - REACH) * view.dpr),
           reach,
           reach,
         );
       }
       if (fills) {
-        const pen = (pens[l] ??= pathPen((fills[l] = new Path2D())));
-        RAMP[l]?.(pen, dx / v.dpr + CELL_W / 2, dy / v.dpr + CELL_H / 2);
+        const pen = (pens[level] ??= pathPen((fills[level] = new Path2D())));
+        RAMP[level]?.(
+          pen,
+          dx / view.dpr + CELL_W / 2,
+          dy / view.dpr + CELL_H / 2,
+        );
       } else {
-        const [sx, sy] = atlas.shape(l);
+        const [sx, sy] = atlas.shape(level);
         ctx.drawImage(
           atlas.canvas,
           sx,
@@ -231,16 +285,33 @@ function paintCells(
  * @class SkeletonSlice
  */
 export class SkeletonSlice implements Slice {
-  private readonly drawn: DrawnCells = new Map();
+  /**
+   * Shape indices it draws.
+   *
+   * @type {readonly number[]}
+   */
+  readonly idx: readonly number[];
+  /**
+   * Levels on its canvas per shape, while the pixels are kept.
+   *
+   * @type {DrawnCells}
+   */
+  readonly #drawn: DrawnCells = new Map();
+  /**
+   * Region the shapes belong to.
+   *
+   * @type {SkeletonRegion}
+   */
+  readonly #region: SkeletonRegion;
 
   /**
    * @param {SkeletonRegion} region - Region.
    * @param {readonly number[]} idx - Shape indices it draws.
    */
-  constructor(
-    private readonly region: SkeletonRegion,
-    readonly idx: readonly number[],
-  ) {}
+  constructor(region: SkeletonRegion, idx: readonly number[]) {
+    this.#region = region;
+    this.idx = idx;
+  }
 
   /**
    * Pixels may be kept until the content is swapped in.
@@ -248,7 +319,7 @@ export class SkeletonSlice implements Slice {
    * @returns {boolean} Retains.
    */
   get retains(): boolean {
-    return !this.region.swapped;
+    return !this.#region.swapped;
   }
 
   /**
@@ -260,7 +331,7 @@ export class SkeletonSlice implements Slice {
    * @returns {void}
    */
   start(t: number, top: number, bottom: number): void {
-    this.region.startVisible(this.idx, t, top, bottom);
+    this.#region.startVisible(this.idx, t, top, bottom);
   }
 
   /**
@@ -270,9 +341,9 @@ export class SkeletonSlice implements Slice {
    * @returns {boolean} Pending.
    */
   pending(t: number): boolean {
-    return this.region
+    return this.#region
       .pick(this.idx)
-      .some((c) => this.region.front(c, t) !== Infinity);
+      .some((box) => this.#region.front(box, t) !== Infinity);
   }
 
   /**
@@ -285,14 +356,14 @@ export class SkeletonSlice implements Slice {
    * @returns {boolean} Animating.
    */
   animating(t: number, top: number, bottom: number): boolean {
-    if (this.region.reduced) return false;
-    return this.region
+    if (this.#region.reduced) return false;
+    return this.#region
       .pick(this.idx)
       .some(
-        (c) =>
-          c.y < bottom &&
-          c.y + c.h > top &&
-          this.region.front(c, t) !== Infinity,
+        (box) =>
+          box.y < bottom &&
+          box.y + box.h > top &&
+          this.#region.front(box, t) !== Infinity,
       );
   }
 
@@ -303,9 +374,9 @@ export class SkeletonSlice implements Slice {
    */
   settlesAt(): number {
     return Math.max(
-      ...this.region
+      ...this.#region
         .pick(this.idx)
-        .map((c) => (c.start === null ? Infinity : c.start + c.dur)),
+        .map((box) => (box.start === null ? Infinity : box.start + box.dur)),
     );
   }
 
@@ -318,13 +389,13 @@ export class SkeletonSlice implements Slice {
    * @returns {void}
    */
   paint(view: View, t: number, keep: boolean): void {
-    if (!keep) this.drawn.clear();
+    if (!keep) this.#drawn.clear();
     paintSkeleton(
-      this.region,
+      this.#region,
       this.idx,
       view,
       t,
-      keep ? this.drawn : undefined,
+      keep ? this.#drawn : undefined,
     );
   }
 }

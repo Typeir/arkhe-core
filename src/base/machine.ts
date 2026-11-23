@@ -45,11 +45,11 @@ export function valueArray(
  * @function uniqueByValue
  * @template {{ value: unknown }} T
  * @param {readonly T[]} items - Items, possibly with repeated values.
- * @returns {T[]} Items with unique values, in order.
+ * @returns {readonly T[]} Items with unique values, in order.
  */
 export function uniqueByValue<T extends { readonly value: unknown }>(
   items: readonly T[],
-): T[] {
+): readonly T[] {
   const seen = new Set<unknown>();
   return items.filter((item) => {
     if (seen.has(item.value)) return false;

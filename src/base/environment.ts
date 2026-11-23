@@ -9,6 +9,8 @@
  * @since 0.1.0
  */
 
+import { mainDocument } from './dom.js';
+
 /**
  * A node Zag can query for its parts.
  *
@@ -50,7 +52,20 @@ export interface ArkheEnvironmentValue {
 export function documentOf(root: RootNode): Document {
   return root.nodeType === 9
     ? (root as Document)
-    : (root.ownerDocument ?? document);
+    : (root as ShadowRoot).host.ownerDocument;
+}
+
+/**
+ * The root outside any `ArkheEnvironment`: the main window's document.
+ *
+ * @function mainRoot
+ * @returns {RootNode} Main document.
+ * @throws {ReferenceError} Where there is no document, as in server rendering.
+ */
+function mainRoot(): RootNode {
+  const doc = mainDocument();
+  if (!doc) throw new ReferenceError('document is not defined');
+  return doc;
 }
 
 /**
@@ -65,7 +80,7 @@ export function documentOf(root: RootNode): Document {
 export function createEnvironment(
   input: EnvironmentInput = {},
 ): ArkheEnvironmentValue {
-  const getRootNode = input.rootNode ?? (() => document);
+  const getRootNode = input.rootNode ?? mainRoot;
   const { container } = input;
   return {
     getRootNode,

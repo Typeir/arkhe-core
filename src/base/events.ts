@@ -16,6 +16,7 @@
  * @property {string} blur - Blur prop.
  * @property {string} keydown - Key-down prop.
  * @property {string} pointerdown - Pointer-down prop.
+ * @property {string} pointerleave - Pointer-leave prop.
  * @property {string} click - Click prop.
  */
 export interface EventNames {
@@ -23,6 +24,7 @@ export interface EventNames {
   readonly blur: string;
   readonly keydown: string;
   readonly pointerdown: string;
+  readonly pointerleave: string;
   readonly click: string;
 }
 
@@ -37,6 +39,7 @@ export const REACT_EVENTS: EventNames = {
   blur: 'onBlur',
   keydown: 'onKeyDown',
   pointerdown: 'onPointerDown',
+  pointerleave: 'onPointerLeave',
   click: 'onClick',
 };
 
@@ -51,5 +54,6 @@ export const SVELTE_EVENTS: EventNames = {
   blur: 'onfocusout',
   keydown: 'onkeydown',
   pointerdown: 'onpointerdown',
+  pointerleave: 'onpointerleave',
   click: 'onclick',
 };

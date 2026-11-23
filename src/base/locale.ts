@@ -19,7 +19,7 @@ export const DEFAULT_LOCALE = 'en';
 
 /**
  * How number fields format and parse: grouped digits, and every fraction
- * digit the user typed (`Intl` rounds to 3 by default).
+ * digit the user typed (`Intl` otherwise rounds to 3).
  *
  * @constant NUMERIC_FORMAT
  * @type {Intl.NumberFormatOptions}
@@ -28,7 +28,20 @@ export const NUMERIC_FORMAT: Intl.NumberFormatOptions = {
   maximumFractionDigits: 20,
 };
 
+/**
+ * Number formatters by locale and options.
+ *
+ * @constant formatters
+ * @type {Map<string, Intl.NumberFormat>}
+ */
 const formatters = new Map<string, Intl.NumberFormat>();
+
+/**
+ * Plural rules by locale.
+ *
+ * @constant plurals
+ * @type {Map<string, Intl.PluralRules>}
+ */
 const plurals = new Map<string, Intl.PluralRules>();
 
 /**

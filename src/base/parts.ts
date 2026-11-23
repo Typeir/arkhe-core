@@ -49,5 +49,18 @@ export function partAttrs(scope: string, part: string): PartAttributes {
  * @returns {'' | undefined} Attribute value.
  */
 export function flag(on: boolean | undefined): '' | undefined {
-  return on ? '' : undefined;
+  if (on) return '';
+  return undefined;
+}
+
+/**
+ * True when `text` has something to show: an empty string counts as absent,
+ * so an empty icon name, label, hint or error renders nothing.
+ *
+ * @function hasText
+ * @param {string | null} [text] - Optional text.
+ * @returns {boolean} Non-empty.
+ */
+export function hasText(text?: string | null): text is string {
+  return text !== undefined && text !== null && text !== '';
 }

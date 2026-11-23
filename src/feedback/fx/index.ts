@@ -9,12 +9,13 @@
  * @since 0.1.0
  */
 
+import { type OwnerWindow, ownWindow } from '../../base/dom.js';
 import {
-  DEFAULT_FX_OPTIONS,
-  InertFx,
   canRunFx,
+  DEFAULT_FX_OPTIONS,
   type Fx,
   type FxOptions,
+  InertFx,
 } from './api.js';
 import { FxEngine } from './engine.js';
 
@@ -36,11 +37,20 @@ export type { PainterKind } from './skeleton/painter.js';
  * skeleton stays and reveals end at once.
  *
  * @function createFx
- * @param {Partial<FxOptions>} [options] - Overrides.
+ * @param {Partial<FxOptions>} [options] - Overrides. Defaults to none.
+ * @param {OwnerWindow | null} [view] - Window the engine draws in; null outside a browser. Defaults to the window core was loaded in.
  * @returns {Fx} Engine.
  */
-export function createFx(options: Partial<FxOptions> = {}): Fx {
-  if (!canRunFx() || matchMedia('(forced-colors: active)').matches)
+export function createFx(
+  options: Partial<FxOptions> = {},
+  view: OwnerWindow | null = ownWindow(),
+): Fx {
+  if (
+    view === null ||
+    !canRunFx(view) ||
+    view.matchMedia('(forced-colors: active)').matches
+  ) {
     return new InertFx();
-  return new FxEngine({ ...DEFAULT_FX_OPTIONS, ...options });
+  }
+  return new FxEngine({ ...DEFAULT_FX_OPTIONS, ...options }, view);
 }

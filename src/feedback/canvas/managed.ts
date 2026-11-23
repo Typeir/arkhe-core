@@ -1,7 +1,7 @@
 /**
  * @fileoverview A canvas whose backing store comes from the shared budget:
  * placed absolutely at its parent's padding-box origin, sized in CSS px and
- * device px separately, zeroed and released on free, and told when the GPU
+ * device px separately, zeroed and handed back on release, and told when the GPU
  * drops or restores its 2D context.
  *
  * @module packages/core/src/feedback/canvas/managed
@@ -42,8 +42,8 @@ export interface Placement {
  * @property {() => void} restored - The 2D context is back, blank.
  */
 export interface LossHandlers {
-  lost(): void;
-  restored(): void;
+  lost: () => void;
+  restored: () => void;
 }
 
 /**
@@ -52,8 +52,36 @@ export interface LossHandlers {
  * @class ManagedCanvas
  */
 export class ManagedCanvas {
+  /**
+   * The canvas while a backing store is held; null otherwise.
+   *
+   * @type {HTMLCanvasElement | null}
+   */
   canvas: HTMLCanvasElement | null = null;
+  /**
+   * Its 2D context while held; null otherwise.
+   *
+   * @type {CanvasRenderingContext2D | null}
+   */
   ctx: CanvasRenderingContext2D | null = null;
+  /**
+   * Shared budget the backing store comes from.
+   *
+   * @type {CanvasBudget}
+   */
+  readonly #budget: CanvasBudget;
+  /**
+   * Holder the budget sees.
+   *
+   * @type {BudgetClient}
+   */
+  readonly #client: BudgetClient;
+  /**
+   * Context loss callbacks.
+   *
+   * @type {LossHandlers}
+   */
+  readonly #handlers: LossHandlers;
 
   /**
    * @param {CanvasBudget} budget - Shared budget.
@@ -61,10 +89,14 @@ export class ManagedCanvas {
    * @param {LossHandlers} handlers - Context loss callbacks.
    */
   constructor(
-    private readonly budget: CanvasBudget,
-    private readonly client: BudgetClient,
-    private readonly handlers: LossHandlers,
-  ) {}
+    budget: CanvasBudget,
+    client: BudgetClient,
+    handlers: LossHandlers,
+  ) {
+    this.#budget = budget;
+    this.#client = client;
+    this.#handlers = handlers;
+  }
 
   /**
    * True while a backing store is held.
@@ -91,35 +123,40 @@ export class ManagedCanvas {
     pxHeight: number,
     place: Placement,
   ): boolean {
-    if (!this.budget.grant(this.client, pxWidth * pxHeight)) return false;
-    const c = parent.ownerDocument.createElement('canvas');
-    c.setAttribute(TILE_ATTR, '');
-    c.setAttribute('aria-hidden', 'true');
-    c.width = pxWidth;
-    c.height = pxHeight;
-    c.style.cssText = `position:absolute;left:0;top:${place.top}px;width:${place.width}px;height:${place.height}px;pointer-events:none;z-index:1`;
-    c.addEventListener('contextlost', () => this.handlers.lost());
-    c.addEventListener('contextrestored', () => this.handlers.restored());
-    parent.append(c);
-    this.canvas = c;
-    this.ctx = c.getContext('2d');
+    if (!this.#budget.grant(this.#client, pxWidth * pxHeight)) return false;
+    const canvas = parent.ownerDocument.createElement('canvas');
+    canvas.setAttribute(TILE_ATTR, '');
+    canvas.setAttribute('aria-hidden', 'true');
+    canvas.width = pxWidth;
+    canvas.height = pxHeight;
+    canvas.style.cssText = `position:absolute;left:0;top:${place.top}px;width:${place.width}px;height:${place.height}px;pointer-events:none;z-index:1`;
+    canvas.addEventListener('contextlost', () => {
+      this.#handlers.lost();
+    });
+    canvas.addEventListener('contextrestored', () => {
+      this.#handlers.restored();
+    });
+    parent.append(canvas);
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
     if (this.ctx) return true;
-    this.free();
+    this.release();
     return false;
   }
 
   /**
-   * Zeroes and removes the canvas and returns its pixels to the budget.
+   * Zeroes and removes the canvas and returns its pixels to the budget. The
+   * canvas can allocate again afterwards.
    *
    * @returns {void}
    */
-  free(): void {
+  release(): void {
     if (this.canvas) {
       this.canvas.width = this.canvas.height = 0;
       this.canvas.remove();
     }
     this.canvas = null;
     this.ctx = null;
-    this.budget.release(this.client);
+    this.#budget.release(this.#client);
   }
 }

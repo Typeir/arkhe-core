@@ -13,6 +13,8 @@
 @use 'components/feedback/feedback';
 @use 'components/field/field';
 @use 'components/overlay/floating';
+@use 'components/hint/card';
+@use 'components/hint/tooltip';
 @use 'components/field/numeric';
 @use 'components/choice/radio';
 @use 'components/select/select';
@@ -31,6 +33,8 @@
   @include feedback.feedback;
   @include field.field;
   @include floating.floating;
+  @include card.card;
+  @include tooltip.tooltip;
   @include numeric.numeric;
   @include radio.radio;
   @include select.select;

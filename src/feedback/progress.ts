@@ -8,7 +8,7 @@
  * @since 0.1.0
  */
 
-import { formatLabel, type ArkheLabels } from '../base/labels.js';
+import { type ArkheLabels, formatLabel } from '../base/labels.js';
 
 /**
  * A threshold drawn on the track.

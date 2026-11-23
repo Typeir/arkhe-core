@@ -77,7 +77,7 @@ export interface ToggleRootAttrs {
  *
  * @function toggleRootAttrs
  * @param {string} label - Group name.
- * @param {ToggleOrientation} [orientation] - Direction; horizontal by default.
+ * @param {ToggleOrientation} [orientation] - Direction. Defaults to `horizontal`.
  * @returns {ToggleRootAttrs} Root attributes.
  */
 export function toggleRootAttrs(

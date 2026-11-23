@@ -206,7 +206,7 @@ export function watchView(
   update();
   box.addEventListener('scroll', update, { passive: true });
   const Observer = box.ownerDocument.defaultView?.ResizeObserver;
-  const observer = Observer ? new Observer(update) : undefined;
+  const observer = Observer ? new Observer(update) : null;
   observer?.observe(box);
   return () => {
     box.removeEventListener('scroll', update);

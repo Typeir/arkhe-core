@@ -10,8 +10,8 @@
  * @since 0.1.0
  */
 
-import { borderEdges, boxFromEdges, type Edges } from '../../canvas/measure.js';
 import type { Region, Slice } from '../../canvas/view.js';
+import { borderEdges, boxFromEdges, type Edges } from '../../canvas/measure.js';
 import {
   CELL_H,
   CELL_W,
@@ -61,6 +61,12 @@ export interface SkeletonBox extends Slotted {
   visibleAtReady: boolean;
 }
 
+/**
+ * Border widths before the first measure.
+ *
+ * @constant NO_EDGES
+ * @type {Edges}
+ */
 const NO_EDGES: Edges = { left: 0, top: 0, right: 0, bottom: 0 };
 
 /**
@@ -69,24 +75,77 @@ const NO_EDGES: Edges = { left: 0, top: 0, right: 0, bottom: 0 };
  * @class SkeletonRegion
  */
 export class SkeletonRegion implements Region {
+  /**
+   * Declared shapes, in document order.
+   *
+   * @type {SkeletonBox[]}
+   */
   boxes: SkeletonBox[] = [];
+  /**
+   * Padding-box width, CSS px.
+   *
+   * @type {number}
+   */
   width = 0;
+  /**
+   * Padding-box height, CSS px.
+   *
+   * @type {number}
+   */
   height = 0;
+  /**
+   * Row grid tiles are cut on: one cell row.
+   *
+   * @type {number}
+   */
   readonly step = CELL_H;
+  /**
+   * When the content arrived; null before that.
+   *
+   * @type {number | null}
+   */
   readyAt: number | null = null;
+  /**
+   * The real content now sits under the shapes.
+   *
+   * @type {boolean}
+   */
   swapped = false;
-  private edges: Edges = NO_EDGES;
+  /**
+   * Owner element; canvases go inside it.
+   *
+   * @type {HTMLElement}
+   */
+  readonly host: HTMLElement;
+  /**
+   * Reduced motion: one still frame, instant reveal.
+   *
+   * @type {boolean}
+   */
+  readonly reduced: boolean;
+  /**
+   * Painter and colours, shared by the engine.
+   *
+   * @type {SkeletonStyle}
+   */
+  readonly style: SkeletonStyle;
+  /**
+   * Border widths of the last measure.
+   *
+   * @type {Edges}
+   */
+  #edges: Edges = NO_EDGES;
 
   /**
    * @param {HTMLElement} host - Owner element.
    * @param {boolean} reduced - Reduced motion: one still frame, instant reveal.
    * @param {SkeletonStyle} style - Painter and colours, shared by the engine.
    */
-  constructor(
-    readonly host: HTMLElement,
-    readonly reduced: boolean,
-    readonly style: SkeletonStyle,
-  ) {}
+  constructor(host: HTMLElement, reduced: boolean, style: SkeletonStyle) {
+    this.host = host;
+    this.reduced = reduced;
+    this.style = style;
+  }
 
   /**
    * Padding box now, from the border widths of the last measure.
@@ -94,8 +153,12 @@ export class SkeletonRegion implements Region {
    * @returns {{ left: number; top: number; bottom: number }} Viewport px.
    */
   box(): { left: number; top: number; bottom: number } {
-    const b = boxFromEdges(this.host, this.edges);
-    return { left: b.left, top: b.top, bottom: b.top + this.height };
+    const padding = boxFromEdges(this.host, this.#edges);
+    return {
+      left: padding.left,
+      top: padding.top,
+      bottom: padding.top + this.height,
+    };
   }
 
   /**
@@ -104,32 +167,32 @@ export class SkeletonRegion implements Region {
    * @returns {void}
    */
   measure(): void {
-    this.edges = borderEdges(this.host);
-    const hb = boxFromEdges(this.host, this.edges);
-    this.width = hb.width;
-    this.height = hb.height;
+    this.#edges = borderEdges(this.host);
+    const hostBox = boxFromEdges(this.host, this.#edges);
+    this.width = hostBox.width;
+    this.height = hostBox.height;
     const own = (el: Element) =>
       el.parentElement?.closest(OWNER_SELECTOR) === this.host;
     this.boxes = [...this.host.querySelectorAll(SHAPE_SELECTOR)]
       .filter(own)
       .map((el) => {
-        const r = el.getBoundingClientRect();
-        const rows = Math.max(1, Math.round(r.height / CELL_H));
-        const y = r.top - hb.top;
+        const rect = el.getBoundingClientRect();
+        const rows = Math.max(1, Math.round(rect.height / CELL_H));
+        const y = rect.top - hostBox.top;
         return {
-          x: r.left - hb.left,
+          x: rect.left - hostBox.left,
           y,
-          w: r.width,
-          h: r.height,
-          cols: Math.max(1, Math.round(r.width / CELL_W)),
+          w: rect.width,
+          h: rect.height,
+          cols: Math.max(1, Math.round(rect.width / CELL_W)),
           rows,
-          cellY: y + (r.height - rows * CELL_H) / 2,
+          cellY: y + (rect.height - rows * CELL_H) / 2,
           sx0: 0,
           sx1: 0,
           sy0: 0,
           sy1: 0,
           start: null,
-          dur: DECODE_BASE_MS + DECODE_PER_PX * r.width,
+          dur: DECODE_BASE_MS + DECODE_PER_PX * rect.width,
           visibleAtReady: false,
         };
       });
@@ -142,7 +205,9 @@ export class SkeletonRegion implements Region {
    * @returns {string} Key.
    */
   key(): string {
-    return JSON.stringify(this.boxes.map((c) => [c.y, c.h, c.sy0, c.sy1]));
+    return JSON.stringify(
+      this.boxes.map((box) => [box.y, box.h, box.sy0, box.sy1]),
+    );
   }
 
   /**
@@ -155,8 +220,10 @@ export class SkeletonRegion implements Region {
   slice(y0: number, y1: number): Slice {
     const lo = y0 - CELL_H;
     const hi = y1 + CELL_H;
-    const idx = this.boxes.flatMap((c, i) =>
-      Math.max(c.y + c.h, c.sy1) > lo && Math.min(c.y, c.sy0) < hi ? [i] : [],
+    const idx = this.boxes.flatMap((box, i) =>
+      Math.max(box.y + box.h, box.sy1) > lo && Math.min(box.y, box.sy0) < hi
+        ? [i]
+        : [],
     );
     return new SkeletonSlice(this, idx);
   }
@@ -172,9 +239,9 @@ export class SkeletonRegion implements Region {
    */
   ready(t: number, viewTop: number, viewBottom: number): void {
     this.readyAt = t;
-    for (const c of this.boxes) {
-      c.visibleAtReady = c.y < viewBottom && c.y + c.h > viewTop;
-      if (this.reduced) c.start = -Infinity;
+    for (const box of this.boxes) {
+      box.visibleAtReady = box.y < viewBottom && box.y + box.h > viewTop;
+      if (this.reduced) box.start = -Infinity;
     }
   }
 
@@ -185,7 +252,7 @@ export class SkeletonRegion implements Region {
    * @returns {void}
    */
   settle(): void {
-    for (const c of this.boxes) c.start = -Infinity;
+    for (const box of this.boxes) box.start = -Infinity;
   }
 
   /**
@@ -205,13 +272,15 @@ export class SkeletonRegion implements Region {
   ): void {
     const readyAt = this.readyAt;
     if (readyAt === null || t < readyAt) return;
-    for (const c of this.pick(idx)) {
-      if (c.start !== null || c.y >= bottom || c.y + c.h <= top) continue;
+    for (const box of this.pick(idx)) {
+      if (box.start !== null || box.y >= bottom || box.y + box.h <= top) {
+        continue;
+      }
       const stagger = Math.min(
         STAGGER_MAX_MS,
-        Math.max(0, c.y - top) * STAGGER_PER_PX,
+        Math.max(0, box.y - top) * STAGGER_PER_PX,
       );
-      c.start = (c.visibleAtReady ? readyAt : t + LATE_START_MS) + stagger;
+      box.start = (box.visibleAtReady ? readyAt : t + LATE_START_MS) + stagger;
     }
   }
 
@@ -219,23 +288,23 @@ export class SkeletonRegion implements Region {
    * Decode front of a shape at `t`, in px from its left edge; null before
    * it starts, Infinity once done.
    *
-   * @param {SkeletonBox} c - Shape.
+   * @param {SkeletonBox} box - Shape.
    * @param {number} t - Now.
    * @returns {number | null} Front.
    */
-  front(c: SkeletonBox, t: number): number | null {
-    if (c.start === null || t < c.start) return null;
-    const p = (t - c.start) / c.dur;
-    return p >= 1 ? Infinity : p * (c.w + FRONT_PX);
+  front(box: SkeletonBox, t: number): number | null {
+    if (box.start === null || t < box.start) return null;
+    const progress = (t - box.start) / box.dur;
+    return progress >= 1 ? Infinity : progress * (box.w + FRONT_PX);
   }
 
   /**
    * Shapes of `idx`.
    *
    * @param {readonly number[]} idx - Shape indices.
-   * @returns {SkeletonBox[]} Shapes.
+   * @returns {readonly SkeletonBox[]} Shapes.
    */
-  pick(idx: readonly number[]): SkeletonBox[] {
+  pick(idx: readonly number[]): readonly SkeletonBox[] {
     return idx.flatMap((i) => this.boxes[i] ?? []);
   }
 }

@@ -10,6 +10,7 @@
  */
 
 import type { RootNode } from '../base/environment.js';
+import { watchFindable } from '../base/dom.js';
 import { definedOnly } from '../base/machine.js';
 
 /**
@@ -107,18 +108,18 @@ export function tabIds(id: string): {
  * @param {string | undefined} value - Requested value.
  * @param {readonly TabItem[]} items - Tabs.
  * @param {Set<string>} [warned] - Unknown values already warned about.
- * @returns {string | undefined} Value to show; undefined when no tab is enabled.
+ * @returns {string | null} Value to show; null when no tab is enabled.
  */
 export function resolveTabValue(
   value: string | undefined,
   items: readonly TabItem[],
   warned: Set<string> = new Set(),
-): string | undefined {
+): string | null {
   const enabled = items.filter((item) => !item.disabled);
   if (value !== undefined && enabled.some((item) => item.value === value)) {
     return value;
   }
-  const fallback = enabled[0]?.value;
+  const fallback = enabled[0]?.value ?? null;
   if (value !== undefined && !warned.has(value)) {
     warned.add(value);
     console.warn(
@@ -135,15 +136,37 @@ export function resolveTabValue(
  * @function staleTabFallback
  * @param {string | null | undefined} current - Value Zag shows now.
  * @param {readonly TabItem[]} items - Current tabs.
- * @returns {string | undefined} Value to select, or undefined to stay put.
+ * @returns {string | null} Value to select, or null to stay put.
  */
 export function staleTabFallback(
   current: string | null | undefined,
   items: readonly TabItem[],
-): string | undefined {
+): string | null {
   const enabled = items.filter((item) => !item.disabled);
-  if (enabled.some((item) => item.value === current)) return undefined;
-  return enabled[0]?.value;
+  if (enabled.some((item) => item.value === current)) return null;
+  return enabled[0]?.value ?? null;
+}
+
+/**
+ * Zag tabs machine props.
+ *
+ * @interface TabsMachineProps
+ * @property {string} id - Instance id.
+ * @property {ReturnType<typeof tabIds>} ids - Trigger and panel ids by value.
+ * @property {string | null} [value] - Controlled tab; null for none.
+ * @property {string | null} [defaultValue] - First tab when uncontrolled; null for none.
+ * @property {{ listLabel: string }} translations - Tab list name.
+ * @property {(details: { value: string }) => void} onValueChange - Zag's change callback.
+ * @property {() => RootNode} getRootNode - Root node for Zag.
+ */
+export interface TabsMachineProps {
+  readonly id: string;
+  readonly ids: ReturnType<typeof tabIds>;
+  readonly value?: string | null;
+  readonly defaultValue?: string | null;
+  readonly translations: { readonly listLabel: string };
+  readonly onValueChange: (details: { value: string }) => void;
+  readonly getRootNode: () => RootNode;
 }
 
 /**
@@ -151,9 +174,9 @@ export function staleTabFallback(
  *
  * @function tabsMachineProps
  * @param {TabsMachineInput} input - Port input.
- * @returns {object} Machine props.
+ * @returns {TabsMachineProps} Machine props.
  */
-export function tabsMachineProps(input: TabsMachineInput) {
+export function tabsMachineProps(input: TabsMachineInput): TabsMachineProps {
   const controlled = input.value !== undefined;
   return definedOnly({
     id: input.id,
@@ -186,29 +209,8 @@ export function findablePanels(
   root: HTMLElement,
   onFound: (value: string) => void,
 ): () => void {
-  const mark = () => {
-    for (const panel of root.querySelectorAll<HTMLElement>(
-      ':scope > [data-findable][hidden]',
-    )) {
-      if (panel.getAttribute('hidden') !== 'until-found') {
-        panel.setAttribute('hidden', 'until-found');
-      }
-    }
-  };
-  const found = (event: Event) => {
-    const value = (event.target as HTMLElement).dataset['value'];
+  return watchFindable(root, (panel) => {
+    const value = panel.dataset['value'];
     if (value !== undefined) onFound(value);
-  };
-  mark();
-  const View = root.ownerDocument.defaultView?.MutationObserver;
-  const observer = View ? new View(mark) : undefined;
-  observer?.observe(root, {
-    subtree: true,
-    attributeFilter: ['hidden'],
   });
-  root.addEventListener('beforematch', found, true);
-  return () => {
-    observer?.disconnect();
-    root.removeEventListener('beforematch', found, true);
-  };
 }

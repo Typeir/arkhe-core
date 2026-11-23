@@ -1,12 +1,10 @@
 /**
  * @fileoverview Number field: caps label over a square control, step
- * buttons either side of a centred mono input. A rhombus blooms behind a
- * step button on hover.
+ * buttons either side of a centred mono input. Each step button is a
+ * secondary fill that turns accent on hover and presses in.
  */
 
 @use '../../part' as *;
-@use '../../motion' as *;
-@use '../../shape' as *;
 @use '../../text' as *;
 @use 'field' as *;
 
@@ -23,7 +21,7 @@
 
   @include part('number-input', 'control') {
     display: grid;
-    grid-template-columns: 2rem 1fr 2rem;
+    grid-template-columns: minmax(2rem, auto) 1fr minmax(2rem, auto);
     @include control-frame;
   }
 
@@ -35,53 +33,42 @@
 
   @each $trigger in ('increment-trigger', 'decrement-trigger') {
     @include part('number-input', $trigger) {
-      position: relative;
-      isolation: isolate;
-      display: inline-flex;
+      display: flex;
       align-items: center;
       justify-content: center;
+      min-width: 28px;
       padding: 0;
-      border: 0;
-      background: transparent;
-      color: var(--color-text-secondary);
+      border: none;
+      background: var(--color-secondary);
+      color: var(--color-surface);
+      font-family: inherit;
+      font-weight: 600;
       cursor: pointer;
-      @include focus-ring;
-
-      &::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-        margin: auto;
-        @include rhombus($upright: false);
-        @include rhombus-size(0.875rem);
-        background: var(--color-accent-a20);
-        scale: 0.4;
-        opacity: 0;
-        transition:
-          scale var(--dur-2) var(--ease-springy),
-          opacity var(--dur-2) ease;
-      }
+      transition: all 0.1s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
 
       &:hover:not([data-disabled]) {
-        color: var(--color-accent);
+        background: var(--color-accent);
+      }
 
-        &::before {
-          scale: 1;
-          opacity: 1;
-        }
+      &:active:not([data-disabled]) {
+        transform: scale(0.95);
+      }
+
+      &:focus-visible {
+        outline: var(--outline-width) solid var(--color-accent);
+        outline-offset: -2px;
       }
 
       &[data-disabled] {
-        opacity: 0.3;
+        opacity: 0.4;
         cursor: not-allowed;
       }
 
-      @include still {
-        &::before {
-          scale: 1;
-          transition: opacity var(--dur-2) ease;
-        }
+      @media (pointer: coarse) {
+        min-width: 44px;
+        min-height: 44px;
       }
     }
   }

@@ -65,7 +65,7 @@ export function statusLook(kind: StatusKind, labels: ArkheLabels): StatusLook {
         politeness: 'assertive',
         text: labels.statusError,
       };
-    case 'info':
+    default:
       return { icon: 'info', politeness: 'polite', text: '' };
   }
 }

@@ -37,6 +37,9 @@
 @mixin virtual {
   @include part('virtual-list', 'root') {
     display: block;
+    margin: 0;
+    padding: 0;
+    list-style: none;
     max-block-size: var(--virtual-max, 37.5rem);
     overflow-y: auto;
     overscroll-behavior: contain;

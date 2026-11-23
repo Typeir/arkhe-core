@@ -15,9 +15,15 @@
  * @since 0.1.0
  */
 
-import { documentOf, type RootNode } from '../base/environment.js';
 import type { EventNames } from '../base/events.js';
+import { documentOf, type RootNode } from '../base/environment.js';
 
+/**
+ * Selector of every hint trigger and positioner.
+ *
+ * @constant OWNERS
+ * @type {string}
+ */
 const OWNERS = ['tooltip', 'hover-card']
   .flatMap((scope) => [
     `[data-scope="${scope}"][data-part="trigger"]`,
@@ -54,11 +60,11 @@ export interface HintEvent {
  * the hint.
  *
  * @interface PointerMemory
- * @property {string | undefined} current - Pointer kind, until the click that follows.
+ * @property {string | null} current - Pointer kind, until the click that follows; null before a press.
  * @property {boolean} [tapped] - A tap opened the hint; only a tap outside or Escape closes it.
  */
 export interface PointerMemory {
-  current: string | undefined;
+  current: string | null;
   tapped?: boolean;
 }
 
@@ -120,7 +126,7 @@ export function hintTriggerProps<P extends object>(
     if (!ownsEvent(event)) return;
     const pointer = event.pointerType ?? event.nativeEvent?.pointerType;
     if (event.type === 'pointerdown') {
-      memory.current = pointer;
+      memory.current = pointer ?? null;
       if (pointer !== 'touch') memory.tapped = false;
     }
     if (event.type === 'blur' || event.type === 'focusout') {
@@ -129,7 +135,7 @@ export function hintTriggerProps<P extends object>(
     }
     if (event.type === 'click') {
       const tapped = (pointer ?? memory.current) === 'touch';
-      memory.current = undefined;
+      memory.current = null;
       if (tapped) {
         event.preventDefault();
         memory.tapped = !input.open;
@@ -153,13 +159,17 @@ export function hintTriggerProps<P extends object>(
   );
   for (const [key, handler] of Object.entries(props)) {
     if (key.startsWith('on') && typeof handler === 'function') {
-      wrapped[key] = (event: HintEvent) => route(event, handler);
+      wrapped[key] = (event: HintEvent) => {
+        route(event, handler);
+      };
     }
   }
   const ensured = [input.names.pointerdown, input.names.click];
   if (input.keys) ensured.push(input.names.keydown);
   for (const key of ensured) {
-    wrapped[key] ??= (event: HintEvent) => route(event);
+    wrapped[key] ??= (event: HintEvent) => {
+      route(event);
+    };
   }
   return wrapped as P;
 }
@@ -191,5 +201,7 @@ export function watchOutsideTap(
     if (!inside) close();
   };
   doc.addEventListener('pointerdown', listener, true);
-  return () => doc.removeEventListener('pointerdown', listener, true);
+  return () => {
+    doc.removeEventListener('pointerdown', listener, true);
+  };
 }

@@ -1,0 +1,85 @@
+/**
+ * @fileoverview Tooltip, drawn as the host's: a flat bubble on the card
+ * ground (the page ground in light), fading in and out, with a tail like a
+ * speech bubble. The tail is Zag's arrow, half a rhombus centred on the
+ * trigger; its two outer edges carry the bubble's border, and it paints over
+ * the bubble's own edge where they meet.
+ */
+
+@use '../../contrast' as *;
+@use '../../motion' as *;
+@use '../../part' as *;
+@use '../overlay/floating' as *;
+
+@mixin tooltip {
+  @include part('tooltip', 'positioner') {
+    @include hint-positioner;
+    transition-duration: 0.15s;
+  }
+
+  @include part('tooltip', 'trigger') {
+    @include inline-trigger;
+  }
+
+  @include part('tooltip', 'content') {
+    --tooltip-ground: light-dark(var(--color-bg), var(--color-bg-tertiary));
+    box-sizing: border-box;
+    width: max-content;
+    max-width: min(24rem, 90vw);
+    padding: 0.5rem 0.75rem;
+    border: var(--border-width-xs) solid var(--color-border);
+    background-color: var(--tooltip-ground);
+    color: var(--color-text);
+    box-shadow: 0 4px 12px var(--color-shadow);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    text-align: left;
+    overflow-wrap: break-word;
+    outline: none;
+    opacity: 1;
+    transition:
+      opacity 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+      display 0.18s allow-discrete;
+
+    @starting-style {
+      opacity: 0;
+    }
+
+    &[hidden] {
+      display: none;
+      opacity: 0;
+      transition:
+        opacity 0.15s ease,
+        display 0.15s allow-discrete;
+    }
+
+    ul,
+    ol {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    @include still {
+      &,
+      &[hidden] {
+        transition: none;
+      }
+    }
+  }
+
+  @include part('tooltip', 'arrow') {
+    --arrow-size: 8px;
+    --arrow-background: var(--tooltip-ground);
+    z-index: 1;
+  }
+
+  @include part('tooltip', 'arrow-tip') {
+    box-sizing: border-box;
+    border-top: var(--border-width-xs) solid var(--color-border);
+    border-left: var(--border-width-xs) solid var(--color-border);
+
+    @include forced {
+      border-color: CanvasText;
+    }
+  }
+}

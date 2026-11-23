@@ -24,13 +24,13 @@ export const NARROW_QUERY = '(max-width: 40rem)';
  *
  * @function narrowQuery
  * @param {RootNode} root - Root node.
- * @returns {MediaQueryList | undefined} Query list.
+ * @returns {MediaQueryList | null} Query list, `null` without one.
  */
-function narrowQuery(root: RootNode): MediaQueryList | undefined {
+function narrowQuery(root: RootNode): MediaQueryList | null {
   const view = documentOf(root).defaultView;
   return typeof view?.matchMedia === 'function'
     ? view.matchMedia(NARROW_QUERY)
-    : undefined;
+    : null;
 }
 
 /**

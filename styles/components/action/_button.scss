@@ -88,6 +88,18 @@ $button-glyphs: (
 );
 
 /**
+ * Glyph stroke per `size` on an icon-only button, thickened where the
+ * 24-unit grid would draw it under 1.5px.
+ */
+$button-strokes: (
+  'xs': 3,
+  's': 3,
+  'm': 2.5,
+  'l': 2.5,
+  'xl': 2.25,
+);
+
+/**
  * Labelled rhombus: a ghost label in the accent, its icon inside a rhombus
  * outline that lights up on hover and focus.
  */
@@ -187,6 +199,12 @@ $button-glyphs: (
       height: var(--button-glyph);
     }
 
+    @each $size, $stroke in $button-strokes {
+      &[data-size='#{$size}'][data-icon-only] svg {
+        stroke-width: $stroke;
+      }
+    }
+
     &[data-size][data-icon-only] {
       padding: calc(var(--button-glyph) * 0.25);
     }
@@ -202,6 +220,10 @@ $button-glyphs: (
 
     &[data-icon-only][data-shape='plain'] {
       @include button-plain;
+    }
+
+    &[data-icon-only][data-shape='plain'][aria-pressed='true'] {
+      color: var(--button-tone, var(--color-accent));
     }
 
     &[data-tone='danger'] {
