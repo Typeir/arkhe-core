@@ -87,3 +87,44 @@ export function findableRegion(
     root.removeEventListener('beforematch', onFound, true);
   };
 }
+
+/**
+ * What can happen to a collapsible: a press on its trigger, a host or
+ * accordion setting it, or the browser revealing it for find-in-page.
+ *
+ * @typedef {{ type: 'toggle' } | { type: 'set', open: boolean } | { type: 'reveal' }} CollapsibleAction
+ */
+export type CollapsibleAction =
+  | { readonly type: 'toggle' }
+  | { readonly type: 'set'; readonly open: boolean }
+  | { readonly type: 'reveal' };
+
+/**
+ * How a collapsible takes actions.
+ *
+ * @interface CollapsibleRules
+ * @property {boolean} [disabled] - Presses and sets change nothing.
+ */
+export interface CollapsibleRules {
+  readonly disabled?: boolean;
+}
+
+/**
+ * Collapsible reducer. A disabled collapsible ignores presses and sets, but
+ * a reveal always opens it: the browser has already shown the region.
+ *
+ * @function collapsibleReduce
+ * @param {boolean} open - Open now.
+ * @param {CollapsibleAction} action - What happened.
+ * @param {CollapsibleRules} rules - How it takes actions.
+ * @returns {boolean} Open after.
+ */
+export function collapsibleReduce(
+  open: boolean,
+  action: CollapsibleAction,
+  rules: CollapsibleRules,
+): boolean {
+  if (action.type === 'reveal') return true;
+  if (rules.disabled) return open;
+  return action.type === 'toggle' ? !open : action.open;
+}

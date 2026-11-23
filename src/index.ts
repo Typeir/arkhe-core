@@ -35,6 +35,7 @@ export * from './base/narrow.js';
 export * from './field/numeric.js';
 export * from './field/numericSync.js';
 export * from './base/parts.js';
+export * from './base/reducer.js';
 export * from './feedback/progress.js';
 export * from './choice/radioGroup.js';
 export * from './base/rovingFocus.js';

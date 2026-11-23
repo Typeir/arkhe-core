@@ -28,13 +28,29 @@ export interface AccordionItem {
  * How sections combine.
  *
  * @interface AccordionRules
+ * @property {readonly AccordionItem[]} items - Sections, in order.
  * @property {boolean} [multiple] - Several open at once; true by default.
  * @property {boolean} [collapsible] - The last open section may close; true by default.
  */
 export interface AccordionRules {
+  readonly items: readonly AccordionItem[];
   readonly multiple?: boolean;
   readonly collapsible?: boolean;
 }
+
+/**
+ * What can happen to an accordion's open values: a section asks to open or
+ * close, or expand / collapse all is pressed.
+ *
+ * @typedef {{ type: 'set', item: AccordionItem, open: boolean } | { type: 'toggle-all' }} AccordionAction
+ */
+export type AccordionAction =
+  | {
+      readonly type: 'set';
+      readonly item: AccordionItem;
+      readonly open: boolean;
+    }
+  | { readonly type: 'toggle-all' };
 
 /**
  * Says whether the section `value` is held open: it is the only one open
@@ -55,31 +71,6 @@ export function accordionHeld(
 }
 
 /**
- * Returns the open values after section `item` asks to open or close.
- * With `multiple` off, opening one closes the rest; a held section stays.
- *
- * @function accordionToggle
- * @param {readonly string[]} open - Open values now.
- * @param {AccordionItem} item - Section.
- * @param {boolean} next - True to open.
- * @param {AccordionRules} rules - How sections combine.
- * @returns {readonly string[]} Open values after.
- */
-export function accordionToggle(
-  open: readonly string[],
-  item: AccordionItem,
-  next: boolean,
-  rules: AccordionRules,
-): readonly string[] {
-  if (item.disabled || open.includes(item.value) === next) return open;
-  if (!next) {
-    if (accordionHeld(open, item.value, rules)) return open;
-    return open.filter((value) => value !== item.value);
-  }
-  return rules.multiple === false ? [item.value] : [...open, item.value];
-}
-
-/**
  * Says whether every enabled section is open.
  *
  * @function accordionAllOpen
@@ -95,21 +86,45 @@ export function accordionAllOpen(
 }
 
 /**
- * Returns the open values after expand all or collapse all. Disabled
- * sections keep their state; collapse all keeps the first open section
- * when `collapsible` is off.
+ * One section opens or closes. With `multiple` off, opening one closes the
+ * rest; a disabled or held section stays as it is.
  *
- * @function accordionToggleAll
- * @param {readonly AccordionItem[]} items - Sections.
+ * @function setSection
+ * @param {readonly string[]} open - Open values now.
+ * @param {AccordionItem} item - Section.
+ * @param {boolean} next - True to open.
+ * @param {AccordionRules} rules - How sections combine.
+ * @returns {readonly string[]} Open values after.
+ */
+function setSection(
+  open: readonly string[],
+  item: AccordionItem,
+  next: boolean,
+  rules: AccordionRules,
+): readonly string[] {
+  if (item.disabled || open.includes(item.value) === next) return open;
+  if (!next) {
+    if (accordionHeld(open, item.value, rules)) return open;
+    return open.filter((value) => value !== item.value);
+  }
+  return rules.multiple === false ? [item.value] : [...open, item.value];
+}
+
+/**
+ * Expand all, or collapse all once every section is open. Disabled sections
+ * keep their state; collapse all keeps the first open section when
+ * `collapsible` is off.
+ *
+ * @function toggleAll
  * @param {readonly string[]} open - Open values now.
  * @param {AccordionRules} rules - How sections combine.
  * @returns {readonly string[]} Open values after.
  */
-export function accordionToggleAll(
-  items: readonly AccordionItem[],
+function toggleAll(
   open: readonly string[],
   rules: AccordionRules,
 ): readonly string[] {
+  const { items } = rules;
   const kept = items.filter(
     (item) => item.disabled && open.includes(item.value),
   );
@@ -123,4 +138,24 @@ export function accordionToggleAll(
   );
   const held = rules.collapsible === false && first ? [first] : [];
   return [...kept.map((item) => item.value), ...held];
+}
+
+/**
+ * Accordion reducer: a section opening or closing, or expand / collapse
+ * all.
+ *
+ * @function accordionReduce
+ * @param {readonly string[]} open - Open values now.
+ * @param {AccordionAction} action - What happened.
+ * @param {AccordionRules} rules - Sections and how they combine.
+ * @returns {readonly string[]} Open values after; the same array when nothing changed.
+ */
+export function accordionReduce(
+  open: readonly string[],
+  action: AccordionAction,
+  rules: AccordionRules,
+): readonly string[] {
+  return action.type === 'set'
+    ? setSection(open, action.item, action.open, rules)
+    : toggleAll(open, rules);
 }

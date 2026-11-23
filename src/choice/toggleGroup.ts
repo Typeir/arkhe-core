@@ -35,14 +35,24 @@ export type ToggleOrientation = 'horizontal' | 'vertical';
 /**
  * How presses combine.
  *
- * @interface TogglePressRules
+ * @interface ToggleRules
  * @property {boolean} [multiple] - Several items may be pressed at once.
  * @property {boolean} [deselectable] - A single pressed item may be released.
  */
-export interface TogglePressRules {
+export interface ToggleRules {
   readonly multiple?: boolean;
   readonly deselectable?: boolean;
 }
+
+/**
+ * What can happen to a toggle group's pressed values: a press on an item,
+ * or the clear button.
+ *
+ * @typedef {{ type: 'press', item: ToggleItem } | { type: 'clear' }} ToggleAction
+ */
+export type ToggleAction =
+  | { readonly type: 'press'; readonly item: ToggleItem }
+  | { readonly type: 'clear' };
 
 /**
  * Attributes of a toggle group root.
@@ -85,21 +95,23 @@ export function toggleRootAttrs(
 }
 
 /**
- * Returns the pressed values after a press on `item`. Several may stay
- * pressed under `multiple`; otherwise the press takes over, and a press on
- * the pressed item releases it only when `deselectable`.
+ * Toggle group reducer. A press keeps several pressed under `multiple`;
+ * otherwise it takes over, and a press on the pressed item releases it only
+ * when `deselectable`. A disabled item changes nothing. Clear releases all.
  *
- * @function togglePress
+ * @function toggleReduce
  * @param {readonly string[]} pressed - Values pressed now.
- * @param {ToggleItem} item - Item pressed.
- * @param {TogglePressRules} rules - How presses combine.
- * @returns {readonly string[]} Values pressed after.
+ * @param {ToggleAction} action - What happened.
+ * @param {ToggleRules} rules - How presses combine.
+ * @returns {readonly string[]} Values pressed after; the same array when nothing changed.
  */
-export function togglePress(
+export function toggleReduce(
   pressed: readonly string[],
-  item: ToggleItem,
-  rules: TogglePressRules,
+  action: ToggleAction,
+  rules: ToggleRules,
 ): readonly string[] {
+  if (action.type === 'clear') return pressed.length > 0 ? [] : pressed;
+  const { item } = action;
   if (item.disabled) return pressed;
   const on = pressed.includes(item.value);
   if (rules.multiple) {
