@@ -1,0 +1,95 @@
+/**
+ * @fileoverview Cheap start-up guess at whether canvases are GPU-backed.
+ * Two signals must agree: a WebGL context made with
+ * `failIfMajorPerformanceCaveat`, and a renderer name that is not a known
+ * software rasteriser. Only one context is opened, and the answer is kept
+ * for the session. The guess can be wrong; the loop's watchdog backs it up.
+ *
+ * @module packages/core/src/feedback/canvas/probe
+ * @version 1.0.0
+ * @author Typeir
+ * @since 0.1.0
+ */
+import { windowOf } from '../../base/dom.js';
+import { hasText } from '../../base/parts.js';
+/**
+ * Renderer names of known software rasterisers.
+ *
+ * @constant SOFTWARE
+ * @type {RegExp}
+ */
+const SOFTWARE = /swiftshader|llvmpipe|softpipe|basic render|software/i;
+/**
+ * Session storage key of the probe result.
+ *
+ * @constant PROBE_KEY
+ * @type {string}
+ */
+export const PROBE_KEY = 'arkhe-canvas-acceleration';
+/**
+ * Probes once per session: a single WebGL context, kept only long enough to
+ * read its renderer. A context costs tens of milliseconds on some devices.
+ *
+ * @function probeAcceleration
+ * @param {OwnerWindow} [view] - Window whose canvases and session are probed. Defaults to the window core was loaded in.
+ * @returns {Acceleration} Result.
+ */
+export function probeAcceleration(view = windowOf()) {
+    const cached = readCache(view);
+    if (cached)
+        return cached;
+    const gl = view.document
+        .createElement('canvas')
+        .getContext('webgl', { failIfMajorPerformanceCaveat: true });
+    const renderer = gl ? rendererOf(gl) : 'no fast webgl';
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    const result = {
+        accelerated: gl !== null && !SOFTWARE.test(renderer),
+        renderer,
+    };
+    writeCache(view, result);
+    return result;
+}
+/**
+ * Reads the renderer name of a WebGL context.
+ *
+ * @function rendererOf
+ * @param {WebGLRenderingContext} gl - Context.
+ * @returns {string} Renderer name; `masked` when the browser hides it.
+ */
+function rendererOf(gl) {
+    const ext = gl.getExtension('WEBGL_debug_renderer_info');
+    return ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : 'masked';
+}
+/**
+ * Reads this session's probe result.
+ *
+ * @function readCache
+ * @param {OwnerWindow} view - Window whose session storage holds it.
+ * @returns {Acceleration | null} Cached result; null when absent or storage is blocked.
+ */
+function readCache(view) {
+    try {
+        const cached = view.sessionStorage.getItem(PROBE_KEY);
+        return hasText(cached) ? JSON.parse(cached) : null;
+    }
+    catch {
+        return null;
+    }
+}
+/**
+ * Keeps the probe result for this session; a blocked storage is ignored.
+ *
+ * @function writeCache
+ * @param {OwnerWindow} view - Window whose session storage keeps it.
+ * @param {Acceleration} result - Probe result.
+ * @returns {void}
+ */
+function writeCache(view, result) {
+    try {
+        view.sessionStorage.setItem(PROBE_KEY, JSON.stringify(result));
+    }
+    catch {
+        return;
+    }
+}

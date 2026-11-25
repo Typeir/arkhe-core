@@ -1,0 +1,80 @@
+/**
+ * @fileoverview Collapsible rules shared by both ports: part ids, the
+ * heading that may wrap the trigger, and the find-in-page reveal. The
+ * closed region is `hidden="until-found"`, so the browser can open it.
+ *
+ * @module packages/core/src/section/collapsible
+ * @version 1.0.0
+ * @author Typeir
+ * @since 0.4.0
+ */
+import { watchFindable } from '../base/dom.js';
+/**
+ * Derives part ids from one base id, made safe for IDREFs.
+ *
+ * @function collapsibleIds
+ * @param {string} base - Unique id of the collapsible.
+ * @returns {CollapsibleIds} Part ids.
+ */
+export function collapsibleIds(base) {
+    const safe = base.replace(/[^\w-]/g, '-');
+    return { trigger: `${safe}-trigger`, content: `${safe}-content` };
+}
+/**
+ * The tag of the heading around the trigger, or undefined for none.
+ *
+ * @function headingTag
+ * @param {HeadingLevel} [level] - Heading level.
+ * @returns {`h${HeadingLevel}` | undefined} Tag name.
+ */
+export function headingTag(level) {
+    return level === undefined ? undefined : `h${level}`;
+}
+/**
+ * Elements of a collapsible's root and header. With a heading it is a
+ * document section: `<section>`, unnamed so not a landmark, and a scoped
+ * `<header>` holding the trigger and the actions. Without one, plain
+ * containers.
+ *
+ * @function sectionTags
+ * @param {HeadingLevel} [heading] - Heading level of the trigger.
+ * @returns {{ root: 'section' | 'div', header: 'header' | 'div' }} Tag names.
+ */
+export function sectionTags(heading) {
+    return heading === undefined
+        ? { root: 'div', header: 'div' }
+        : { root: 'section', header: 'header' };
+}
+/**
+ * Keeps a closed region findable: the framework writes plain `hidden`, this
+ * turns it into `hidden="until-found"`; when find-in-page or a text
+ * fragment reveals the region, `onFound` opens the collapsible. A nested
+ * region revealed inside it opens it too.
+ *
+ * @function findableRegion
+ * @param {HTMLElement} root - Collapsible root; the region is its child.
+ * @param {() => void} onFound - Opens the collapsible.
+ * @returns {() => void} Stops watching.
+ */
+export function findableRegion(root, onFound) {
+    return watchFindable(root, () => {
+        onFound();
+    });
+}
+/**
+ * Collapsible reducer. A disabled collapsible ignores presses and sets, but
+ * a reveal always opens it: the browser has already shown the region.
+ *
+ * @function collapsibleReduce
+ * @param {boolean} open - Open now.
+ * @param {CollapsibleAction} action - What happened.
+ * @param {CollapsibleRules} rules - How it takes actions.
+ * @returns {boolean} Open after.
+ */
+export function collapsibleReduce(open, action, rules) {
+    if (action.type === 'reveal')
+        return true;
+    if (rules.disabled)
+        return open;
+    return action.type === 'toggle' ? !open : action.open;
+}

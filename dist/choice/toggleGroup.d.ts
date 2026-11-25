@@ -1,0 +1,105 @@
+/**
+ * @fileoverview Toggle group rules shared by both ports: what a press does
+ * to the pressed values, which items show under a limit, and the toolbar
+ * attributes that let the browser's focusgroup move focus with arrows.
+ *
+ * @module packages/core/src/choice/toggleGroup
+ * @version 1.0.0
+ * @author Typeir
+ * @since 0.4.0
+ */
+/**
+ * One toggle.
+ *
+ * @interface ToggleItem
+ * @property {string} value - Key; any text.
+ * @property {string} label - Accessible name; shown unless the port renders its own content.
+ * @property {string} [icon] - Lucide name of a leading icon.
+ * @property {boolean} [disabled] - Ignores presses; arrows still reach it.
+ */
+export interface ToggleItem {
+    readonly value: string;
+    readonly label: string;
+    readonly icon?: string;
+    readonly disabled?: boolean;
+}
+/**
+ * Which way the toggles run.
+ *
+ * @typedef {'horizontal' | 'vertical'} ToggleOrientation
+ */
+export type ToggleOrientation = 'horizontal' | 'vertical';
+/**
+ * How presses combine.
+ *
+ * @interface ToggleRules
+ * @property {boolean} [multiple] - Several items may be pressed at once.
+ * @property {boolean} [deselectable] - A single pressed item may be released.
+ */
+export interface ToggleRules {
+    readonly multiple?: boolean;
+    readonly deselectable?: boolean;
+}
+/**
+ * What can happen to a toggle group's pressed values: a press on an item,
+ * or the clear button.
+ *
+ * @typedef {{ type: 'press', item: ToggleItem } | { type: 'clear' }} ToggleAction
+ */
+export type ToggleAction = {
+    readonly type: 'press';
+    readonly item: ToggleItem;
+} | {
+    readonly type: 'clear';
+};
+/**
+ * Attributes of a toggle group root.
+ *
+ * @interface ToggleRootAttrs
+ * @property {'toolbar'} role - Toolbar role; one tab stop.
+ * @property {string} aria-label - Group name.
+ * @property {'vertical' | undefined} aria-orientation - Set when vertical.
+ * @property {string} focusgroup - Browser focus movement: wraps, along the block axis when vertical.
+ * @property {ToggleOrientation} data-orientation - Direction.
+ */
+export interface ToggleRootAttrs {
+    readonly role: 'toolbar';
+    readonly 'aria-label': string;
+    readonly 'aria-orientation': 'vertical' | undefined;
+    readonly focusgroup: string;
+    readonly 'data-orientation': ToggleOrientation;
+}
+/**
+ * Builds the root attributes.
+ *
+ * @function toggleRootAttrs
+ * @param {string} label - Group name.
+ * @param {ToggleOrientation} [orientation] - Direction. Defaults to `horizontal`.
+ * @returns {ToggleRootAttrs} Root attributes.
+ */
+export declare function toggleRootAttrs(label: string, orientation?: ToggleOrientation): ToggleRootAttrs;
+/**
+ * Toggle group reducer. A press keeps several pressed under `multiple`;
+ * otherwise it takes over, and a press on the pressed item releases it only
+ * when `deselectable`. A disabled item changes nothing. Clear releases all.
+ *
+ * @function toggleReduce
+ * @param {readonly string[]} pressed - Values pressed now.
+ * @param {ToggleAction} action - What happened.
+ * @param {ToggleRules} rules - How presses combine.
+ * @returns {readonly string[]} Values pressed after; the same array when nothing changed.
+ */
+export declare function toggleReduce(pressed: readonly string[], action: ToggleAction, rules: ToggleRules): readonly string[];
+/**
+ * Returns the items to draw: all of them when there is no limit or the
+ * group is expanded, else the first `limit` plus every pressed item past
+ * it, in order.
+ *
+ * @function toggleShown
+ * @param {readonly ToggleItem[]} items - Items, in order.
+ * @param {readonly string[]} pressed - Values pressed now.
+ * @param {number | undefined} limit - Items shown while collapsed.
+ * @param {boolean} expanded - True once the reader asked for more.
+ * @returns {readonly ToggleItem[]} Items to draw.
+ */
+export declare function toggleShown(items: readonly ToggleItem[], pressed: readonly string[], limit: number | undefined, expanded: boolean): readonly ToggleItem[];

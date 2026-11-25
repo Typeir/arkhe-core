@@ -1,0 +1,149 @@
+/**
+ * @fileoverview Number field rules shared by both ports. Zag holds the draft
+ * text and formats and parses it in the provider's locale (fi: "1 234,5";
+ * typing 1,5 works); the outside world sees a number or `null`. `NumericSync` keeps a
+ * controlled value and Zag's draft in step without eating keystrokes.
+ *
+ * @module packages/core/src/field/numeric
+ * @version 1.0.0
+ * @author Typeir
+ * @since 0.1.0
+ */
+import type { RootNode } from '../base/environment.js';
+import { type ArkheLabels } from '../base/labels.js';
+/**
+ * A field's value: a number, or `null` when empty or unparseable.
+ *
+ * @typedef {number | null} NumericValue
+ */
+export type NumericValue = number | null;
+/**
+ * Optional limits.
+ *
+ * @interface NumericBounds
+ * @property {number} [min] - Lowest value.
+ * @property {number} [max] - Highest value.
+ */
+export interface NumericBounds {
+    readonly min?: number;
+    readonly max?: number;
+}
+/**
+ * The slice of Zag's number-input API that `NumericSync` drives.
+ *
+ * @interface NumericMachineApi
+ * @property {number} valueAsNumber - Parsed draft; NaN when empty.
+ * @property {(value: number) => void} setValue - Replaces the draft.
+ * @property {() => void} clearValue - Empties the draft.
+ */
+export interface NumericMachineApi {
+    readonly valueAsNumber: number;
+    setValue: (value: number) => void;
+    clearValue: () => void;
+}
+/**
+ * What a port passes to `numericMachineProps`.
+ *
+ * @interface NumericMachineInput
+ * @property {string} id - Instance id.
+ * @property {string} label - Visible label; names the step buttons.
+ * @property {ArkheLabels} labels - Label templates.
+ * @property {string} [locale] - BCP 47 locale for formatting and parsing. Defaults to `DEFAULT_LOCALE`.
+ * @property {NumericValue} [value] - Controlled value.
+ * @property {NumericValue} [defaultValue] - First value when uncontrolled.
+ * @property {number} [min] - Lowest value.
+ * @property {number} [max] - Highest value.
+ * @property {number} [step] - Step size.
+ * @property {string} [name] - Form field name.
+ * @property {boolean} [required] - A value must be given.
+ * @property {boolean} [invalid] - Marks the control invalid.
+ * @property {boolean} [disabled] - Blocks input.
+ * @property {boolean} [readOnly] - Shows the value without taking edits.
+ * @property {() => RootNode} getRootNode - Root node for Zag.
+ */
+export interface NumericMachineInput extends NumericBounds {
+    readonly id: string;
+    readonly label: string;
+    readonly labels: ArkheLabels;
+    readonly locale?: string;
+    readonly value?: NumericValue;
+    readonly defaultValue?: NumericValue;
+    readonly step?: number;
+    readonly name?: string;
+    readonly required?: boolean;
+    readonly invalid?: boolean;
+    readonly disabled?: boolean;
+    readonly readOnly?: boolean;
+    readonly getRootNode: () => RootNode;
+}
+/**
+ * Maps Zag's parsed number to a field value.
+ *
+ * @function toNumericValue
+ * @param {number} valueAsNumber - Parsed draft.
+ * @returns {NumericValue} Number, or null for NaN.
+ */
+export declare function toNumericValue(valueAsNumber: number): NumericValue;
+/**
+ * Renders a field value as draft text in `locale`.
+ *
+ * @function formatDraft
+ * @param {NumericValue | undefined} value - Field value.
+ * @param {string} [locale] - BCP 47 locale. Defaults to `DEFAULT_LOCALE`.
+ * @returns {string} Draft; empty for null or undefined.
+ */
+export declare function formatDraft(value: NumericValue | undefined, locale?: string): string;
+/**
+ * Clamps a value into `bounds`; null passes through. A missing or non-finite
+ * bound falls back to Zag's own default, the safe-integer range.
+ *
+ * @function clampToBounds
+ * @param {NumericValue} value - Field value.
+ * @param {NumericBounds} bounds - Limits.
+ * @returns {NumericValue} Clamped value.
+ */
+export declare function clampToBounds(value: NumericValue, bounds: NumericBounds): NumericValue;
+/**
+ * Zag number-input machine props, minus change callbacks.
+ *
+ * @interface NumericMachineProps
+ * @property {string} id - Instance id.
+ * @property {string} locale - BCP 47 locale.
+ * @property {Intl.NumberFormatOptions} formatOptions - Format options.
+ * @property {string} defaultValue - First draft text.
+ * @property {number} [min] - Lowest value.
+ * @property {number} [max] - Highest value.
+ * @property {number} [step] - Step size.
+ * @property {string} [name] - Form field name.
+ * @property {boolean} [required] - A value must be given.
+ * @property {boolean} [invalid] - Marks the control invalid.
+ * @property {boolean} [disabled] - Blocks input.
+ * @property {boolean} [readOnly] - Shows the value without taking edits.
+ * @property {{ incrementLabel: string, decrementLabel: string }} translations - Step button names.
+ * @property {() => RootNode} getRootNode - Root node for Zag.
+ */
+export interface NumericMachineProps extends NumericBounds {
+    readonly id: string;
+    readonly locale: string;
+    readonly formatOptions: Intl.NumberFormatOptions;
+    readonly defaultValue: string;
+    readonly step?: number;
+    readonly name?: string;
+    readonly required?: boolean;
+    readonly invalid?: boolean;
+    readonly disabled?: boolean;
+    readonly readOnly?: boolean;
+    readonly translations: {
+        readonly incrementLabel: string;
+        readonly decrementLabel: string;
+    };
+    readonly getRootNode: () => RootNode;
+}
+/**
+ * Builds Zag number-input machine props, with Arkhé's step button names.
+ *
+ * @function numericMachineProps
+ * @param {NumericMachineInput} input - Port input.
+ * @returns {NumericMachineProps} Machine props, minus change callbacks.
+ */
+export declare function numericMachineProps(input: NumericMachineInput): NumericMachineProps;
