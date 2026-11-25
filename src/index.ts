@@ -27,6 +27,7 @@ export * from './overlay/floating.js';
 export * from './base/focusReturn.js';
 export * from './hint/hint.js';
 export * from './hint/hintTree.js';
+export * from './hint/sleep.js';
 export * from './base/icons.js';
 export * from './base/labels.js';
 export * from './feedback/loader.js';
