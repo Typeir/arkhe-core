@@ -1,7 +1,7 @@
 /**
  * @fileoverview Loads floating content once, on first open, and remembers
- * the result. Ports subscribe to redraw as it moves from idle to loading to
- * ready or error.
+ * the result, one loader per source. Ports subscribe to redraw as it moves
+ * from idle to loading to ready or error.
  *
  * @module packages/core/src/feedback/loader
  * @version 1.0.0
@@ -117,4 +117,29 @@ export class ContentLoader<T> {
     this.#state = state;
     for (const listener of this.#listeners) listener();
   }
+}
+
+/**
+ * Loaders by source, so a component that unmounts and mounts again with the
+ * same source finds its content already loaded.
+ *
+ * @constant LOADERS
+ * @type {WeakMap<() => Promise<unknown>, ContentLoader<unknown>>}
+ */
+const LOADERS = new WeakMap<() => Promise<unknown>, ContentLoader<unknown>>();
+
+/**
+ * The one loader for `source`, made on first use.
+ *
+ * @function loaderFor
+ * @template T
+ * @param {() => Promise<T>} source - Fetches the content.
+ * @returns {ContentLoader<T>} Loader shared by every caller with this source.
+ */
+export function loaderFor<T>(source: () => Promise<T>): ContentLoader<T> {
+  const known = LOADERS.get(source) as ContentLoader<T> | undefined;
+  if (known !== undefined) return known;
+  const made = new ContentLoader(source);
+  LOADERS.set(source, made as ContentLoader<unknown>);
+  return made;
 }
