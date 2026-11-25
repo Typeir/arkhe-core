@@ -95,10 +95,12 @@ export interface HintTriggerInput {
  * hint nested inside it.
  *
  * @function ownsEvent
- * @param {HintEvent} event - Event at the trigger.
+ * @param {Pick<HintEvent, 'target' | 'currentTarget'>} event - Event at the trigger.
  * @returns {boolean} True when no nested trigger or hint sits between.
  */
-export function ownsEvent(event: HintEvent): boolean {
+export function ownsEvent(
+  event: Pick<HintEvent, 'target' | 'currentTarget'>,
+): boolean {
   const target = event.target as Element | null;
   if (typeof target?.closest !== 'function') return true;
   return target.closest(OWNERS) === event.currentTarget;

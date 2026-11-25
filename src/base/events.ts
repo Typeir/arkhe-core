@@ -18,6 +18,7 @@
  * @property {string} pointerdown - Pointer-down prop.
  * @property {string} pointerleave - Pointer-leave prop.
  * @property {string} pointerover - Pointer-over prop.
+ * @property {string} pointerout - Pointer-out prop.
  * @property {string} click - Click prop.
  */
 export interface EventNames {
@@ -27,6 +28,7 @@ export interface EventNames {
   readonly pointerdown: string;
   readonly pointerleave: string;
   readonly pointerover: string;
+  readonly pointerout: string;
   readonly click: string;
 }
 
@@ -43,6 +45,7 @@ export const REACT_EVENTS: EventNames = {
   pointerdown: 'onPointerDown',
   pointerleave: 'onPointerLeave',
   pointerover: 'onPointerOver',
+  pointerout: 'onPointerOut',
   click: 'onClick',
 };
 
@@ -59,5 +62,6 @@ export const SVELTE_EVENTS: EventNames = {
   pointerdown: 'onpointerdown',
   pointerleave: 'onpointerleave',
   pointerover: 'onpointerover',
+  pointerout: 'onpointerout',
   click: 'onclick',
 };

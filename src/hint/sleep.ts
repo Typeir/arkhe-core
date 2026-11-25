@@ -11,6 +11,7 @@
  */
 
 import type { EventNames } from '../base/events.js';
+import { ownsEvent } from './hint.js';
 
 /**
  * What woke a hint: a hovering pointer, keyboard focus, or a touch press.
@@ -51,9 +52,15 @@ export interface SleepingTrigger {
  * @property {string} type - Event type.
  * @property {string} [pointerType] - Pointer kind, for pointer events.
  * @property {{ pointerType?: string }} [nativeEvent] - React's underlying event.
+ * @property {EventTarget | null} [target] - Element the event started on.
+ * @property {EventTarget | null} [currentTarget] - Element the handler sits on.
+ * @property {EventTarget | null} [relatedTarget] - Element the pointer moved to, for pointer-out events.
  */
 export interface WakeEvent {
   readonly type: string;
+  readonly target?: EventTarget | null;
+  readonly currentTarget?: EventTarget | null;
+  readonly relatedTarget?: EventTarget | null;
   readonly pointerType?: string;
   readonly nativeEvent?: { readonly pointerType?: string };
 }
@@ -95,24 +102,71 @@ export function wakeOf(event: WakeEvent): HintWake | null {
 }
 
 /**
- * Handlers that wake a sleeping trigger.
+ * Wakes a sleeping trigger and remembers whether the pointer that woke it
+ * is still over the trigger: the live machine replays a hover only then.
+ * Events from a trigger nested inside it wake only that one. Leaving is read
+ * from the bubbling pointerout, which both ports delegate, so a sleeping
+ * trigger holds no listener of its own.
  *
- * @function wakeHandlers
- * @param {EventNames} names - The framework's event prop names.
- * @param {(wake: HintWake) => void} wake - Starts the machine.
- * @returns {Record<string, (event: WakeEvent) => void>} Props to spread.
+ * @class WakeWatch
  */
-export function wakeHandlers(
-  names: EventNames,
-  wake: (wake: HintWake) => void,
-): Record<string, (event: WakeEvent) => void> {
-  const handle = (event: WakeEvent) => {
-    const kind = wakeOf(event);
-    if (kind !== null) wake(kind);
-  };
-  return {
-    [names.pointerover]: handle,
-    [names.focus]: handle,
-    [names.pointerdown]: handle,
-  };
+export class WakeWatch {
+  /**
+   * Props to spread on the sleeping trigger.
+   *
+   * @type {Readonly<Record<string, (event: WakeEvent) => void>>}
+   */
+  readonly handlers: Readonly<Record<string, (event: WakeEvent) => void>>;
+  /**
+   * The waking pointer is still over the trigger.
+   *
+   * @type {boolean}
+   */
+  #inside = false;
+
+  /**
+   * @param {EventNames} names - The framework's event prop names.
+   * @param {(wake: HintWake) => void} wake - Starts the machine.
+   */
+  constructor(names: EventNames, wake: (wake: HintWake) => void) {
+    const handle = (event: WakeEvent) => {
+      const owner = {
+        target: event.target ?? null,
+        currentTarget: event.currentTarget ?? null,
+      };
+      if (!ownsEvent(owner)) return;
+      const kind = wakeOf(event);
+      if (kind === null) return;
+      if (kind === 'hover') this.#inside = true;
+      wake(kind);
+    };
+    this.handlers = {
+      [names.pointerover]: handle,
+      [names.focus]: handle,
+      [names.pointerdown]: handle,
+      [names.pointerout]: (event: WakeEvent) => {
+        const from = event.currentTarget as Node | null | undefined;
+        const to = event.relatedTarget as Node | null | undefined;
+        if (from?.contains(to ?? null) !== true) this.leave();
+      },
+    };
+  }
+
+  /**
+   * Whether the waking pointer is still over the trigger.
+   *
+   * @returns {boolean} Inside.
+   */
+  get hovering(): boolean {
+    return this.#inside;
+  }
+
+  /**
+   * Records the pointer leaving the trigger.
+   *
+   * @returns {void}
+   */
+  leave(): void {
+    this.#inside = false;
+  }
 }
